@@ -1,190 +1,198 @@
 ---
-interface Post {
+interface Essay {
   title: string;
   date: string;
-  slug: string;
+  location: string;
   excerpt: string;
+  tags: string[];
 }
 
-// 나중에 동적으로 불러올 포스트들
-const posts: Post[] = [];
+const essays: Essay[] = [
+  {
+    title: '가지튀김도 잘 먹고, 그런 사람이 됐다',
+    date: '2026-05-16',
+    location: '서울 문래동',
+    excerpt:
+      '볕이 센 오후를 피해 작은 골목으로 들어가니, 튀김 냄새와 젖은 시멘트 냄새가 겹쳤다. 입천장이 조금 데는 온도, 그리고 오래 걷고 난 뒤의 허기가 잘 어울렸다.',
+    tags: ['골목', '식탁', '산책'],
+  },
+  {
+    title: '느슨하게 목적지를 정했을 뿐, 사실은 좀 걷자는 것 뿐이다',
+    date: '2026-05-10',
+    location: '양천구 목동',
+    excerpt:
+      '종합운동장 주변은 의외로 조용했다. 사람이 빠져나간 관람석, 바람이 비집고 들어오는 계단, 구름의 속도. 계획보다 오래 머무르며 사진을 천천히 남겼다.',
+    tags: ['운동장', '도시풍경', '도보여행'],
+  },
+  {
+    title: '제물포 빈 공간',
+    date: '2026-05-02',
+    location: '인천 제물포',
+    excerpt:
+      '빈 건물은 늘 배경음이 작다. 문이 닫힌 상가 앞에서 셔터를 누르면, 소리보다 공기의 결이 먼저 기록되는 기분이 든다. 그 적막이 오늘의 중심이었다.',
+    tags: ['빈공간', '건축', '기록'],
+  },
+];
 ---
 
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ydnil Strolls - 작은 모험들</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <title>Ydnil Strolls</title>
     <style>
-      * {
-        font-family: "Hahmlet", serif;
-        box-sizing: border-box;
+      :root {
+        --bg: #f6f6f3;
+        --panel: #ffffff;
+        --text: #202020;
+        --muted: #737373;
+        --rule: #e4e2db;
       }
 
-      html {
-        scroll-behavior: smooth;
+      * {
+        box-sizing: border-box;
       }
 
       body {
         margin: 0;
-        padding: 0;
-        background-color: #fafafa;
-        color: #333;
-        line-height: 1.8;
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Iowan Old Style', 'Apple SD Gothic Neo', 'Noto Serif KR', serif;
+        line-height: 1.9;
       }
 
-      main {
-        max-width: 800px;
+      .shell {
+        max-width: 760px;
         margin: 0 auto;
-        padding: 2rem 1rem;
+        padding: 4rem 1.25rem 5rem;
       }
 
-      /* Header */
-      .site-header {
-        text-align: center;
-        border-bottom: 2px solid #e0e0e0;
-        padding-bottom: 2rem;
-        margin-bottom: 3rem;
+      .topbar {
+        border-bottom: 1px solid var(--rule);
+        padding-bottom: 1.15rem;
+        margin-bottom: 2.5rem;
       }
 
-      .site-title {
-        font-size: 3rem;
-        font-weight: 700;
-        margin: 0 0 0.5rem 0;
-        color: #222;
-      }
-
-      .site-subtitle {
-        font-size: 1.2rem;
-        color: #999;
+      .brand {
         margin: 0;
-        font-weight: 400;
+        font-size: 1.45rem;
+        letter-spacing: 0.02em;
       }
 
-      /* Posts Section */
-      .posts-section {
-        margin-bottom: 3rem;
+      .intro {
+        margin: 0.6rem 0 0;
+        color: var(--muted);
+        font-size: 0.95rem;
       }
 
-      .posts-section h2 {
-        font-size: 1.8rem;
-        color: #222;
-        margin-bottom: 1.5rem;
+      .essay-list {
+        display: grid;
+        gap: 3.4rem;
       }
 
-      .posts-list {
-        list-style: none;
-        padding: 0;
+      .essay {
+        display: grid;
+        gap: 1.15rem;
+      }
+
+      .photo-frame {
         margin: 0;
+        border: 1px solid #ddd9cf;
+        background: var(--panel);
+        padding: clamp(0.35rem, 1.1vw, 0.55rem);
       }
 
-      .post-item {
-        margin-bottom: 2rem;
-        padding-bottom: 2rem;
-        border-bottom: 1px solid #e0e0e0;
+      .photo-surface {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        background:
+          linear-gradient(155deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15)),
+          radial-gradient(circle at 30% 30%, #ddd8cf 0%, #c8c3b8 40%, #a7a39a 100%);
       }
 
-      .post-item:last-child {
-        border-bottom: none;
-      }
-
-      .post-link {
-        text-decoration: none;
-        color: inherit;
-        transition: all 0.3s ease;
-      }
-
-      .post-link:hover {
-        color: #0066cc;
-      }
-
-      .post-link h3 {
+      h2 {
+        margin: 0;
         font-size: 1.5rem;
-        margin: 0 0 0.5rem 0;
-        color: #222;
+        font-weight: 500;
+        line-height: 1.45;
       }
 
-      .post-link time {
-        display: block;
-        color: #999;
-        font-size: 0.95rem;
-        margin-bottom: 0.5rem;
-      }
-
-      .post-link p {
+      .meta {
         margin: 0;
-        color: #666;
-        font-size: 1rem;
+        color: var(--muted);
+        font-size: 0.92rem;
       }
 
-      .no-posts {
-        color: #999;
-        font-style: italic;
+      .excerpt {
+        margin: 0;
+        font-size: 1.03rem;
       }
 
-      /* Footer */
-      .site-footer {
-        text-align: center;
-        border-top: 1px solid #e0e0e0;
-        padding-top: 2rem;
-        margin-top: 3rem;
-        color: #999;
-        font-size: 0.95rem;
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.42rem;
       }
 
-      /* Responsive */
+      .tag {
+        border: 1px solid var(--rule);
+        color: #545454;
+        padding: 0.16rem 0.55rem;
+        font-size: 0.82rem;
+      }
+
+      footer {
+        margin-top: 4rem;
+        padding-top: 1.3rem;
+        border-top: 1px solid var(--rule);
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
       @media (max-width: 640px) {
-        .site-title {
-          font-size: 2rem;
+        .shell {
+          padding-top: 2.4rem;
         }
 
-        main {
-          padding: 1rem;
+        .essay-list {
+          gap: 2.4rem;
         }
 
-        .site-header {
-          padding-bottom: 1.5rem;
-          margin-bottom: 2rem;
+        .excerpt {
+          font-size: 1rem;
         }
       }
     </style>
   </head>
 
   <body>
-    <main>
-      <header class="site-header">
-        <h1 class="site-title">Ydnil Strolls</h1>
-        <p class="site-subtitle">small adventures</p>
+    <main class="shell">
+      <header class="topbar">
+        <h1 class="brand">뚜벅뚜벅 Ydnil</h1>
+        <p class="intro">광고 없는 미니멀 포토에세이 · 느린 보폭으로 기록하는 도시 산책</p>
       </header>
 
-      <section class="posts-section">
-        <h2>최근 포스트</h2>
-        {posts.length === 0 ? (
-          <p class="no-posts">아직 포스트가 없습니다. 곧 추가될 예정입니다!</p>
-        ) : (
-          <ul class="posts-list">
-            {posts.map((post) => (
-              <li key={post.slug} class="post-item">
-                <a href={`/posts/${post.slug}`} class="post-link">
-                  <h3>{post.title}</h3>
-                  <time>{post.date}</time>
-                  <p>{post.excerpt}</p>
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
+      <section class="essay-list" aria-label="photo essays">
+        {essays.map((essay) => (
+          <article class="essay">
+            <figure class="photo-frame" aria-hidden="true">
+              <div class="photo-surface"></div>
+            </figure>
+            <header>
+              <h2>{essay.title}</h2>
+              <p class="meta">{essay.date} · {essay.location}</p>
+            </header>
+            <p class="excerpt">{essay.excerpt}</p>
+            <div class="tags">
+              {essay.tags.map((tag) => (
+                <span class="tag">#{tag}</span>
+              ))}
+            </div>
+          </article>
+        ))}
       </section>
 
-      <footer class="site-footer">
-        <p>&copy; 2026 Ydnil. All rights reserved.</p>
-      </footer>
+      <footer>© 2026 Ydnil Strolls</footer>
     </main>
   </body>
 </html>
