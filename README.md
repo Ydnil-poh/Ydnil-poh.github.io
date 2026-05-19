@@ -1,43 +1,57 @@
-# Astro Starter Kit: Minimal
+# Ydnil Strolls
 
-```sh
-npm create astro@latest -- --template minimal
+작은 모험들을 기록하는 개인 블로그입니다. Astro로 만들어진 정적 블로그입니다.
+
+## 🚀 프로젝트 구조
+
 ```
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
 /
-├── public/
+├── public/              # 정적 자산 (이미지 등)
 ├── src/
-│   └── pages/
-│       └── index.astro
+│   ├── pages/          # 블로그 페이지
+│   │   ├── index.astro # 홈페이지
+│   │   └── posts/      # 블로그 포스트들
+│   ├── layouts/        # 레이아웃 컴포넌트
+│   └── styles/         # 스타일 파일
 └── package.json
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## 🎨 설정
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+- **폰트**: Hahmlet (한글 우아한 폰트)
+- **스타일**: 깔끔한 미니멀 디자인
+- **반응형**: 모바일 친화적 구조
 
-Any static assets, like images, can be placed in the `public/` directory.
+## 🧞 명령어
 
-## 🧞 Commands
+```bash
+# 개발 서버 실행
+npm run dev
 
-All commands are run from the root of the project, from a terminal:
+# 프로덕션 빌드
+npm run build
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+# 빌드 미리보기
+npm run preview
+```
 
-## 👀 Want to learn more?
+개발 서버는 기본적으로 `http://localhost:4321`에서 실행됩니다.
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## 📝 포스트 작성
+
+1. `src/posts/` 디렉토리에 새로운 `.md` 파일 생성
+2. Front Matter로 메타데이터 추가:
+   ```yaml
+   ---
+   title: 포스트 제목
+   date: 2026-05-19
+   slug: post-slug
+   excerpt: 간단한 설명
+   ---
+   ```
+3. Markdown으로 콘텐츠 작성
+
+## 📖 더 알아보기
+
+- [Astro 공식 문서](https://docs.astro.build)
+- [Astro Discord 커뮤니티](https://astro.build/chat)
