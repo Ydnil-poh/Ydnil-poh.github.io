@@ -14,16 +14,15 @@ const cells = posts
     const charCount = body.replace(/\s/g, '').length;
     const activity = post.data.views + post.data.trackbacks * 8;
     const density = clamp(0.18 + Math.log10(activity + 1) * 0.28, 0.18, 0.9);
-
-    // 셀 크기는 고정, 분석값은 위치 우선순위에만 반영
     const score = charCount * 0.01 + imageCount * 18 + activity * 0.7;
-
     return { post, density, score };
   })
   .sort((a, b) => b.score - a.score);
 
 const cellCount = cells.length;
 const side = Math.max(1, Math.ceil(Math.sqrt(cellCount))); // 1x1, 2x2, 3x3...
+const totalSlots = side * side;
+const emptySlots = Math.max(0, totalSlots - cellCount);
 ---
 
 <html lang="ko">
@@ -42,19 +41,24 @@ const side = Math.max(1, Math.ceil(Math.sqrt(cellCount))); // 1x1, 2x2, 3x3...
 
       .grid-wrap { overflow-x:auto; padding-bottom:.3rem; }
       .grid {
-        --cell-size: 240px;
+        --gap:.8rem;
+        --grid-max: min(92vw, 1080px);
+        --cell-size: calc((var(--grid-max) - (var(--grid-side) - 1) * var(--gap)) / var(--grid-side));
         display:grid;
         width:max-content;
         margin:0 auto;
         grid-template-columns: repeat(var(--grid-side), var(--cell-size));
-        gap:.8rem;
+        gap:var(--gap);
+      }
+      .cell,
+      .placeholder {
+        border:1px solid var(--rule);
+        width:var(--cell-size);
+        height:var(--cell-size);
       }
       .cell {
         position:relative;
         display:block;
-        border:1px solid var(--rule);
-        width:var(--cell-size);
-        height:var(--cell-size);
         border-radius:2px;
         overflow:hidden;
         background:
@@ -65,12 +69,15 @@ const side = Math.max(1, Math.ceil(Math.sqrt(cellCount))); // 1x1, 2x2, 3x3...
       .cell:hover { transform: translateY(-2px); filter: saturate(1.08); }
       .cell:focus-visible { outline: 2px solid #9b968a; outline-offset: 2px; }
 
-      .grid-single .grid { --cell-size: min(74vw, 560px); }
+      .placeholder {
+        border-style:dashed;
+        opacity:.45;
+        background:linear-gradient(135deg, rgba(228,226,219,.28), rgba(228,226,219,.06));
+      }
 
-      @media (max-width: 900px) { .grid { --cell-size: 200px; } }
       @media (max-width: 760px) {
         .shell { padding:2.4rem 1rem 3.5rem; }
-        .grid { --cell-size: 165px; gap:.58rem; }
+        .grid { --gap:.58rem; --grid-max: 94vw; }
       }
     </style>
   </head>
@@ -78,10 +85,10 @@ const side = Math.max(1, Math.ceil(Math.sqrt(cellCount))); // 1x1, 2x2, 3x3...
     <main class="shell">
       <header class="topbar">
         <h1 class="brand">뚜벅뚜벅 Ydnil · Bubble Grid</h1>
-        <p class="intro">셀은 텍스트/썸네일 없이 색면으로만 존재합니다. 포스트가 누적될수록 정방형 그리드(1x1 → 2x2 → 3x3...)가 커지고, 본문/이미지/활동 데이터는 셀의 위치와 농도에만 반영됩니다.</p>
+        <p class="intro">셀은 색면으로만 존재합니다. 포스트 수가 늘어나면 정방형 그리드가 커지며, 비어 있는 슬롯은 빈 셀(placeholder)로 남겨 전체 구조를 유지합니다.</p>
       </header>
 
-      <section class:list={["grid-wrap", side === 1 && 'grid-single']} aria-label="bubble post grid">
+      <section class="grid-wrap" aria-label="bubble post grid">
         <div class="grid" style={`--grid-side:${side};`}>
           {cells.map(({ post, density }) => (
             <a
@@ -92,6 +99,7 @@ const side = Math.max(1, Math.ceil(Math.sqrt(cellCount))); // 1x1, 2x2, 3x3...
               title={post.data.title}
             ></a>
           ))}
+          {Array.from({ length: emptySlots }).map(() => <div class="placeholder" aria-hidden="true"></div>)}
         </div>
       </section>
     </main>
