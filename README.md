@@ -1,57 +1,54 @@
 # Ydnil Strolls
 
-작은 모험들을 기록하는 개인 블로그입니다. Astro로 만들어진 정적 블로그입니다.
+광고 없는 미니멀 포토에세이 스타일의 Astro 개인 블로그입니다.
 
-## 🚀 프로젝트 구조
-
-```
-/
-├── public/              # 정적 자산 (이미지 등)
-├── src/
-│   ├── pages/          # 블로그 페이지
-│   │   ├── index.astro # 홈페이지
-│   │   └── posts/      # 블로그 포스트들
-│   ├── layouts/        # 레이아웃 컴포넌트
-│   └── styles/         # 스타일 파일
-└── package.json
-```
-
-## 🎨 설정
-
-- **폰트**: Hahmlet (한글 우아한 폰트)
-- **스타일**: 깔끔한 미니멀 디자인
-- **반응형**: 모바일 친화적 구조
-
-## 🧞 명령어
+## 실행
 
 ```bash
-# 개발 서버 실행
+npm install
 npm run dev
-
-# 프로덕션 빌드
-npm run build
-
-# 빌드 미리보기
-npm run preview
 ```
 
-개발 서버는 기본적으로 `http://localhost:4321`에서 실행됩니다.
+## 콘텐츠 등록 방법
 
-## 📝 포스트 작성
+포스트는 `src/content/posts/*.md`에 Markdown으로 추가합니다.
 
-1. `src/posts/` 디렉토리에 새로운 `.md` 파일 생성
-2. Front Matter로 메타데이터 추가:
-   ```yaml
-   ---
-   title: 포스트 제목
-   date: 2026-05-19
-   slug: post-slug
-   excerpt: 간단한 설명
-   ---
-   ```
-3. Markdown으로 콘텐츠 작성
+### Frontmatter 필드
 
-## 📖 더 알아보기
+```yaml
+---
+title: 포스트 제목
+date: 2026-05-20
+location: 서울 어딘가
+excerpt: 목록에서 보일 짧은 소개
+tags: [산책, 사진]
+cover: /images/sample.jpg
+coverAlt: 표지 이미지 설명
+views: 0
+trackbacks: 0
+---
+```
 
-- [Astro 공식 문서](https://docs.astro.build)
-- [Astro Discord 커뮤니티](https://astro.build/chat)
+## 인터랙티브 그리드 규칙
+
+- 포스트 1개 = 그리드 셀 1개
+- `본문 글자 수`와 `본문 이미지 개수`로 셀의 그리드 내 배치 우선순위(score) 조정
+- `views` + `trackbacks` 값을 이용해 셀 농도(색면 강도) 조정
+- 포스트 수가 늘어나면 정방형 그리드가 1x1 → 2x2 → 3x3으로 증가 (각 셀은 텍스트/썸네일 없이 동일한 위계의 색면)
+
+## 이미지 추가
+
+이미지는 `public/images/`에 넣고 Markdown에서 `/images/파일명.jpg`로 참조하세요.
+
+## 배포
+
+`main` 브랜치에 푸시하면 GitHub Actions가 빌드 후 GitHub Pages에 자동 배포합니다.
+
+
+## 활동 지표(중요)
+
+- `views`, `trackbacks`는 현재 자동 집계가 아니라 **Markdown frontmatter 수동 입력값**입니다.
+- 즉, 샘플 포스트의 수치도 하드코딩 예시이며 새 포스트도 기본은 `0`으로 시작합니다.
+- 실제 자동 집계 연동(예: 분석 API/DB)은 별도 구현이 필요합니다.
+
+- 포스트 수가 정방형 슬롯 수보다 적을 때(예: 3개 → 2x2), 남는 칸은 placeholder 셀로 유지됩니다.
