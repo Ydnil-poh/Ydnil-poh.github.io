@@ -1,57 +1,46 @@
 # Ydnil Strolls
 
-작은 모험들을 기록하는 개인 블로그입니다. Astro로 만들어진 정적 블로그입니다.
+광고 없는 미니멀 포토에세이 스타일의 Astro 개인 블로그입니다.
 
-## 🚀 프로젝트 구조
-
-```
-/
-├── public/              # 정적 자산 (이미지 등)
-├── src/
-│   ├── pages/          # 블로그 페이지
-│   │   ├── index.astro # 홈페이지
-│   │   └── posts/      # 블로그 포스트들
-│   ├── layouts/        # 레이아웃 컴포넌트
-│   └── styles/         # 스타일 파일
-└── package.json
-```
-
-## 🎨 설정
-
-- **폰트**: Hahmlet (한글 우아한 폰트)
-- **스타일**: 깔끔한 미니멀 디자인
-- **반응형**: 모바일 친화적 구조
-
-## 🧞 명령어
+## 실행
 
 ```bash
-# 개발 서버 실행
+npm install
 npm run dev
-
-# 프로덕션 빌드
-npm run build
-
-# 빌드 미리보기
-npm run preview
 ```
 
-개발 서버는 기본적으로 `http://localhost:4321`에서 실행됩니다.
+## 콘텐츠 등록 방법
 
-## 📝 포스트 작성
+포스트는 `src/content/posts/*.md`에 Markdown으로 추가합니다.
 
-1. `src/posts/` 디렉토리에 새로운 `.md` 파일 생성
-2. Front Matter로 메타데이터 추가:
-   ```yaml
-   ---
-   title: 포스트 제목
-   date: 2026-05-19
-   slug: post-slug
-   excerpt: 간단한 설명
-   ---
-   ```
-3. Markdown으로 콘텐츠 작성
+### 1) 새 파일 만들기
 
-## 📖 더 알아보기
+예시: `src/content/posts/2026-05-20-my-walk.md`
 
-- [Astro 공식 문서](https://docs.astro.build)
-- [Astro Discord 커뮤니티](https://astro.build/chat)
+### 2) Frontmatter 작성
+
+```yaml
+---
+title: 포스트 제목
+date: 2026-05-20
+location: 서울 어딘가
+excerpt: 목록에서 보일 짧은 소개
+tags:
+  - 산책
+  - 사진
+cover: /images/sample.jpg
+coverAlt: 표지 이미지 설명
+---
+```
+
+### 3) 본문 작성
+
+일반 Markdown으로 본문을 작성하면 `/posts/[slug]` 상세 페이지가 자동 생성됩니다.
+
+## 이미지 추가
+
+이미지는 `public/images/`에 넣고 Markdown/Frontmatter에서 `/images/파일명.jpg`처럼 참조하세요.
+
+## 배포
+
+`main` 브랜치에 푸시하면 GitHub Actions가 빌드 후 GitHub Pages에 자동 배포합니다.
