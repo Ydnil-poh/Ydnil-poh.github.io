@@ -1,11 +1,31 @@
 ---
 import { getCollection } from 'astro:content';
 
-const essays = (await getCollection('posts')).sort(
+const posts = (await getCollection('posts')).sort(
   (a, b) => b.data.date.getTime() - a.data.date.getTime(),
 );
 
 const dateFormat = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' });
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+const cells = posts
+  .map((post) => {
+    const body = post.body ?? '';
+    const imageCount = (body.match(/!\[[^\]]*\]\([^)]*\)/g) ?? []).length;
+    const charCount = body.replace(/\s/g, '').length;
+    const activity = post.data.views + post.data.trackbacks * 8;
+    const density = clamp(0.22 + Math.log10(activity + 1) * 0.26, 0.22, 0.92);
+
+    // 셀 크기는 고정, 본문 분석 결과는 위치 우선순위(score)로만 반영
+    const score = charCount * 0.01 + imageCount * 18 + activity * 0.7;
+
+    return { post, imageCount, charCount, density, score };
+  })
+  .sort((a, b) => b.score - a.score);
+
+const cellCount = cells.length;
+const side = Math.max(1, Math.ceil(Math.sqrt(cellCount))); // 1x1, 2x2, 3x3...
 ---
 
 <html lang="ko">
@@ -16,84 +36,67 @@ const dateFormat = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' });
     <style>
       :root { --bg:#f6f6f3; --panel:#fff; --text:#202020; --muted:#737373; --rule:#e4e2db; }
       * { box-sizing:border-box; }
-      body { margin:0; background:var(--bg); color:var(--text); font-family:'Iowan Old Style','Apple SD Gothic Neo','Noto Serif KR',serif; line-height:1.9; }
-      .shell { max-width:1280px; margin:0 auto; padding:4.2rem 2rem 5.2rem; }
-      .topbar { border-bottom:1px solid var(--rule); padding-bottom:1.25rem; margin-bottom:3.2rem; }
-      .brand { margin:0; font-size:1.62rem; letter-spacing:.02em; }
-      .intro { margin:.65rem 0 0; color:var(--muted); font-size:1rem; }
+      body { margin:0; background:var(--bg); color:var(--text); font-family:'Iowan Old Style','Apple SD Gothic Neo','Noto Serif KR',serif; }
+      .shell { max-width:1380px; margin:0 auto; padding:3.6rem 1.4rem 5rem; }
+      .topbar { border-bottom:1px solid var(--rule); padding-bottom:1.2rem; margin-bottom:2.1rem; }
+      .brand { margin:0; font-size:1.62rem; }
+      .intro { margin:.62rem 0 0; color:var(--muted); line-height:1.75; }
 
-      .essay-list { display:grid; gap:4.2rem; }
-      .essay {
+      .grid {
         display:grid;
-        grid-template-columns: minmax(0, 1.18fr) minmax(0, .82fr);
-        align-items:start;
-        gap:2.2rem;
+        grid-template-columns: repeat(var(--grid-side), minmax(0, 1fr));
+        gap:.8rem;
+      }
+      .cell {
+        position:relative;
         text-decoration:none;
         color:inherit;
+        border:1px solid var(--rule);
+        background:var(--panel);
+        overflow:hidden;
+        aspect-ratio:1/1;
       }
-      .essay:nth-child(even) {
-        grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+      .cell::before {
+        content:'';
+        position:absolute; inset:0;
+        background:linear-gradient(170deg, rgba(32,32,32, calc(var(--density) * .62)), rgba(32,32,32, calc(var(--density) * .15)) 58%, rgba(32,32,32,.03));
+        z-index:1;
       }
-      .essay:nth-child(even) .essay-text { order:1; }
-      .essay:nth-child(even) .essay-photo { order:2; }
+      .cover { position:absolute; inset:0; z-index:0; }
+      .cover img { width:100%; height:100%; object-fit:cover; display:block; filter:saturate(.85) contrast(1.02); }
+      .fallback { width:100%; height:100%; background: radial-gradient(circle at 30% 30%, #ddd8cf 0%, #c8c3b8 40%, #a7a39a 100%); }
+      .content { position:relative; z-index:2; height:100%; display:flex; flex-direction:column; justify-content:flex-end; padding:1rem; }
+      .title { margin:0 0 .35rem; font-size:1.05rem; line-height:1.38; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.36); }
+      .meta { margin:0; font-size:.82rem; color:rgba(255,255,255,.88); }
+      .signals { margin-top:.55rem; font-size:.76rem; color:rgba(255,255,255,.86); display:flex; gap:.45rem; flex-wrap:wrap; }
 
-      .essay-photo { margin:0; }
-      .photo-frame { margin:0; border:1px solid #ddd9cf; background:var(--panel); padding:clamp(.42rem, .9vw, .62rem); }
-      .photo-surface { width:100%; aspect-ratio:4/3; background:linear-gradient(155deg,rgba(0,0,0,.05),rgba(0,0,0,.15)), radial-gradient(circle at 30% 30%, #ddd8cf 0%, #c8c3b8 40%, #a7a39a 100%); overflow:hidden; }
-      .photo-surface img { width:100%; height:100%; object-fit:cover; display:block; }
-
-      .essay-text { max-width:560px; }
-      h2 { margin:0; font-size:1.72rem; font-weight:500; line-height:1.42; }
-      .meta { margin:.45rem 0 0; color:var(--muted); font-size:.95rem; }
-      .excerpt { margin:1rem 0 0; font-size:1.08rem; }
-      .tags { display:flex; flex-wrap:wrap; gap:.42rem; margin-top:1.05rem; }
-      .tag { border:1px solid var(--rule); color:#545454; padding:.16rem .55rem; font-size:.82rem; }
-      .empty { color:var(--muted); }
-
-      @media (max-width: 980px) {
-        .shell { max-width:900px; padding:3.4rem 1.35rem 4.5rem; }
-        .essay,
-        .essay:nth-child(even) { grid-template-columns:1fr; gap:1.1rem; }
-        .essay:nth-child(even) .essay-text,
-        .essay:nth-child(even) .essay-photo { order:initial; }
-        .essay-text { max-width:100%; }
+      @media (max-width: 760px) {
+        .shell { padding:2.4rem 1rem 3.5rem; }
+        .grid { gap:.66rem; }
       }
     </style>
   </head>
   <body>
     <main class="shell">
       <header class="topbar">
-        <h1 class="brand">뚜벅뚜벅 Ydnil</h1>
-        <p class="intro">광고 없는 미니멀 포토에세이 · 느린 보폭으로 기록하는 도시 산책</p>
+        <h1 class="brand">뚜벅뚜벅 Ydnil · Interactive Grid</h1>
+        <p class="intro">셀 크기는 모두 동일하고, 본문/이미지/활동 데이터는 그리드 내 노출 우선순위(위치)에만 반영됩니다. 그리드는 1x1, 2x2, 3x3 형태로 확장됩니다.</p>
       </header>
 
-      {essays.length === 0 ? (
-        <p class="empty">아직 발행된 포토에세이가 없습니다. `src/content/posts`에 첫 글을 추가해보세요.</p>
-      ) : (
-        <section class="essay-list" aria-label="photo essays">
-          {essays.map((essay) => (
-            <a class="essay" href={`/posts/${essay.id.replace(/\.md$/, '')}/`}>
-              <figure class="essay-photo photo-frame" aria-hidden="true">
-                <div class="photo-surface">
-                  {essay.data.cover ? (
-                    <img src={essay.data.cover} alt={essay.data.coverAlt} loading="lazy" />
-                  ) : null}
-                </div>
-              </figure>
-              <header class="essay-text">
-                <h2>{essay.data.title}</h2>
-                <p class="meta">{dateFormat.format(essay.data.date)} · {essay.data.location}</p>
-                <p class="excerpt">{essay.data.excerpt}</p>
-                <div class="tags">
-                  {essay.data.tags.map((tag) => (
-                    <span class="tag">#{tag}</span>
-                  ))}
-                </div>
-              </header>
-            </a>
-          ))}
-        </section>
-      )}
+      <section class="grid" style={`--grid-side:${side};`} aria-label="interactive post grid">
+        {cells.map(({ post, density, imageCount, charCount, score }) => (
+          <a class="cell" href={`/posts/${post.id.replace(/\.md$/, '')}/`} style={`--density:${density};`}>
+            <div class="cover" aria-hidden="true">
+              {post.data.cover ? <img src={post.data.cover} alt="" loading="lazy" /> : <div class="fallback"></div>}
+            </div>
+            <div class="content">
+              <h2 class="title">{post.data.title}</h2>
+              <p class="meta">{dateFormat.format(post.data.date)} · {post.data.location}</p>
+              <p class="signals">점수 {Math.round(score)} · 조회 {post.data.views} · 트랙백 {post.data.trackbacks} · 본문 {charCount}자 · 사진 {imageCount}장</p>
+            </div>
+          </a>
+        ))}
+      </section>
     </main>
   </body>
 </html>

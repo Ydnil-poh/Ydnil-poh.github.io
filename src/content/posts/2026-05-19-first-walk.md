@@ -9,11 +9,15 @@ tags:
   - 포토에세이
 cover: /images/yeonnam-rain.svg
 coverAlt: 비 온 뒤 연남동 골목 풍경
+views: 124
+trackbacks: 3
 ---
 
 비가 그친 뒤의 골목은 소리가 작아진다.
 차 바퀴가 남긴 물결이 조금씩 마르고,
 간판의 색은 평소보다 더 선명해진다.
+
+![젖은 바닥](/images/yeonnam-rain.svg)
 
 사진을 찍을 때는, 빠르게 걷지 않으려고 한다.
 한 장면 앞에서 한 번 더 멈추면

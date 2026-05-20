@@ -11,6 +11,8 @@ const posts = defineCollection({
     tags: z.array(z.string()).default([]),
     cover: z.string().optional(),
     coverAlt: z.string().default('포토에세이 이미지'),
+    views: z.number().int().nonnegative().default(0),
+    trackbacks: z.number().int().nonnegative().default(0),
   }),
 });
 
