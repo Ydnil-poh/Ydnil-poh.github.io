@@ -1,190 +1,99 @@
 ---
-interface Post {
-  title: string;
-  date: string;
-  slug: string;
-  excerpt: string;
-}
+import { getCollection } from 'astro:content';
 
-// 나중에 동적으로 불러올 포스트들
-const posts: Post[] = [];
+const posts = (await getCollection('posts')).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+);
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+const cells = posts
+  .map((post) => {
+    const body = post.body ?? '';
+    const imageCount = (body.match(/!\[[^\]]*\]\([^)]*\)/g) ?? []).length;
+    const charCount = body.replace(/\s/g, '').length;
+    const activity = post.data.views + post.data.trackbacks * 8;
+    const density = clamp(0.18 + Math.log10(activity + 1) * 0.28, 0.18, 0.9);
+
+    // 셀 크기는 고정, 분석값은 위치 우선순위에만 반영
+    const score = charCount * 0.01 + imageCount * 18 + activity * 0.7;
+
+    return { post, density, score };
+  })
+  .sort((a, b) => b.score - a.score);
+
+const cellCount = cells.length;
+const side = Math.max(1, Math.ceil(Math.sqrt(cellCount))); // 1x1, 2x2, 3x3...
 ---
 
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ydnil Strolls - 작은 모험들</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <title>Ydnil Strolls</title>
     <style>
-      * {
-        font-family: "Hahmlet", serif;
-        box-sizing: border-box;
+      :root { --bg:#f6f6f3; --text:#202020; --muted:#737373; --rule:#e4e2db; }
+      * { box-sizing:border-box; }
+      body { margin:0; background:var(--bg); color:var(--text); font-family:'Iowan Old Style','Apple SD Gothic Neo','Noto Serif KR',serif; }
+      .shell { max-width:1440px; margin:0 auto; padding:3.6rem 1.4rem 5rem; }
+      .topbar { border-bottom:1px solid var(--rule); padding-bottom:1.2rem; margin-bottom:2.1rem; }
+      .brand { margin:0; font-size:1.62rem; }
+      .intro { margin:.62rem 0 0; color:var(--muted); line-height:1.75; }
+
+      .grid-wrap { overflow-x:auto; padding-bottom:.3rem; }
+      .grid {
+        --cell-size: 240px;
+        display:grid;
+        width:max-content;
+        margin:0 auto;
+        grid-template-columns: repeat(var(--grid-side), var(--cell-size));
+        gap:.8rem;
       }
-
-      html {
-        scroll-behavior: smooth;
+      .cell {
+        position:relative;
+        display:block;
+        border:1px solid var(--rule);
+        width:var(--cell-size);
+        height:var(--cell-size);
+        border-radius:2px;
+        overflow:hidden;
+        background:
+          radial-gradient(circle at 30% 30%, rgba(255,255,255,.28), rgba(255,255,255,.06) 42%, transparent 70%),
+          linear-gradient(160deg, rgba(36,36,36, calc(var(--density) * .78)), rgba(36,36,36, calc(var(--density) * .38)) 55%, rgba(36,36,36,.08));
+        transition: transform .18s ease, filter .18s ease;
       }
+      .cell:hover { transform: translateY(-2px); filter: saturate(1.08); }
+      .cell:focus-visible { outline: 2px solid #9b968a; outline-offset: 2px; }
 
-      body {
-        margin: 0;
-        padding: 0;
-        background-color: #fafafa;
-        color: #333;
-        line-height: 1.8;
-      }
+      .grid-single .grid { --cell-size: min(74vw, 560px); }
 
-      main {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 2rem 1rem;
-      }
-
-      /* Header */
-      .site-header {
-        text-align: center;
-        border-bottom: 2px solid #e0e0e0;
-        padding-bottom: 2rem;
-        margin-bottom: 3rem;
-      }
-
-      .site-title {
-        font-size: 3rem;
-        font-weight: 700;
-        margin: 0 0 0.5rem 0;
-        color: #222;
-      }
-
-      .site-subtitle {
-        font-size: 1.2rem;
-        color: #999;
-        margin: 0;
-        font-weight: 400;
-      }
-
-      /* Posts Section */
-      .posts-section {
-        margin-bottom: 3rem;
-      }
-
-      .posts-section h2 {
-        font-size: 1.8rem;
-        color: #222;
-        margin-bottom: 1.5rem;
-      }
-
-      .posts-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-
-      .post-item {
-        margin-bottom: 2rem;
-        padding-bottom: 2rem;
-        border-bottom: 1px solid #e0e0e0;
-      }
-
-      .post-item:last-child {
-        border-bottom: none;
-      }
-
-      .post-link {
-        text-decoration: none;
-        color: inherit;
-        transition: all 0.3s ease;
-      }
-
-      .post-link:hover {
-        color: #0066cc;
-      }
-
-      .post-link h3 {
-        font-size: 1.5rem;
-        margin: 0 0 0.5rem 0;
-        color: #222;
-      }
-
-      .post-link time {
-        display: block;
-        color: #999;
-        font-size: 0.95rem;
-        margin-bottom: 0.5rem;
-      }
-
-      .post-link p {
-        margin: 0;
-        color: #666;
-        font-size: 1rem;
-      }
-
-      .no-posts {
-        color: #999;
-        font-style: italic;
-      }
-
-      /* Footer */
-      .site-footer {
-        text-align: center;
-        border-top: 1px solid #e0e0e0;
-        padding-top: 2rem;
-        margin-top: 3rem;
-        color: #999;
-        font-size: 0.95rem;
-      }
-
-      /* Responsive */
-      @media (max-width: 640px) {
-        .site-title {
-          font-size: 2rem;
-        }
-
-        main {
-          padding: 1rem;
-        }
-
-        .site-header {
-          padding-bottom: 1.5rem;
-          margin-bottom: 2rem;
-        }
+      @media (max-width: 900px) { .grid { --cell-size: 200px; } }
+      @media (max-width: 760px) {
+        .shell { padding:2.4rem 1rem 3.5rem; }
+        .grid { --cell-size: 165px; gap:.58rem; }
       }
     </style>
   </head>
-
   <body>
-    <main>
-      <header class="site-header">
-        <h1 class="site-title">Ydnil Strolls</h1>
-        <p class="site-subtitle">small adventures</p>
+    <main class="shell">
+      <header class="topbar">
+        <h1 class="brand">뚜벅뚜벅 Ydnil · Bubble Grid</h1>
+        <p class="intro">셀은 텍스트/썸네일 없이 색면으로만 존재합니다. 포스트가 누적될수록 정방형 그리드(1x1 → 2x2 → 3x3...)가 커지고, 본문/이미지/활동 데이터는 셀의 위치와 농도에만 반영됩니다.</p>
       </header>
 
-      <section class="posts-section">
-        <h2>최근 포스트</h2>
-        {posts.length === 0 ? (
-          <p class="no-posts">아직 포스트가 없습니다. 곧 추가될 예정입니다!</p>
-        ) : (
-          <ul class="posts-list">
-            {posts.map((post) => (
-              <li key={post.slug} class="post-item">
-                <a href={`/posts/${post.slug}`} class="post-link">
-                  <h3>{post.title}</h3>
-                  <time>{post.date}</time>
-                  <p>{post.excerpt}</p>
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
+      <section class:list={["grid-wrap", side === 1 && 'grid-single']} aria-label="bubble post grid">
+        <div class="grid" style={`--grid-side:${side};`}>
+          {cells.map(({ post, density }) => (
+            <a
+              class="cell"
+              href={`/posts/${post.id.replace(/\.md$/, '')}/`}
+              style={`--density:${density};`}
+              aria-label={post.data.title}
+              title={post.data.title}
+            ></a>
+          ))}
+        </div>
       </section>
-
-      <footer class="site-footer">
-        <p>&copy; 2026 Ydnil. All rights reserved.</p>
-      </footer>
     </main>
   </body>
 </html>
