@@ -5,8 +5,6 @@ const posts = (await getCollection('posts')).sort(
   (a, b) => b.data.date.getTime() - a.data.date.getTime(),
 );
 
-const dateFormat = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' });
-
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 const cells = posts
@@ -15,12 +13,12 @@ const cells = posts
     const imageCount = (body.match(/!\[[^\]]*\]\([^)]*\)/g) ?? []).length;
     const charCount = body.replace(/\s/g, '').length;
     const activity = post.data.views + post.data.trackbacks * 8;
-    const density = clamp(0.22 + Math.log10(activity + 1) * 0.26, 0.22, 0.92);
+    const density = clamp(0.18 + Math.log10(activity + 1) * 0.28, 0.18, 0.9);
 
-    // 셀 크기는 고정, 본문 분석 결과는 위치 우선순위(score)로만 반영
+    // 셀 크기는 고정, 분석값은 위치 우선순위에만 반영
     const score = charCount * 0.01 + imageCount * 18 + activity * 0.7;
 
-    return { post, imageCount, charCount, density, score };
+    return { post, density, score };
   })
   .sort((a, b) => b.score - a.score);
 
@@ -34,68 +32,67 @@ const side = Math.max(1, Math.ceil(Math.sqrt(cellCount))); // 1x1, 2x2, 3x3...
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ydnil Strolls</title>
     <style>
-      :root { --bg:#f6f6f3; --panel:#fff; --text:#202020; --muted:#737373; --rule:#e4e2db; }
+      :root { --bg:#f6f6f3; --text:#202020; --muted:#737373; --rule:#e4e2db; }
       * { box-sizing:border-box; }
       body { margin:0; background:var(--bg); color:var(--text); font-family:'Iowan Old Style','Apple SD Gothic Neo','Noto Serif KR',serif; }
-      .shell { max-width:1380px; margin:0 auto; padding:3.6rem 1.4rem 5rem; }
+      .shell { max-width:1440px; margin:0 auto; padding:3.6rem 1.4rem 5rem; }
       .topbar { border-bottom:1px solid var(--rule); padding-bottom:1.2rem; margin-bottom:2.1rem; }
       .brand { margin:0; font-size:1.62rem; }
       .intro { margin:.62rem 0 0; color:var(--muted); line-height:1.75; }
 
+      .grid-wrap { overflow-x:auto; padding-bottom:.3rem; }
       .grid {
+        --cell-size: 240px;
         display:grid;
-        grid-template-columns: repeat(var(--grid-side), minmax(0, 1fr));
+        width:max-content;
+        margin:0 auto;
+        grid-template-columns: repeat(var(--grid-side), var(--cell-size));
         gap:.8rem;
       }
       .cell {
         position:relative;
-        text-decoration:none;
-        color:inherit;
+        display:block;
         border:1px solid var(--rule);
-        background:var(--panel);
+        width:var(--cell-size);
+        height:var(--cell-size);
+        border-radius:2px;
         overflow:hidden;
-        aspect-ratio:1/1;
+        background:
+          radial-gradient(circle at 30% 30%, rgba(255,255,255,.28), rgba(255,255,255,.06) 42%, transparent 70%),
+          linear-gradient(160deg, rgba(36,36,36, calc(var(--density) * .78)), rgba(36,36,36, calc(var(--density) * .38)) 55%, rgba(36,36,36,.08));
+        transition: transform .18s ease, filter .18s ease;
       }
-      .cell::before {
-        content:'';
-        position:absolute; inset:0;
-        background:linear-gradient(170deg, rgba(32,32,32, calc(var(--density) * .62)), rgba(32,32,32, calc(var(--density) * .15)) 58%, rgba(32,32,32,.03));
-        z-index:1;
-      }
-      .cover { position:absolute; inset:0; z-index:0; }
-      .cover img { width:100%; height:100%; object-fit:cover; display:block; filter:saturate(.85) contrast(1.02); }
-      .fallback { width:100%; height:100%; background: radial-gradient(circle at 30% 30%, #ddd8cf 0%, #c8c3b8 40%, #a7a39a 100%); }
-      .content { position:relative; z-index:2; height:100%; display:flex; flex-direction:column; justify-content:flex-end; padding:1rem; }
-      .title { margin:0 0 .35rem; font-size:1.05rem; line-height:1.38; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.36); }
-      .meta { margin:0; font-size:.82rem; color:rgba(255,255,255,.88); }
-      .signals { margin-top:.55rem; font-size:.76rem; color:rgba(255,255,255,.86); display:flex; gap:.45rem; flex-wrap:wrap; }
+      .cell:hover { transform: translateY(-2px); filter: saturate(1.08); }
+      .cell:focus-visible { outline: 2px solid #9b968a; outline-offset: 2px; }
 
+      .grid-single .grid { --cell-size: min(74vw, 560px); }
+
+      @media (max-width: 900px) { .grid { --cell-size: 200px; } }
       @media (max-width: 760px) {
         .shell { padding:2.4rem 1rem 3.5rem; }
-        .grid { gap:.66rem; }
+        .grid { --cell-size: 165px; gap:.58rem; }
       }
     </style>
   </head>
   <body>
     <main class="shell">
       <header class="topbar">
-        <h1 class="brand">뚜벅뚜벅 Ydnil · Interactive Grid</h1>
-        <p class="intro">셀 크기는 모두 동일하고, 본문/이미지/활동 데이터는 그리드 내 노출 우선순위(위치)에만 반영됩니다. 그리드는 1x1, 2x2, 3x3 형태로 확장됩니다.</p>
+        <h1 class="brand">뚜벅뚜벅 Ydnil · Bubble Grid</h1>
+        <p class="intro">셀은 텍스트/썸네일 없이 색면으로만 존재합니다. 포스트가 누적될수록 정방형 그리드(1x1 → 2x2 → 3x3...)가 커지고, 본문/이미지/활동 데이터는 셀의 위치와 농도에만 반영됩니다.</p>
       </header>
 
-      <section class="grid" style={`--grid-side:${side};`} aria-label="interactive post grid">
-        {cells.map(({ post, density, imageCount, charCount, score }) => (
-          <a class="cell" href={`/posts/${post.id.replace(/\.md$/, '')}/`} style={`--density:${density};`}>
-            <div class="cover" aria-hidden="true">
-              {post.data.cover ? <img src={post.data.cover} alt="" loading="lazy" /> : <div class="fallback"></div>}
-            </div>
-            <div class="content">
-              <h2 class="title">{post.data.title}</h2>
-              <p class="meta">{dateFormat.format(post.data.date)} · {post.data.location}</p>
-              <p class="signals">점수 {Math.round(score)} · 조회 {post.data.views} · 트랙백 {post.data.trackbacks} · 본문 {charCount}자 · 사진 {imageCount}장</p>
-            </div>
-          </a>
-        ))}
+      <section class:list={["grid-wrap", side === 1 && 'grid-single']} aria-label="bubble post grid">
+        <div class="grid" style={`--grid-side:${side};`}>
+          {cells.map(({ post, density }) => (
+            <a
+              class="cell"
+              href={`/posts/${post.id.replace(/\.md$/, '')}/`}
+              style={`--density:${density};`}
+              aria-label={post.data.title}
+              title={post.data.title}
+            ></a>
+          ))}
+        </div>
       </section>
     </main>
   </body>
