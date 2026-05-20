@@ -1,0 +1,46 @@
+---
+interface Props {
+  title: string;
+  date: Date;
+  location: string;
+  tags: string[];
+}
+
+const { title, date, location, tags } = Astro.props;
+const formattedDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'long' }).format(date);
+---
+
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | Ydnil Strolls</title>
+    <style>
+      :root { --bg:#f6f6f3; --text:#202020; --muted:#737373; --rule:#e4e2db; }
+      * { box-sizing:border-box; }
+      body { margin:0; background:var(--bg); color:var(--text); font-family:'Iowan Old Style','Apple SD Gothic Neo','Noto Serif KR',serif; line-height:1.9; }
+      .shell { max-width:760px; margin:0 auto; padding:3rem 1.25rem 5rem; }
+      a { color:inherit; }
+      .back { color:var(--muted); text-decoration:none; font-size:.9rem; }
+      h1 { margin:1.2rem 0 .4rem; font-size:2rem; line-height:1.35; }
+      .meta { margin:0 0 1.4rem; color:var(--muted); font-size:.95rem; }
+      .tags { display:flex; gap:.42rem; flex-wrap:wrap; margin:0 0 1.8rem; }
+      .tag { border:1px solid var(--rule); padding:.16rem .55rem; font-size:.82rem; color:#545454; }
+      article :global(p) { margin:0 0 1.2rem; font-size:1.03rem; }
+      article :global(img) { width:100%; height:auto; margin:1.2rem 0 1.7rem; display:block; }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <a class="back" href="/">← 홈으로</a>
+      <header>
+        <h1>{title}</h1>
+        <p class="meta">{formattedDate} · {location}</p>
+        <div class="tags">{tags.map((tag) => <span class="tag">#{tag}</span>)}</div>
+      </header>
+      <article>
+        <slot />
+      </article>
+    </main>
+  </body>
+</html>

@@ -1,190 +1,102 @@
 ---
-interface Post {
-  title: string;
-  date: string;
-  slug: string;
-  excerpt: string;
-}
+import { getCollection } from 'astro:content';
 
-// 나중에 동적으로 불러올 포스트들
-const posts: Post[] = [];
+const posts = (await getCollection('posts')).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+);
+
+const dateFormat = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' });
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+const cells = posts
+  .map((post) => {
+    const body = post.body ?? '';
+    const imageCount = (body.match(/!\[[^\]]*\]\([^)]*\)/g) ?? []).length;
+    const charCount = body.replace(/\s/g, '').length;
+    const activity = post.data.views + post.data.trackbacks * 8;
+    const density = clamp(0.22 + Math.log10(activity + 1) * 0.26, 0.22, 0.92);
+
+    // 셀 크기는 고정, 본문 분석 결과는 위치 우선순위(score)로만 반영
+    const score = charCount * 0.01 + imageCount * 18 + activity * 0.7;
+
+    return { post, imageCount, charCount, density, score };
+  })
+  .sort((a, b) => b.score - a.score);
+
+const cellCount = cells.length;
+const side = Math.max(1, Math.ceil(Math.sqrt(cellCount))); // 1x1, 2x2, 3x3...
 ---
 
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ydnil Strolls - 작은 모험들</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <title>Ydnil Strolls</title>
     <style>
-      * {
-        font-family: "Hahmlet", serif;
-        box-sizing: border-box;
+      :root { --bg:#f6f6f3; --panel:#fff; --text:#202020; --muted:#737373; --rule:#e4e2db; }
+      * { box-sizing:border-box; }
+      body { margin:0; background:var(--bg); color:var(--text); font-family:'Iowan Old Style','Apple SD Gothic Neo','Noto Serif KR',serif; }
+      .shell { max-width:1380px; margin:0 auto; padding:3.6rem 1.4rem 5rem; }
+      .topbar { border-bottom:1px solid var(--rule); padding-bottom:1.2rem; margin-bottom:2.1rem; }
+      .brand { margin:0; font-size:1.62rem; }
+      .intro { margin:.62rem 0 0; color:var(--muted); line-height:1.75; }
+
+      .grid {
+        display:grid;
+        grid-template-columns: repeat(var(--grid-side), minmax(0, 1fr));
+        gap:.8rem;
       }
-
-      html {
-        scroll-behavior: smooth;
+      .cell {
+        position:relative;
+        text-decoration:none;
+        color:inherit;
+        border:1px solid var(--rule);
+        background:var(--panel);
+        overflow:hidden;
+        aspect-ratio:1/1;
       }
-
-      body {
-        margin: 0;
-        padding: 0;
-        background-color: #fafafa;
-        color: #333;
-        line-height: 1.8;
+      .cell::before {
+        content:'';
+        position:absolute; inset:0;
+        background:linear-gradient(170deg, rgba(32,32,32, calc(var(--density) * .62)), rgba(32,32,32, calc(var(--density) * .15)) 58%, rgba(32,32,32,.03));
+        z-index:1;
       }
+      .cover { position:absolute; inset:0; z-index:0; }
+      .cover img { width:100%; height:100%; object-fit:cover; display:block; filter:saturate(.85) contrast(1.02); }
+      .fallback { width:100%; height:100%; background: radial-gradient(circle at 30% 30%, #ddd8cf 0%, #c8c3b8 40%, #a7a39a 100%); }
+      .content { position:relative; z-index:2; height:100%; display:flex; flex-direction:column; justify-content:flex-end; padding:1rem; }
+      .title { margin:0 0 .35rem; font-size:1.05rem; line-height:1.38; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.36); }
+      .meta { margin:0; font-size:.82rem; color:rgba(255,255,255,.88); }
+      .signals { margin-top:.55rem; font-size:.76rem; color:rgba(255,255,255,.86); display:flex; gap:.45rem; flex-wrap:wrap; }
 
-      main {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 2rem 1rem;
-      }
-
-      /* Header */
-      .site-header {
-        text-align: center;
-        border-bottom: 2px solid #e0e0e0;
-        padding-bottom: 2rem;
-        margin-bottom: 3rem;
-      }
-
-      .site-title {
-        font-size: 3rem;
-        font-weight: 700;
-        margin: 0 0 0.5rem 0;
-        color: #222;
-      }
-
-      .site-subtitle {
-        font-size: 1.2rem;
-        color: #999;
-        margin: 0;
-        font-weight: 400;
-      }
-
-      /* Posts Section */
-      .posts-section {
-        margin-bottom: 3rem;
-      }
-
-      .posts-section h2 {
-        font-size: 1.8rem;
-        color: #222;
-        margin-bottom: 1.5rem;
-      }
-
-      .posts-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-
-      .post-item {
-        margin-bottom: 2rem;
-        padding-bottom: 2rem;
-        border-bottom: 1px solid #e0e0e0;
-      }
-
-      .post-item:last-child {
-        border-bottom: none;
-      }
-
-      .post-link {
-        text-decoration: none;
-        color: inherit;
-        transition: all 0.3s ease;
-      }
-
-      .post-link:hover {
-        color: #0066cc;
-      }
-
-      .post-link h3 {
-        font-size: 1.5rem;
-        margin: 0 0 0.5rem 0;
-        color: #222;
-      }
-
-      .post-link time {
-        display: block;
-        color: #999;
-        font-size: 0.95rem;
-        margin-bottom: 0.5rem;
-      }
-
-      .post-link p {
-        margin: 0;
-        color: #666;
-        font-size: 1rem;
-      }
-
-      .no-posts {
-        color: #999;
-        font-style: italic;
-      }
-
-      /* Footer */
-      .site-footer {
-        text-align: center;
-        border-top: 1px solid #e0e0e0;
-        padding-top: 2rem;
-        margin-top: 3rem;
-        color: #999;
-        font-size: 0.95rem;
-      }
-
-      /* Responsive */
-      @media (max-width: 640px) {
-        .site-title {
-          font-size: 2rem;
-        }
-
-        main {
-          padding: 1rem;
-        }
-
-        .site-header {
-          padding-bottom: 1.5rem;
-          margin-bottom: 2rem;
-        }
+      @media (max-width: 760px) {
+        .shell { padding:2.4rem 1rem 3.5rem; }
+        .grid { gap:.66rem; }
       }
     </style>
   </head>
-
   <body>
-    <main>
-      <header class="site-header">
-        <h1 class="site-title">Ydnil Strolls</h1>
-        <p class="site-subtitle">small adventures</p>
+    <main class="shell">
+      <header class="topbar">
+        <h1 class="brand">뚜벅뚜벅 Ydnil · Interactive Grid</h1>
+        <p class="intro">셀 크기는 모두 동일하고, 본문/이미지/활동 데이터는 그리드 내 노출 우선순위(위치)에만 반영됩니다. 그리드는 1x1, 2x2, 3x3 형태로 확장됩니다.</p>
       </header>
 
-      <section class="posts-section">
-        <h2>최근 포스트</h2>
-        {posts.length === 0 ? (
-          <p class="no-posts">아직 포스트가 없습니다. 곧 추가될 예정입니다!</p>
-        ) : (
-          <ul class="posts-list">
-            {posts.map((post) => (
-              <li key={post.slug} class="post-item">
-                <a href={`/posts/${post.slug}`} class="post-link">
-                  <h3>{post.title}</h3>
-                  <time>{post.date}</time>
-                  <p>{post.excerpt}</p>
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
+      <section class="grid" style={`--grid-side:${side};`} aria-label="interactive post grid">
+        {cells.map(({ post, density, imageCount, charCount, score }) => (
+          <a class="cell" href={`/posts/${post.id.replace(/\.md$/, '')}/`} style={`--density:${density};`}>
+            <div class="cover" aria-hidden="true">
+              {post.data.cover ? <img src={post.data.cover} alt="" loading="lazy" /> : <div class="fallback"></div>}
+            </div>
+            <div class="content">
+              <h2 class="title">{post.data.title}</h2>
+              <p class="meta">{dateFormat.format(post.data.date)} · {post.data.location}</p>
+              <p class="signals">점수 {Math.round(score)} · 조회 {post.data.views} · 트랙백 {post.data.trackbacks} · 본문 {charCount}자 · 사진 {imageCount}장</p>
+            </div>
+          </a>
+        ))}
       </section>
-
-      <footer class="site-footer">
-        <p>&copy; 2026 Ydnil. All rights reserved.</p>
-      </footer>
     </main>
   </body>
 </html>
