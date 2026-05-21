@@ -1,57 +1,96 @@
 # Ydnil Strolls
 
-작은 모험들을 기록하는 개인 블로그입니다. Astro로 만들어진 정적 블로그입니다.
+## 콘텐츠 등록 규칙
 
-## 🚀 프로젝트 구조
+- 포스트는 `src/content/posts/*.md`만 자동 수집됩니다.
+- 현재 저장소 기본 포스트는 `src/content/posts/post1.md` 1개만 유지됩니다.
+- 필수 frontmatter: `title`, `date`, `location`, `excerpt`.
 
+## Supabase 설정 (필수)
+
+### 1) 프로젝트 생성
+1. https://supabase.com 에서 프로젝트 생성
+2. 프로젝트 대시보드에서 **Project URL**과 **anon public key** 확인
+
+### 2) 테이블 생성
+SQL Editor에서 아래 실행:
+
+```sql
+create table if not exists public.posts (
+  id text primary key,
+  views integer not null default 0,
+  trackbacks integer not null default 0
+);
 ```
-/
-├── public/              # 정적 자산 (이미지 등)
-├── src/
-│   ├── pages/          # 블로그 페이지
-│   │   ├── index.astro # 홈페이지
-│   │   └── posts/      # 블로그 포스트들
-│   ├── layouts/        # 레이아웃 컴포넌트
-│   └── styles/         # 스타일 파일
-└── package.json
+
+`id` 값은 마크다운 파일명(slug)과 동일해야 합니다.  
+예: `src/content/posts/post1.md` → `id = 'post1'`
+
+### 3) 조회/업데이트 정책(RLS)
+
+```sql
+alter table public.posts enable row level security;
+
+create policy "public read posts"
+on public.posts
+for select
+using (true);
+
+create policy "public update views"
+on public.posts
+for update
+using (true)
+with check (true);
 ```
 
-## 🎨 설정
+### 4) 조회수 증가 RPC 함수 생성
 
-- **폰트**: Hahmlet (한글 우아한 폰트)
-- **스타일**: 깔끔한 미니멀 디자인
-- **반응형**: 모바일 친화적 구조
+```sql
+create or replace function public.increment_post_view(post_id text)
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  insert into public.posts (id, views, trackbacks)
+  values (post_id, 1, 0)
+  on conflict (id)
+  do update set views = public.posts.views + 1;
+end;
+$$;
+```
 
-## 🧞 명령어
+## 코드에 키 입력 위치/방법
+
+이 프로젝트는 **클라이언트에서 `import.meta.env.PUBLIC_*`** 값을 읽습니다. (`src/pages/index.astro`)
+
+### 로컬 개발
+프로젝트 루트에 `.env` 파일 생성:
 
 ```bash
-# 개발 서버 실행
-npm run dev
-
-# 프로덕션 빌드
-npm run build
-
-# 빌드 미리보기
-npm run preview
+PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 ```
 
-개발 서버는 기본적으로 `http://localhost:4321`에서 실행됩니다.
+### GitHub Pages 배포 (GitHub Actions)
+1. GitHub 저장소 → **Settings → Secrets and variables → Actions**
+2. Repository secrets 추가
+   - `PUBLIC_SUPABASE_URL`
+   - `PUBLIC_SUPABASE_ANON_KEY`
+3. 워크플로우에서 빌드 step에 env 주입(아래 예시):
 
-## 📝 포스트 작성
+```yaml
+- name: Build with Astro
+  run: npm run build
+  env:
+    PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+    PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+```
 
-1. `src/posts/` 디렉토리에 새로운 `.md` 파일 생성
-2. Front Matter로 메타데이터 추가:
-   ```yaml
-   ---
-   title: 포스트 제목
-   date: 2026-05-19
-   slug: post-slug
-   excerpt: 간단한 설명
-   ---
-   ```
-3. Markdown으로 콘텐츠 작성
+## 실행
 
-## 📖 더 알아보기
-
-- [Astro 공식 문서](https://docs.astro.build)
-- [Astro Discord 커뮤니티](https://astro.build/chat)
+```bash
+npm install
+npm run dev
+npm run build
+```
