@@ -36,11 +36,26 @@ const parsed = posts.map((post) => {
       body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:#243024}
       .shell{padding:24px}
       .board-wrap{overflow:auto}
-      .board{position:relative;width:1232px;height:783px;background:transparent}
-      .placeholder,.cell{position:absolute;width:100px;height:75px;border:0;}
-      .placeholder{background:var(--empty);border:1px solid #cfd4c8}
-      .cell{cursor:pointer;will-change:transform;transition:transform .55s cubic-bezier(.22,.8,.2,1), background-color .25s ease;display:block}
-      .cell.shrink{transform:scale(.96)}
+      .grid-container{
+        display:grid !important;
+        grid-template-columns:repeat(11,100px) !important;
+        grid-template-rows:repeat(9,75px) !important;
+        gap:12px !important;
+        width:max-content !important;
+        height:max-content !important;
+        margin:40px auto !important;
+        padding:20px;
+        position:relative;
+      }
+      .grid-item,.placeholder-cell{
+        width:100px !important;
+        height:75px !important;
+        box-sizing:border-box !important;
+        border-radius:6px;
+      }
+      .placeholder-cell{background:var(--empty);border:1px solid #cfd4c8}
+      .grid-item{cursor:pointer;will-change:transform;transition:transform .55s cubic-bezier(.22,.8,.2,1), background-color .25s ease;display:block}
+      .grid-item.shrink{transform:scale(.96)}
       .meta{margin:8px 0 12px;color:#4a554b;font-size:14px}
       .hint{font-size:12px;color:#667267}
       .modal{position:fixed;inset:0;background:rgba(18,24,18,.6);display:none;align-items:center;justify-content:center;padding:24px;z-index:20}
@@ -50,7 +65,7 @@ const parsed = posts.map((post) => {
       .close{float:right}
       @media (max-width:768px){
         .board-wrap{overflow-x:auto}
-        .board{transform:rotate(90deg);transform-origin:center center; margin:180px 0;}
+        .grid-container{transform:rotate(90deg);transform-origin:center center; margin:180px 0 !important;}
       }
     </style>
   </head>
@@ -59,8 +74,8 @@ const parsed = posts.map((post) => {
       <h1>Spiral Matrix Archive</h1>
       <p class="meta">99칸(11×9) 달팽이형 매트릭스 · 마크다운 자동 파싱 + Supabase 조회수 반영</p>
       <p class="hint">포스트가 1개면 가운데에 놓이고, 나머지는 placeholder로 유지됩니다.</p>
-      <section class="board-wrap"><div id="board" class="board" aria-label="spiral board">
-        {Array.from({ length: 99 }).map(() => <div class="placeholder"></div>)}
+      <section class="board-wrap grid-container-wrap"><div id="board" class="grid-container" aria-label="spiral board">
+        {Array.from({ length: 99 }).map(() => <div class="placeholder-cell"></div>)}
       </div></section>
     </main>
 
@@ -129,12 +144,12 @@ const parsed = posts.map((post) => {
       function render(){
         board.innerHTML='';
         for(let i=0;i<COLS*ROWS;i++){
-          const ph=document.createElement('div'); ph.className='placeholder';
+          const ph=document.createElement('div'); ph.className='placeholder-cell';
           const {x,y}=toXY(slots[i]); ph.style.transform=`translate3d(${x}px,${y}px,0)`; board.appendChild(ph);
         }
         const ranked=[...posts].sort((a,b)=>score(b)-score(a));
         ranked.forEach((p,idx)=>{
-          const el=document.createElement('a'); el.className='cell'; el.href=p.url; el.dataset.id=p.id;
+          const el=document.createElement('a'); el.className='grid-item'; el.href=p.url; el.dataset.id=p.id;
           const {x,y}=toXY(slots[idx]); el.style.transform=`translate3d(${x}px,${y}px,0)`; el.style.backgroundColor=tierColor(idx, ranked.length);
           el.addEventListener('click', (e)=>onCellClick(e,p));
           board.appendChild(el);
