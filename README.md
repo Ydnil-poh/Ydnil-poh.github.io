@@ -1,57 +1,91 @@
 # Ydnil Strolls
 
-## 왜 `post1`이 안 보일 수 있나
+## 콘텐츠 등록 규칙
 
-현재 구조는 **`src/content/posts/*.md` 경로의 Markdown만 수집**합니다. `post1.md`를 다른 경로(예: 루트, public, src/posts)에 올리면 목록에 안 뜹니다.
+- 포스트는 `src/content/posts/*.md`만 자동 수집됩니다.
+- 현재 저장소 기본 포스트는 `src/content/posts/post1.md` 1개만 유지됩니다.
+- 필수 frontmatter: `title`, `date`, `location`, `excerpt`.
 
-또한 프론트매터 필수값(`title`, `date`, `location`, `excerpt`)이 누락되면 컬렉션 검증에서 제외될 수 있습니다.
+## Supabase 설정 (필수)
 
-## 올바른 등록 규칙
+### 1) 프로젝트 생성
+1. https://supabase.com 에서 프로젝트 생성
+2. 프로젝트 대시보드에서 **Project URL**과 **anon public key** 확인
 
-1. 파일 위치: `src/content/posts/post1.md`  
-2. 확장자: `.md`  
-3. 프론트매터 필수 필드 포함
+### 2) 테이블 생성
+SQL Editor에서 아래 실행:
 
-```yaml
----
-title: post1
-date: 2026-05-21
-location: Seoul
-excerpt: short summary
-tags: [archive]
-cover: /images/sample.jpg
-coverAlt: sample
-views: 0
-trackbacks: 0
----
+```sql
+create table if not exists public.posts (
+  id text primary key,
+  views integer not null default 0,
+  trackbacks integer not null default 0
+);
 ```
 
-## 인터랙티브 나선형 매트릭스 스펙
+`id` 값은 마크다운 파일명(slug)과 동일해야 합니다.  
+예: `src/content/posts/post1.md` → `id = 'post1'`
 
-- 11열 × 9행(99칸) 고정판
-- 중앙([6열,5행])부터 시계방향 달팽이 배치
-- 마크다운 자동 파싱:
-  - `text_count`: 공백 제외 글자 수
-  - `image_count`: `![]()` + `<img>` 개수
-  - `has_embed`: iframe/video/embed 존재 여부
-- 점수식:  
-  `totalScore = (text_count * 0.1) + (image_count * 15) + (has_embed * 20) + (views * 2.5)`
-- 색상 단계:
-  - 상위 15%: `#E65A28`
-  - 15~40%: `#3D4A3E`
-  - 그 외: `#607261`
-- 빈 칸 placeholder: `#DFE2D9`
-- 배경: `#EAECE6`
-- 모바일(<=768px): 보드 90도 회전 + 가로 스크롤
+### 3) 조회/업데이트 정책(RLS)
 
-## Supabase 연동
+```sql
+alter table public.posts enable row level security;
 
-클라이언트에서 아래 Public env를 사용합니다.
+create policy "public read posts"
+on public.posts
+for select
+using (true);
 
-- `PUBLIC_SUPABASE_URL`
-- `PUBLIC_SUPABASE_ANON_KEY`
+create policy "public update views"
+on public.posts
+for update
+using (true)
+with check (true);
+```
 
-조회수 증가 RPC는 `increment_post_view(post_id text)`를 호출하도록 구현되어 있습니다.
+### 4) 조회수 증가 RPC 함수 생성
+
+```sql
+create or replace function public.increment_post_view(post_id text)
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  insert into public.posts (id, views, trackbacks)
+  values (post_id, 1, 0)
+  on conflict (id)
+  do update set views = public.posts.views + 1;
+end;
+$$;
+```
+
+## 코드에 키 입력 위치/방법
+
+이 프로젝트는 **클라이언트에서 `import.meta.env.PUBLIC_*`** 값을 읽습니다. (`src/pages/index.astro`)
+
+### 로컬 개발
+프로젝트 루트에 `.env` 파일 생성:
+
+```bash
+PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+```
+
+### GitHub Pages 배포 (GitHub Actions)
+1. GitHub 저장소 → **Settings → Secrets and variables → Actions**
+2. Repository secrets 추가
+   - `PUBLIC_SUPABASE_URL`
+   - `PUBLIC_SUPABASE_ANON_KEY`
+3. 워크플로우에서 빌드 step에 env 주입(아래 예시):
+
+```yaml
+- name: Build with Astro
+  run: npm run build
+  env:
+    PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+    PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+```
 
 ## 실행
 
