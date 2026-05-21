@@ -1,54 +1,62 @@
 # Ydnil Strolls
 
-광고 없는 미니멀 포토에세이 스타일의 Astro 개인 블로그입니다.
+## 왜 `post1`이 안 보일 수 있나
+
+현재 구조는 **`src/content/posts/*.md` 경로의 Markdown만 수집**합니다. `post1.md`를 다른 경로(예: 루트, public, src/posts)에 올리면 목록에 안 뜹니다.
+
+또한 프론트매터 필수값(`title`, `date`, `location`, `excerpt`)이 누락되면 컬렉션 검증에서 제외될 수 있습니다.
+
+## 올바른 등록 규칙
+
+1. 파일 위치: `src/content/posts/post1.md`  
+2. 확장자: `.md`  
+3. 프론트매터 필수 필드 포함
+
+```yaml
+---
+title: post1
+date: 2026-05-21
+location: Seoul
+excerpt: short summary
+tags: [archive]
+cover: /images/sample.jpg
+coverAlt: sample
+views: 0
+trackbacks: 0
+---
+```
+
+## 인터랙티브 나선형 매트릭스 스펙
+
+- 11열 × 9행(99칸) 고정판
+- 중앙([6열,5행])부터 시계방향 달팽이 배치
+- 마크다운 자동 파싱:
+  - `text_count`: 공백 제외 글자 수
+  - `image_count`: `![]()` + `<img>` 개수
+  - `has_embed`: iframe/video/embed 존재 여부
+- 점수식:  
+  `totalScore = (text_count * 0.1) + (image_count * 15) + (has_embed * 20) + (views * 2.5)`
+- 색상 단계:
+  - 상위 15%: `#E65A28`
+  - 15~40%: `#3D4A3E`
+  - 그 외: `#607261`
+- 빈 칸 placeholder: `#DFE2D9`
+- 배경: `#EAECE6`
+- 모바일(<=768px): 보드 90도 회전 + 가로 스크롤
+
+## Supabase 연동
+
+클라이언트에서 아래 Public env를 사용합니다.
+
+- `PUBLIC_SUPABASE_URL`
+- `PUBLIC_SUPABASE_ANON_KEY`
+
+조회수 증가 RPC는 `increment_post_view(post_id text)`를 호출하도록 구현되어 있습니다.
 
 ## 실행
 
 ```bash
 npm install
 npm run dev
+npm run build
 ```
-
-## 콘텐츠 등록 방법
-
-포스트는 `src/content/posts/*.md`에 Markdown으로 추가합니다.
-
-### Frontmatter 필드
-
-```yaml
----
-title: 포스트 제목
-date: 2026-05-20
-location: 서울 어딘가
-excerpt: 목록에서 보일 짧은 소개
-tags: [산책, 사진]
-cover: /images/sample.jpg
-coverAlt: 표지 이미지 설명
-views: 0
-trackbacks: 0
----
-```
-
-## 인터랙티브 그리드 규칙
-
-- 포스트 1개 = 그리드 셀 1개
-- `본문 글자 수`와 `본문 이미지 개수`로 셀의 그리드 내 배치 우선순위(score) 조정
-- `views` + `trackbacks` 값을 이용해 셀 농도(색면 강도) 조정
-- 포스트 수가 늘어나면 정방형 그리드가 1x1 → 2x2 → 3x3으로 증가 (각 셀은 텍스트/썸네일 없이 동일한 위계의 색면)
-
-## 이미지 추가
-
-이미지는 `public/images/`에 넣고 Markdown에서 `/images/파일명.jpg`로 참조하세요.
-
-## 배포
-
-`main` 브랜치에 푸시하면 GitHub Actions가 빌드 후 GitHub Pages에 자동 배포합니다.
-
-
-## 활동 지표(중요)
-
-- `views`, `trackbacks`는 현재 자동 집계가 아니라 **Markdown frontmatter 수동 입력값**입니다.
-- 즉, 샘플 포스트의 수치도 하드코딩 예시이며 새 포스트도 기본은 `0`으로 시작합니다.
-- 실제 자동 집계 연동(예: 분석 API/DB)은 별도 구현이 필요합니다.
-
-- 포스트 수가 정방형 슬롯 수보다 적을 때(예: 3개 → 2x2), 남는 칸은 placeholder 셀로 유지됩니다.
