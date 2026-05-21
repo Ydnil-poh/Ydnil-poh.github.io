@@ -3,8 +3,8 @@ title: post1
 date: 2026-05-21
 location: Seoul
 excerpt: 블로그와 SNS 사이를 오래 오가던 기록 습관이, AI 시대를 지나며 조금 다른 방향으로 흘러가기 시작했다
-tags: [blog][AI][archive]
-cover: 
+tags: [blog, AI, archive]
+cover: ""
 coverAlt: sample
 views: 0
 trackbacks: 0
