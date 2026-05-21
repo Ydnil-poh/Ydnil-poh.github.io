@@ -3,8 +3,9 @@ import { getCollection, render } from 'astro:content';
 import PostLayout from '../../layouts/PostLayout.astro';
 
 export async function getStaticPaths() {
+  const stripExtension = (id: string) => id.replace(/\.(md|markdown|mdx)$/i, '');
   const posts = await getCollection('posts');
-  return posts.map((post) => ({ params: { slug: post.id.replace(/\.md$/, '') }, props: { post } }));
+  return posts.map((post) => ({ params: { slug: stripExtension(post.id) }, props: { post } }));
 }
 
 const { post } = Astro.props;
