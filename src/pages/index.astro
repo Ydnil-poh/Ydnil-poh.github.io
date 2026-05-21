@@ -38,7 +38,7 @@ const parsed = posts.map((post) => {
       .board-wrap{overflow:auto}
       .board{position:relative;width:1232px;height:783px;background:transparent}
       .placeholder,.cell{position:absolute;width:100px;height:75px;border:0;}
-      .placeholder{background:var(--empty)}
+      .placeholder{background:var(--empty);border:1px solid #cfd4c8}
       .cell{cursor:pointer;will-change:transform;transition:transform .55s cubic-bezier(.22,.8,.2,1), background-color .25s ease;display:block}
       .cell.shrink{transform:scale(.96)}
       .meta{margin:8px 0 12px;color:#4a554b;font-size:14px}
@@ -59,7 +59,9 @@ const parsed = posts.map((post) => {
       <h1>Spiral Matrix Archive</h1>
       <p class="meta">99칸(11×9) 달팽이형 매트릭스 · 마크다운 자동 파싱 + Supabase 조회수 반영</p>
       <p class="hint">포스트가 1개면 가운데에 놓이고, 나머지는 placeholder로 유지됩니다.</p>
-      <section class="board-wrap"><div id="board" class="board" aria-label="spiral board"></div></section>
+      <section class="board-wrap"><div id="board" class="board" aria-label="spiral board">
+        {Array.from({ length: 99 }).map(() => <div class="placeholder"></div>)}
+      </div></section>
     </main>
 
     <aside id="modal" class="modal" aria-hidden="true">
@@ -72,7 +74,7 @@ const parsed = posts.map((post) => {
     </aside>
 
     <script type="application/json" id="seed-posts">{JSON.stringify(parsed)}</script>
-    <script>
+    <script type="module">
       const seedPosts = JSON.parse(document.getElementById('seed-posts').textContent || '[]');
       const board = document.getElementById('board');
       const modal = document.getElementById('modal');
