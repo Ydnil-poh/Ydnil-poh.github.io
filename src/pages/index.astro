@@ -1,190 +1,187 @@
 ---
-interface Post {
-  title: string;
-  date: string;
-  slug: string;
-  excerpt: string;
-}
+import { getCollection } from 'astro:content';
 
-// 나중에 동적으로 불러올 포스트들
-const posts: Post[] = [];
+const posts = await getCollection('posts');
+
+const parsed = posts.map((post) => {
+  const body = post.body ?? '';
+  const textCount = body.replace(/\s/g, '').length;
+  const imageMarkdownCount = (body.match(/!\[[^\]]*\]\([^)]*\)/g) ?? []).length;
+  const imageHtmlCount = (body.match(/<img\b[^>]*>/gi) ?? []).length;
+  const imageCount = imageMarkdownCount + imageHtmlCount;
+  const hasEmbed = /<(iframe|video|embed)\b[^>]*>/i.test(body) ? 1 : 0;
+
+  return {
+    id: post.id.replace(/\.md$/, ''),
+    slug: post.id.replace(/\.md$/, ''),
+    title: post.data.title,
+    location: post.data.location,
+    date: post.data.date.toISOString(),
+    url: `/posts/${post.id.replace(/\.md$/, '')}/`,
+    text_count: textCount,
+    image_count: imageCount,
+    has_embed: hasEmbed,
+  };
+});
 ---
 
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ydnil Strolls - 작은 모험들</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <title>Interactive Spiral Archive</title>
     <style>
-      * {
-        font-family: "Hahmlet", serif;
-        box-sizing: border-box;
-      }
-
-      html {
-        scroll-behavior: smooth;
-      }
-
-      body {
-        margin: 0;
-        padding: 0;
-        background-color: #fafafa;
-        color: #333;
-        line-height: 1.8;
-      }
-
-      main {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 2rem 1rem;
-      }
-
-      /* Header */
-      .site-header {
-        text-align: center;
-        border-bottom: 2px solid #e0e0e0;
-        padding-bottom: 2rem;
-        margin-bottom: 3rem;
-      }
-
-      .site-title {
-        font-size: 3rem;
-        font-weight: 700;
-        margin: 0 0 0.5rem 0;
-        color: #222;
-      }
-
-      .site-subtitle {
-        font-size: 1.2rem;
-        color: #999;
-        margin: 0;
-        font-weight: 400;
-      }
-
-      /* Posts Section */
-      .posts-section {
-        margin-bottom: 3rem;
-      }
-
-      .posts-section h2 {
-        font-size: 1.8rem;
-        color: #222;
-        margin-bottom: 1.5rem;
-      }
-
-      .posts-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-
-      .post-item {
-        margin-bottom: 2rem;
-        padding-bottom: 2rem;
-        border-bottom: 1px solid #e0e0e0;
-      }
-
-      .post-item:last-child {
-        border-bottom: none;
-      }
-
-      .post-link {
-        text-decoration: none;
-        color: inherit;
-        transition: all 0.3s ease;
-      }
-
-      .post-link:hover {
-        color: #0066cc;
-      }
-
-      .post-link h3 {
-        font-size: 1.5rem;
-        margin: 0 0 0.5rem 0;
-        color: #222;
-      }
-
-      .post-link time {
-        display: block;
-        color: #999;
-        font-size: 0.95rem;
-        margin-bottom: 0.5rem;
-      }
-
-      .post-link p {
-        margin: 0;
-        color: #666;
-        font-size: 1rem;
-      }
-
-      .no-posts {
-        color: #999;
-        font-style: italic;
-      }
-
-      /* Footer */
-      .site-footer {
-        text-align: center;
-        border-top: 1px solid #e0e0e0;
-        padding-top: 2rem;
-        margin-top: 3rem;
-        color: #999;
-        font-size: 0.95rem;
-      }
-
-      /* Responsive */
-      @media (max-width: 640px) {
-        .site-title {
-          font-size: 2rem;
-        }
-
-        main {
-          padding: 1rem;
-        }
-
-        .site-header {
-          padding-bottom: 1.5rem;
-          margin-bottom: 2rem;
-        }
+      :root { --bg:#EAECE6; --empty:#DFE2D9; --top:#E65A28; --mid:#3D4A3E; --base:#607261; }
+      *{box-sizing:border-box}
+      body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:#243024}
+      .shell{padding:24px}
+      .board-wrap{overflow:auto}
+      .board{position:relative;width:1232px;height:783px;background:transparent}
+      .placeholder,.cell{position:absolute;width:100px;height:75px;border:0;}
+      .placeholder{background:var(--empty);border:1px solid #cfd4c8}
+      .cell{cursor:pointer;will-change:transform;transition:transform .55s cubic-bezier(.22,.8,.2,1), background-color .25s ease;display:block}
+      .cell.shrink{transform:scale(.96)}
+      .meta{margin:8px 0 12px;color:#4a554b;font-size:14px}
+      .hint{font-size:12px;color:#667267}
+      .modal{position:fixed;inset:0;background:rgba(18,24,18,.6);display:none;align-items:center;justify-content:center;padding:24px;z-index:20}
+      .modal.open{display:flex}
+      .sheet{background:#f5f6f1;width:min(860px,94vw);max-height:90vh;overflow:auto;padding:24px;border-radius:8px;transform:scale(.95);opacity:.4;transition:transform .28s ease, opacity .28s ease}
+      .modal.open .sheet{transform:scale(1);opacity:1}
+      .close{float:right}
+      @media (max-width:768px){
+        .board-wrap{overflow-x:auto}
+        .board{transform:rotate(90deg);transform-origin:center center; margin:180px 0;}
       }
     </style>
   </head>
-
   <body>
-    <main>
-      <header class="site-header">
-        <h1 class="site-title">Ydnil Strolls</h1>
-        <p class="site-subtitle">small adventures</p>
-      </header>
-
-      <section class="posts-section">
-        <h2>최근 포스트</h2>
-        {posts.length === 0 ? (
-          <p class="no-posts">아직 포스트가 없습니다. 곧 추가될 예정입니다!</p>
-        ) : (
-          <ul class="posts-list">
-            {posts.map((post) => (
-              <li key={post.slug} class="post-item">
-                <a href={`/posts/${post.slug}`} class="post-link">
-                  <h3>{post.title}</h3>
-                  <time>{post.date}</time>
-                  <p>{post.excerpt}</p>
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <footer class="site-footer">
-        <p>&copy; 2026 Ydnil. All rights reserved.</p>
-      </footer>
+    <main class="shell">
+      <h1>Spiral Matrix Archive</h1>
+      <p class="meta">99칸(11×9) 달팽이형 매트릭스 · 마크다운 자동 파싱 + Supabase 조회수 반영</p>
+      <p class="hint">포스트가 1개면 가운데에 놓이고, 나머지는 placeholder로 유지됩니다.</p>
+      <section class="board-wrap"><div id="board" class="board" aria-label="spiral board">
+        {Array.from({ length: 99 }).map(() => <div class="placeholder"></div>)}
+      </div></section>
     </main>
+
+    <aside id="modal" class="modal" aria-hidden="true">
+      <article class="sheet">
+        <button id="closeModal" class="close">닫기</button>
+        <h2 id="modalTitle"></h2>
+        <p id="modalMeta" class="meta"></p>
+        <div id="modalBody"></div>
+      </article>
+    </aside>
+
+    <script type="application/json" id="seed-posts">{JSON.stringify(parsed)}</script>
+    <script type="module">
+      const seedPosts = JSON.parse(document.getElementById('seed-posts').textContent || '[]');
+      const board = document.getElementById('board');
+      const modal = document.getElementById('modal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalMeta = document.getElementById('modalMeta');
+      const modalBody = document.getElementById('modalBody');
+      document.getElementById('closeModal').addEventListener('click', () => modal.classList.remove('open'));
+
+      const COLS = 11, ROWS = 9, CELL_W = 100, CELL_H = 75, GAP = 12;
+      const CENTER = { c: 5, r: 4 }; // 0-index => [6열,5행]
+      let isAnimating = false;
+      let posts = seedPosts.map((p)=>({ ...p, views:0, trackbacks:0 }));
+
+      function spiralPositions(cols, rows, center){
+        const dirs = [[1,0],[0,1],[-1,0],[0,-1]];
+        let step=1, d=0, c=center.c, r=center.r;
+        const out=[];
+        if (c>=0&&c<cols&&r>=0&&r<rows) out.push({c,r});
+        while(out.length<cols*rows){
+          for(let rep=0; rep<2; rep++){
+            for(let i=0;i<step;i++){
+              c += dirs[d][0]; r += dirs[d][1];
+              if(c>=0&&c<cols&&r>=0&&r<rows) out.push({c,r});
+              if(out.length>=cols*rows) return out;
+            }
+            d=(d+1)%4;
+          }
+          step++;
+        }
+        return out;
+      }
+      const slots = spiralPositions(COLS, ROWS, CENTER);
+
+      function score(p){ return (p.text_count*0.1)+(p.image_count*15)+(p.has_embed*20)+(p.views*2.5); }
+      function tierColor(idx,total){ const pct = total===0?1:(idx+1)/total; if(pct<=0.15) return '#E65A28'; if(pct<=0.4) return '#3D4A3E'; return '#607261'; }
+      function toXY(pos){ return { x: pos.c*(CELL_W+GAP), y: pos.r*(CELL_H+GAP) }; }
+
+      async function fetchLive(){
+        const url = import.meta.env.PUBLIC_SUPABASE_URL;
+        const key = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+        if(!url || !key) return;
+        const ids = posts.map(p=>p.id);
+        if(!ids.length) return;
+        const q = encodeURIComponent(ids.join(','));
+        const res = await fetch(`${url}/rest/v1/posts?select=id,views,trackbacks&id=in.(${q})`, { headers:{ apikey:key, Authorization:`Bearer ${key}` } });
+        if(!res.ok) return;
+        const rows = await res.json();
+        const m = new Map(rows.map(r=>[r.id,r]));
+        posts = posts.map(p=>({ ...p, views: m.get(p.id)?.views ?? 0, trackbacks: m.get(p.id)?.trackbacks ?? 0 }));
+      }
+
+      function render(){
+        board.innerHTML='';
+        for(let i=0;i<COLS*ROWS;i++){
+          const ph=document.createElement('div'); ph.className='placeholder';
+          const {x,y}=toXY(slots[i]); ph.style.transform=`translate3d(${x}px,${y}px,0)`; board.appendChild(ph);
+        }
+        const ranked=[...posts].sort((a,b)=>score(b)-score(a));
+        ranked.forEach((p,idx)=>{
+          const el=document.createElement('a'); el.className='cell'; el.href=p.url; el.dataset.id=p.id;
+          const {x,y}=toXY(slots[idx]); el.style.transform=`translate3d(${x}px,${y}px,0)`; el.style.backgroundColor=tierColor(idx, ranked.length);
+          el.addEventListener('click', (e)=>onCellClick(e,p));
+          board.appendChild(el);
+        });
+      }
+
+      async function onCellClick(e, post){
+        e.preventDefault();
+        if(isAnimating) return; // 0단계
+        isAnimating=true;
+        const el=e.currentTarget;
+
+        // 1단계
+        el.classList.add('shrink'); await new Promise(r=>setTimeout(r,100)); el.classList.remove('shrink');
+
+        // 2단계
+        posts = posts.map(p=>p.id===post.id?{...p, views:p.views+1}:p);
+        render();
+        incrementView(post.id).catch(()=>{});
+
+        // 3단계
+        await new Promise(r=>setTimeout(r,560));
+
+        // 4단계
+        await openPost(post);
+        isAnimating=false;
+      }
+
+      async function incrementView(id){
+        const url = import.meta.env.PUBLIC_SUPABASE_URL;
+        const key = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+        if(!url || !key) return;
+        await fetch(`${url}/rest/v1/rpc/increment_post_view`, { method:'POST', headers:{ 'Content-Type':'application/json', apikey:key, Authorization:`Bearer ${key}` }, body: JSON.stringify({ post_id:id }) });
+      }
+
+      async function openPost(post){
+        const res = await fetch(post.url);
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html,'text/html');
+        const article = doc.querySelector('article');
+        modalTitle.textContent = post.title;
+        modalMeta.textContent = `${new Date(post.date).toLocaleDateString('ko-KR')} · ${post.location}`;
+        modalBody.innerHTML = article ? article.innerHTML : '<p>본문을 불러오지 못했습니다.</p>';
+        modal.classList.add('open');
+      }
+
+      fetchLive().finally(render);
+    </script>
   </body>
 </html>
