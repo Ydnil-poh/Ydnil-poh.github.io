@@ -105,7 +105,7 @@ const parsed = posts.map((post) => {
       const COLS = 11, ROWS = 9;
       const CENTER = { c: 5, r: 4 }; // 0-index => [6열,5행]
       let isAnimating = false;
-      let posts = seedPosts.map((p)=>({ ...p, views:0, trackbacks:0 }));
+      let posts = seedPosts.map((p)=>({ ...p, views:0 }));
 
       function spiralPositions(cols, rows, center){
         const dirs = [[1,0],[0,1],[-1,0],[0,-1]];
@@ -127,7 +127,17 @@ const parsed = posts.map((post) => {
       }
       const slots = spiralPositions(COLS, ROWS, CENTER);
 
-      function score(p){ return (p.text_count*0.1)+(p.image_count*15)+(p.has_embed*20)+(p.views*2.5); }
+      const TEXT_WEIGHT = 0.1;
+      const IMAGE_WEIGHT = 0.35;
+      const EMBED_WEIGHT = IMAGE_WEIGHT * 24; // 24fps metaphor
+      const VIEW_WEIGHT = 2.5;
+
+      function score(p){
+        return (p.text_count * TEXT_WEIGHT) +
+          (p.image_count * IMAGE_WEIGHT) +
+          (p.has_embed * EMBED_WEIGHT) +
+          (p.views * VIEW_WEIGHT);
+      }
       function tierColor(idx,total){ const pct = total===0?1:(idx+1)/total; if(pct<=0.15) return '#E65A28'; if(pct<=0.4) return '#3D4A3E'; return '#607261'; }
 
       async function fetchLive(){
@@ -137,11 +147,11 @@ const parsed = posts.map((post) => {
         const ids = posts.map(p=>p.id);
         if(!ids.length) return;
         const q = encodeURIComponent(ids.join(','));
-        const res = await fetch(`${url}/rest/v1/posts?select=id,views,trackbacks&id=in.(${q})`, { headers:{ apikey:key, Authorization:`Bearer ${key}` } });
+        const res = await fetch(`${url}/rest/v1/posts?select=id,views&id=in.(${q})`, { headers:{ apikey:key, Authorization:`Bearer ${key}` } });
         if(!res.ok) return;
         const rows = await res.json();
         const m = new Map(rows.map(r=>[r.id,r]));
-        posts = posts.map(p=>({ ...p, views: m.get(p.id)?.views ?? 0, trackbacks: m.get(p.id)?.trackbacks ?? 0 }));
+        posts = posts.map(p=>({ ...p, views: m.get(p.id)?.views ?? 0 }));
       }
 
       function render(){
