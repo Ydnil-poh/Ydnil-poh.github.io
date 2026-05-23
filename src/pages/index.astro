@@ -1,242 +1,491 @@
 ---
 import { getCollection } from 'astro:content';
 
-const posts = await getCollection('posts');
-const stripExtension = (id) => id.replace(/\.(md|markdown|mdx)$/i, '');
+const stripExtension = (id: string) => id.replace(/\.(md|markdown|mdx)$/i, '');
+const hashNumber = (value: string) => [...value].reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) % 100000, 17);
+const normalize = (value: number, min: number, max: number) => max <= min ? 0.5 : Number(((value - min) / (max - min)).toFixed(4));
 
-const parsed = posts.map((post) => {
-  const body = post.body ?? '';
-  const textCount = body.replace(/\s/g, '').length;
-  const imageMarkdownCount = (body.match(/!\[[^\]]*\]\([^)]*\)/g) ?? []).length;
-  const imageHtmlCount = (body.match(/<img\b[^>]*>/gi) ?? []).length;
-  const imageCount = imageMarkdownCount + imageHtmlCount;
-  const hasEmbed = /<(iframe|video|embed)\b[^>]*>/i.test(body) ? 1 : 0;
+const sourceRecords = await getCollection('records', ({ data }) => data.visibility !== 'private');
+const parsed = sourceRecords.map((record) => {
+  const id = stripExtension(record.id);
+  const body = record.body ?? '';
+  const textCount = body.replace(/<[^>]+>/g, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/\s/g, '').length;
+  const markdownImages = [...body.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)].map((match) => match[1]);
+  const htmlImages = [...body.matchAll(/<img\b[^>]*src=['"]([^'"]+)['"][^>]*>/gi)].map((match) => match[1]);
+  const imageUrls = [record.data.cover, ...markdownImages, ...htmlImages].filter(Boolean);
+  const rawScore = record.data.manualScore ?? textCount * 0.08 + imageUrls.length * 14 + record.data.tags.length * 6 + record.data.views * 0.8;
+  const clusterSeed = [record.data.location, ...record.data.tags].join('|') || id;
 
   return {
-    id: stripExtension(post.id),
-    slug: stripExtension(post.id),
-    title: post.data.title,
-    location: post.data.location,
-    date: post.data.date.toISOString(),
-    url: `/posts/${stripExtension(post.id)}/`,
-    text_count: textCount,
-    image_count: imageCount,
-    has_embed: hasEmbed,
+    id,
+    slug: id,
+    title: record.data.title,
+    date: record.data.date.toISOString(),
+    location: record.data.location,
+    excerpt: record.data.excerpt,
+    type: record.data.type,
+    tags: record.data.tags,
+    cover: record.data.cover ?? '',
+    coverAlt: record.data.coverAlt,
+    url: `/records/${id}/`,
+    imageUrls,
+    textCount,
+    rawScore,
+    cluster: record.data.manualCluster ?? hashNumber(clusterSeed) % Math.max(4, Math.ceil(Math.sqrt(sourceRecords.length + 4)) + 3),
   };
 });
+
+const minScore = Math.min(...parsed.map((record) => record.rawScore), 0);
+const maxScore = Math.max(...parsed.map((record) => record.rawScore), 1);
+const records = parsed.map((record, index) => {
+  const score = record.rawScore === record.rawScore ? normalize(record.rawScore, minScore, maxScore) : 0.5;
+  const angle = (hashNumber(`${record.id}:${record.cluster}`) / 100000) * Math.PI * 2;
+  const band = 0.16 + ((index + 1) / Math.max(parsed.length, 1)) * 0.68;
+  const radius = Math.max(0.1, Math.min(0.86, band - score * 0.18));
+  const x = 0.5 + Math.cos(angle) * radius * 0.46;
+  const y = 0.5 + Math.sin(angle) * radius * 0.36;
+
+  return {
+    ...record,
+    score,
+    position: { x: Number(x.toFixed(4)), y: Number(y.toFixed(4)) },
+  };
+});
+
+const relatedFor = (source: typeof records[number]) => records
+  .filter((candidate) => candidate.id !== source.id)
+  .map((candidate) => {
+    const sharedTags = candidate.tags.filter((tag) => source.tags.includes(tag)).length;
+    const location = candidate.location === source.location ? 1 : 0;
+    const cluster = candidate.cluster === source.cluster ? 1 : 0;
+    return { id: candidate.id, weight: sharedTags * 2 + location + cluster };
+  })
+  .filter((item) => item.weight > 0)
+  .sort((a, b) => b.weight - a.weight)
+  .slice(0, 8)
+  .map((item) => item.id);
+
+const fieldRecords = records.map((record) => ({ ...record, related: relatedFor(record) }));
+const ambientFragments = Array.from({ length: 360 }, (_, index) => {
+  const seed = hashNumber(`ambient:${index}:${fieldRecords.length}`);
+  const x = ((seed * 37) % 10000) / 100;
+  const y = ((seed * 53) % 10000) / 100;
+  const w = 6 + (seed % 58);
+  const h = 2 + (seed % 5);
+  const density = seed % 100;
+  const tint = density > 88 ? 'warm' : density > 58 ? 'olive' : density > 28 ? 'soft' : 'pale';
+  return { index, x, y, w, h, tint, opacity: 0.16 + (density / 100) * 0.32 };
+});
+
+const lines = fieldRecords.flatMap((record) => record.related.map((targetId) => {
+  const target = fieldRecords.find((item) => item.id === targetId);
+  if (!target) return null;
+  return {
+    source: record.id,
+    target: target.id,
+    x1: record.position.x * 100,
+    y1: record.position.y * 100,
+    x2: target.position.x * 100,
+    y2: target.position.y * 100,
+  };
+}).filter(Boolean));
+
+const selected = fieldRecords[0];
+const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(new Date());
 ---
 
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Interactive Spiral Archive</title>
+    <meta name="viewport" content="width=1440, initial-scale=1.0" />
+    <title>Ydnil-poh Archive Field</title>
     <style>
-      :root { --bg:#EAECE6; --empty:#DFE2D9; --top:#E65A28; --mid:#3D4A3E; --base:#607261; }
-      *{box-sizing:border-box}
-      body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:#243024}
-      .shell{padding:24px}
-      .board-wrap{overflow:auto}
-      .grid-container{
-        display:grid !important;
-        grid-template-columns:repeat(11,100px) !important;
-        grid-template-rows:repeat(9,75px) !important;
-        gap:12px !important;
-        width:max-content !important;
-        height:max-content !important;
-        margin:40px auto !important;
-        padding:20px;
-        position:relative;
+      :root {
+        --paper: #ede8de;
+        --paper-2: #f7f3eb;
+        --ink: #25231d;
+        --muted: #6f6b60;
+        --line: rgba(92, 83, 67, 0.2);
+        --grid: rgba(96, 90, 75, 0.11);
+        --pale: rgba(108, 103, 89, 0.2);
+        --soft: rgba(107, 105, 83, 0.34);
+        --olive: rgba(91, 95, 63, 0.62);
+        --warm: rgba(197, 112, 67, 0.7);
       }
-      .grid-item,.placeholder-cell{
-        width:100px !important;
-        height:75px !important;
-        box-sizing:border-box !important;
-        border-radius:6px;
-        grid-column:auto;
-        grid-row:auto;
+
+      * { box-sizing: border-box; }
+
+      body {
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "Inter", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+        height: 100vh;
+        margin: 0;
+        overflow: hidden;
       }
-      .placeholder-cell{background:var(--empty);border:1px solid #cfd4c8}
-      .grid-item{cursor:pointer;will-change:transform;transition:transform .55s cubic-bezier(.22,.8,.2,1), background-color .25s ease;display:block}
-      .grid-item.shrink{transform:scale(.96)}
-      .meta{margin:8px 0 12px;color:#4a554b;font-size:14px}
-      .debug{margin:0 0 10px;color:#2f3a30;font-size:13px}
-      .modal{position:fixed;inset:0;background:rgba(18,24,18,.6);display:none;align-items:center;justify-content:center;padding:24px;z-index:20}
-      .modal.open{display:flex}
-      .sheet{background:#f5f6f1;width:min(860px,94vw);max-height:90vh;overflow:auto;padding:24px;border-radius:8px;transform:scale(.95);opacity:.4;transition:transform .28s ease, opacity .28s ease}
-      .modal.open .sheet{transform:scale(1);opacity:1}
-      .close{float:right}
-      @media (max-width:768px){
-        .board-wrap{overflow-x:auto}
-        .grid-container{transform:rotate(90deg);transform-origin:center center; margin:180px 0 !important;}
+
+      body::before {
+        background: radial-gradient(circle at 50% 45%, rgba(255,255,255,0.5), transparent 58%);
+        content: "";
+        inset: 0;
+        pointer-events: none;
+        position: fixed;
+      }
+
+      .archive-shell {
+        display: grid;
+        grid-template-columns: 178px 1fr 292px;
+        gap: 24px;
+        height: 100vh;
+        padding: 28px 30px 26px;
+        position: relative;
+      }
+
+      .brand {
+        align-self: start;
+      }
+
+      .brand h1 {
+        font-size: 21px;
+        font-weight: 500;
+        letter-spacing: 0;
+        line-height: 1;
+        margin: 0 0 4px;
+      }
+
+      .brand span,
+      .archive-meta,
+      .status,
+      .inspector,
+      .footnote {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .status {
+        align-self: end;
+        display: grid;
+        gap: 10px;
+        line-height: 1.4;
+      }
+
+      .status-row {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .field-stage {
+        border: 1px solid var(--line);
+        min-height: 0;
+        padding: 28px;
+        position: relative;
+      }
+
+      .archive-meta {
+        display: flex;
+        justify-content: space-between;
+        left: 28px;
+        position: absolute;
+        right: 28px;
+        top: 18px;
+        z-index: 4;
+      }
+
+      .field {
+        background:
+          linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+          rgba(247, 243, 235, 0.48);
+        background-size: 34px 34px;
+        height: calc(100vh - 112px);
+        margin-top: 26px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .field::after {
+        border: 1px solid rgba(91, 95, 63, 0.26);
+        content: "";
+        height: 126px;
+        left: 48%;
+        pointer-events: none;
+        position: absolute;
+        top: 48%;
+        transform: translate(-50%, -50%);
+        width: 170px;
+      }
+
+      .ambient,
+      .record-node {
+        position: absolute;
+      }
+
+      .ambient {
+        background: var(--pale);
+        height: calc(var(--h) * 1px);
+        left: calc(var(--x) * 1%);
+        opacity: var(--o);
+        top: calc(var(--y) * 1%);
+        width: calc(var(--w) * 1px);
+      }
+
+      .ambient.soft { background: var(--soft); }
+      .ambient.olive { background: var(--olive); }
+      .ambient.warm { background: var(--warm); }
+
+      .relations {
+        inset: 0;
+        pointer-events: none;
+        position: absolute;
+      }
+
+      .relations line {
+        stroke: rgba(91, 95, 63, 0.42);
+        stroke-width: 1;
+      }
+
+      .record-node {
+        color: inherit;
+        display: grid;
+        gap: 4px;
+        left: calc(var(--x) * 100%);
+        opacity: calc(0.48 + var(--score) * 0.48);
+        text-decoration: none;
+        top: calc(var(--y) * 100%);
+        transform: translate(-50%, -50%);
+        width: 86px;
+        z-index: 3;
+      }
+
+      .record-node:focus,
+      .record-node:hover,
+      .record-node.is-selected {
+        outline: 1px solid rgba(37, 35, 29, 0.45);
+        outline-offset: 8px;
+      }
+
+      .record-stripe {
+        background: var(--olive);
+        height: 4px;
+        width: calc(28px + var(--score) * 48px);
+      }
+
+      .record-stripe:nth-child(2n) { opacity: 0.72; width: calc(18px + var(--score) * 34px); }
+      .record-stripe:nth-child(3n) { opacity: 0.56; width: calc(22px + var(--score) * 52px); }
+
+      .record-node[data-density="high"] .record-stripe { background: var(--warm); }
+      .record-node[data-density="medium"] .record-stripe { background: var(--olive); }
+      .record-node[data-density="low"] .record-stripe { background: var(--soft); }
+
+      .inspector {
+        border: 1px solid var(--line);
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        min-height: 0;
+        padding: 26px;
+      }
+
+      .inspector h2 {
+        color: var(--ink);
+        font-size: 17px;
+        font-weight: 500;
+        letter-spacing: 0;
+        margin: 0 0 22px;
+      }
+
+      .inspector dl {
+        border-bottom: 1px solid var(--line);
+        border-top: 1px solid var(--line);
+        display: grid;
+        gap: 7px;
+        grid-template-columns: 1fr 1fr;
+        margin: 0 0 22px;
+        padding: 16px 0;
+      }
+
+      .inspector dt { color: var(--muted); }
+      .inspector dd { color: var(--ink); margin: 0; }
+
+      .excerpt {
+        color: var(--ink);
+        font-family: "Iowan Old Style", "Apple SD Gothic Neo", "Noto Serif KR", serif;
+        font-size: 15px;
+        line-height: 1.8;
+        margin: 0;
+      }
+
+      .thumbs {
+        align-content: end;
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(4, 1fr);
+        margin-top: 24px;
+      }
+
+      .thumb {
+        aspect-ratio: 1;
+        background: var(--paper-2);
+        border: 1px solid var(--line);
+        overflow: hidden;
+      }
+
+      .thumb img {
+        height: 100%;
+        object-fit: cover;
+        width: 100%;
+      }
+
+      .thumb.fallback {
+        background: repeating-linear-gradient(0deg, var(--soft), var(--soft) 4px, transparent 4px, transparent 9px), var(--paper-2);
+      }
+
+      .open-link {
+        color: var(--ink);
+        display: inline-flex;
+        font-size: 14px;
+        justify-self: start;
+        margin-top: 24px;
+        text-decoration: none;
+      }
+
+      .open-link::after {
+        content: "→";
+        margin-left: 18px;
+      }
+
+      .footnote {
+        bottom: 20px;
+        left: 30px;
+        position: fixed;
       }
     </style>
   </head>
   <body>
-    <main class="shell">
-      <h1 style="text-align:center;">Ydnil-stroll</h1>
-      <p class="meta" style="text-align:center;">Spiral Matrix Archive</p>
-      <p id="postCount" class="debug" aria-live="polite"></p>
-      <section class="board-wrap grid-container-wrap"><div id="board" class="grid-container" aria-label="spiral board">
-        {Array.from({ length: 99 }).map(() => <div class="placeholder-cell"></div>)}
-      </div></section>
+    <main class="archive-shell">
+      <section class="brand" aria-label="archive identity">
+        <h1>Ydnil-poh <span>archive</span></h1>
+      </section>
+
+      <section class="field-stage" aria-label="semantic archive field">
+        <div class="archive-meta">
+          <span>archive as of</span>
+          <span>{archiveDate}</span>
+        </div>
+        <div class="field" id="field">
+          {ambientFragments.map((fragment) => (
+            <span
+              class={`ambient ${fragment.tint}`}
+              style={`--x:${fragment.x};--y:${fragment.y};--w:${fragment.w};--h:${fragment.h};--o:${fragment.opacity};`}
+            />
+          ))}
+          <svg class="relations" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            {lines.map((line) => line && <line x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} />)}
+          </svg>
+          {fieldRecords.map((record, index) => {
+            const density = record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low';
+            return (
+              <a
+                class={`record-node ${index === 0 ? 'is-selected' : ''}`}
+                data-record-id={record.id}
+                data-density={density}
+                href={record.url}
+                style={`--x:${record.position.x};--y:${record.position.y};--score:${record.score};`}
+              >
+                {Array.from({ length: 9 }).map(() => <span class="record-stripe" />)}
+              </a>
+            );
+          })}
+        </div>
+      </section>
+
+      <aside class="inspector" aria-label="selected record">
+        <h2 id="detail-title">{selected?.title ?? 'empty archive'}</h2>
+        <dl>
+          <dt>score</dt><dd id="detail-score">{selected ? selected.score.toFixed(2) : '0.00'}</dd>
+          <dt>cluster</dt><dd id="detail-cluster">{selected ? `# ${selected.cluster}` : '-'}</dd>
+          <dt>created</dt><dd id="detail-date">{selected ? selected.date.slice(0, 10) : '-'}</dd>
+          <dt>type</dt><dd id="detail-type">{selected?.type ?? '-'}</dd>
+        </dl>
+        <p class="excerpt" id="detail-excerpt">{selected?.excerpt ?? '기록이 쌓이면 이곳에 의미 밀도가 생깁니다.'}</p>
+        <div>
+          <div class="thumbs" id="detail-thumbs">
+            {selected?.imageUrls.length
+              ? selected.imageUrls.slice(0, 8).map((url) => <span class="thumb"><img src={url} alt={selected.coverAlt} /></span>)
+              : Array.from({ length: 8 }).map(() => <span class="thumb fallback" />)}
+          </div>
+          <a class="open-link" id="detail-open" href={selected?.url ?? '/archive-manifest.json'}>open</a>
+        </div>
+      </aside>
+
+      <section class="status" aria-label="archive state">
+        <div class="status-row"><span>records</span><span>{fieldRecords.length}</span></div>
+        <div class="status-row"><span>clusters</span><span>{new Set(fieldRecords.map((record) => record.cluster)).size}</span></div>
+        <div class="status-row"><span>view</span><span>field</span></div>
+        <div class="status-row"><span>sleep</span><span>nightly</span></div>
+      </section>
     </main>
 
-    <aside id="modal" class="modal" aria-hidden="true">
-      <article class="sheet">
-        <button id="closeModal" class="close">닫기</button>
-        <h2 id="modalTitle"></h2>
-        <p id="modalMeta" class="meta"></p>
-        <div id="modalBody"></div>
-      </article>
-    </aside>
+    <p class="footnote">the archive grows, connects, and reimagines itself while you rest.</p>
 
-    <script type="application/json" id="seed-posts">{JSON.stringify(parsed)}</script>
+    <script type="application/json" id="archive-records">{JSON.stringify(fieldRecords)}</script>
     <script type="module">
-      const seedPosts = JSON.parse(document.getElementById('seed-posts').textContent || '[]');
-      const board = document.getElementById('board');
-      const modal = document.getElementById('modal');
-      const modalTitle = document.getElementById('modalTitle');
-      const modalMeta = document.getElementById('modalMeta');
-      const modalBody = document.getElementById('modalBody');
-      const postCount = document.getElementById('postCount');
-      document.getElementById('closeModal').addEventListener('click', () => modal.classList.remove('open'));
+      const records = JSON.parse(document.getElementById('archive-records')?.textContent || '[]');
+      const nodes = [...document.querySelectorAll('.record-node')];
+      const title = document.getElementById('detail-title');
+      const score = document.getElementById('detail-score');
+      const cluster = document.getElementById('detail-cluster');
+      const date = document.getElementById('detail-date');
+      const type = document.getElementById('detail-type');
+      const excerpt = document.getElementById('detail-excerpt');
+      const thumbs = document.getElementById('detail-thumbs');
+      const open = document.getElementById('detail-open');
 
-      const COLS = 11, ROWS = 9;
-      const CENTER = { c: 5, r: 4 }; // 0-index => [6열,5행]
-      let isAnimating = false;
-      let posts = seedPosts.map((p)=>({ ...p, views:0 }));
+      function selectRecord(record) {
+        nodes.forEach((node) => node.classList.toggle('is-selected', node.dataset.recordId === record.id));
+        title.textContent = record.title;
+        score.textContent = Number(record.score).toFixed(2);
+        cluster.textContent = `# ${record.cluster}`;
+        date.textContent = String(record.date).slice(0, 10);
+        type.textContent = record.type;
+        excerpt.textContent = record.excerpt;
+        open.href = record.url;
+        thumbs.innerHTML = '';
 
-      function spiralPositions(cols, rows, center){
-        const dirs = [[1,0],[0,1],[-1,0],[0,-1]];
-        let step=1, d=0, c=center.c, r=center.r;
-        const out=[];
-        if (c>=0&&c<cols&&r>=0&&r<rows) out.push({c,r});
-        while(out.length<cols*rows){
-          for(let rep=0; rep<2; rep++){
-            for(let i=0;i<step;i++){
-              c += dirs[d][0]; r += dirs[d][1];
-              if(c>=0&&c<cols&&r>=0&&r<rows) out.push({c,r});
-              if(out.length>=cols*rows) return out;
-            }
-            d=(d+1)%4;
+        const images = record.imageUrls?.length ? record.imageUrls.slice(0, 8) : Array.from({ length: 8 }, () => '');
+        for (const image of images) {
+          const item = document.createElement('span');
+          item.className = image ? 'thumb' : 'thumb fallback';
+          if (image) {
+            const img = document.createElement('img');
+            img.src = image;
+            img.alt = record.coverAlt || '';
+            item.appendChild(img);
           }
-          step++;
+          thumbs.appendChild(item);
         }
-        return out;
       }
-      const slots = spiralPositions(COLS, ROWS, CENTER);
 
-      const TEXT_WEIGHT = 0.1;
-      const IMAGE_WEIGHT = 0.35;
-      const EMBED_WEIGHT = IMAGE_WEIGHT * 24; // 24fps metaphor
-      const VIEW_WEIGHT = 2.5;
-
-      function score(p){
-        return (p.text_count * TEXT_WEIGHT) +
-          (p.image_count * IMAGE_WEIGHT) +
-          (p.has_embed * EMBED_WEIGHT) +
-          (p.views * VIEW_WEIGHT);
-      }
-      function tierColor(idx,total){ const pct = total===0?1:(idx+1)/total; if(pct<=0.15) return '#E65A28'; if(pct<=0.4) return '#3D4A3E'; return '#607261'; }
-
-      async function fetchLive(){
+      async function incrementRecord(id) {
         const url = import.meta.env.PUBLIC_SUPABASE_URL;
         const key = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
-        if(!url || !key) return;
-        const ids = posts.map(p=>p.id);
-        if(!ids.length) return;
-        const q = encodeURIComponent(ids.join(','));
-        const res = await fetch(`${url}/rest/v1/posts?select=id,views&id=in.(${q})`, { headers:{ apikey:key, Authorization:`Bearer ${key}` } });
-        if(!res.ok) return;
-        const rows = await res.json();
-        const m = new Map(rows.map(r=>[r.id,r]));
-        posts = posts.map(p=>({ ...p, views: m.get(p.id)?.views ?? 0 }));
-      }
-
-      function render(){
-        board.innerHTML='';
-        const grid = Array.from({ length: COLS * ROWS }, () => ({ type: 'placeholder' }));
-        const ranked=[...posts].sort((a,b)=>score(b)-score(a));
-
-        if (postCount) {
-          postCount.textContent = `현재 업로드된 포스트 개수: ${ranked.length}개`;
-        }
-
-        ranked.forEach((post, idx) => {
-          const pos = slots[idx];
-          if (!pos) return;
-          const linear = pos.r * COLS + pos.c;
-          grid[linear] = { type: 'post', post, rank: idx };
-        });
-
-        grid.forEach((cell, linearIdx) => {
-          const c = (linearIdx % COLS) + 1;
-          const r = Math.floor(linearIdx / COLS) + 1;
-
-          if (cell.type === 'placeholder') {
-            const ph=document.createElement('div');
-            ph.className='placeholder-cell';
-            ph.style.gridColumn = `${c}`;
-            ph.style.gridRow = `${r}`;
-            board.appendChild(ph);
-            return;
-          }
-
-          const { post, rank } = cell;
-          const el=document.createElement('a');
-          el.className='grid-item';
-          el.href=post.url;
-          el.dataset.id=post.id;
-          el.style.gridColumn = `${c}`;
-          el.style.gridRow = `${r}`;
-          el.style.backgroundColor=tierColor(rank, ranked.length);
-          el.addEventListener('click', (e)=>onCellClick(e,post));
-          board.appendChild(el);
+        if (!url || !key) return;
+        await fetch(`${url}/rest/v1/rpc/increment_record_view`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: key, Authorization: `Bearer ${key}` },
+          body: JSON.stringify({ record_slug: id }),
         });
       }
 
-      async function onCellClick(e, post){
-        e.preventDefault();
-        if(isAnimating) return; // 0단계
-        isAnimating=true;
-        const el=e.currentTarget;
-
-        // 1단계
-        el.classList.add('shrink'); await new Promise(r=>setTimeout(r,100)); el.classList.remove('shrink');
-
-        // 2단계
-        posts = posts.map(p=>p.id===post.id?{...p, views:p.views+1}:p);
-        render();
-        incrementView(post.id).catch(()=>{});
-
-        // 3단계
-        await new Promise(r=>setTimeout(r,560));
-
-        // 4단계
-        await openPost(post);
-        isAnimating=false;
-      }
-
-      async function incrementView(id){
-        const url = import.meta.env.PUBLIC_SUPABASE_URL;
-        const key = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
-        if(!url || !key) return;
-        await fetch(`${url}/rest/v1/rpc/increment_post_view`, { method:'POST', headers:{ 'Content-Type':'application/json', apikey:key, Authorization:`Bearer ${key}` }, body: JSON.stringify({ post_id:id }) });
-      }
-
-      async function openPost(post){
-        const res = await fetch(post.url);
-        const html = await res.text();
-        const doc = new DOMParser().parseFromString(html,'text/html');
-        const article = doc.querySelector('article');
-        modalTitle.textContent = post.title;
-        modalMeta.textContent = `${new Date(post.date).toLocaleDateString('ko-KR')} · ${post.location}`;
-        modalBody.innerHTML = article ? article.innerHTML : '<p>본문을 불러오지 못했습니다.</p>';
-        modal.classList.add('open');
-      }
-
-      fetchLive().finally(render);
+      nodes.forEach((node) => {
+        node.addEventListener('click', (event) => {
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          event.preventDefault();
+          const record = records.find((item) => item.id === node.dataset.recordId);
+          if (!record) return;
+          selectRecord(record);
+          incrementRecord(record.id).catch(() => {});
+        });
+      });
     </script>
   </body>
 </html>
