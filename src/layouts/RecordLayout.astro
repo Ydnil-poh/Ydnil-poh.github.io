@@ -1,0 +1,135 @@
+---
+interface Props {
+  title: string;
+  date: Date;
+  location: string;
+  tags: string[];
+  type: string;
+  cover?: string;
+  coverAlt?: string;
+}
+
+const { title, date, location, tags, type, cover, coverAlt } = Astro.props;
+const formattedDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'long' }).format(date);
+---
+
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | Ydnil-poh Archive</title>
+    <style>
+      :root {
+        --paper: #eeeae1;
+        --ink: #24231d;
+        --muted: #736f64;
+        --line: #d8d1c3;
+        --field: #f7f4ec;
+        --olive: #6f7156;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "Iowan Old Style", "Apple SD Gothic Neo", "Noto Serif KR", serif;
+        line-height: 1.88;
+      }
+
+      a { color: inherit; }
+
+      .shell {
+        width: min(840px, calc(100vw - 56px));
+        margin: 0 auto;
+        padding: 44px 0 80px;
+      }
+
+      .back {
+        color: var(--muted);
+        display: inline-block;
+        font-family: "Inter", "Apple SD Gothic Neo", sans-serif;
+        font-size: 13px;
+        margin-bottom: 38px;
+        text-decoration: none;
+      }
+
+      header {
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 32px;
+        padding-bottom: 28px;
+      }
+
+      h1 {
+        font-size: 32px;
+        font-weight: 500;
+        letter-spacing: 0;
+        line-height: 1.35;
+        margin: 0 0 14px;
+      }
+
+      .meta,
+      .tags {
+        color: var(--muted);
+        font-family: "Inter", "Apple SD Gothic Neo", sans-serif;
+        font-size: 13px;
+        margin: 0;
+      }
+
+      .tags {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .tag {
+        border: 1px solid var(--line);
+        padding: 2px 7px;
+      }
+
+      .cover {
+        background: var(--field);
+        border: 1px solid var(--line);
+        margin: 0 0 32px;
+        max-height: 520px;
+        object-fit: cover;
+        width: 100%;
+      }
+
+      article :global(p) {
+        font-size: 17px;
+        margin: 0 0 22px;
+      }
+
+      article :global(img) {
+        background: var(--field);
+        border: 1px solid var(--line);
+        display: block;
+        height: auto;
+        margin: 28px 0 34px;
+        max-width: 100%;
+      }
+
+      article :global(a) {
+        color: var(--olive);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <a class="back" href="/">back to archive field</a>
+      <header>
+        <h1>{title}</h1>
+        <p class="meta">{formattedDate} / {location} / {type}</p>
+        {tags.length > 0 && <div class="tags">{tags.map((tag) => <span class="tag">#{tag}</span>)}</div>}
+      </header>
+      {cover && <img class="cover" src={cover} alt={coverAlt ?? ''} />}
+      <article>
+        <slot />
+      </article>
+    </main>
+  </body>
+</html>
