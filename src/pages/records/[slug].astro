@@ -1,0 +1,26 @@
+---
+import { getCollection, render } from 'astro:content';
+import RecordLayout from '../../layouts/RecordLayout.astro';
+
+const stripExtension = (id: string) => id.replace(/\.(md|markdown|mdx)$/i, '');
+
+export async function getStaticPaths() {
+  const records = await getCollection('records', ({ data }) => data.visibility !== 'private');
+  return records.map((record) => ({ params: { slug: stripExtension(record.id) }, props: { record } }));
+}
+
+const { record } = Astro.props;
+const { Content } = await render(record);
+---
+
+<RecordLayout
+  title={record.data.title}
+  date={record.data.date}
+  location={record.data.location}
+  tags={record.data.tags}
+  type={record.data.type}
+  cover={record.data.cover}
+  coverAlt={record.data.coverAlt}
+>
+  <Content />
+</RecordLayout>
