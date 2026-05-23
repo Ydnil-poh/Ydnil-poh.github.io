@@ -1,96 +1,110 @@
-# Ydnil Strolls
+# Ydnil-poh Archive Field
 
-## 콘텐츠 등록 규칙
+A personal archive field built around semantic density, spatial memory, and AI-readable records.
 
-- 포스트는 `src/content/posts/*.md`만 자동 수집됩니다.
-- 현재 저장소 기본 포스트는 `src/content/posts/post1.md` 1개만 유지됩니다.
-- 필수 frontmatter: `title`, `date`, `location`, `excerpt`.
+This is not a blog feed. The homepage is the archive surface itself: a quiet semantic terrain where records gather, compress, and drift slowly through nightly rebuilds.
 
-## Supabase 설정 (필수)
+## Writing Source
 
-### 1) 프로젝트 생성
-1. https://supabase.com 에서 프로젝트 생성
-2. 프로젝트 대시보드에서 **Project URL**과 **anon public key** 확인
+Records live in:
 
-### 2) 테이블 생성
-SQL Editor에서 아래 실행:
-
-```sql
-create table if not exists public.posts (
-  id text primary key,
-  views integer not null default 0,
-  trackbacks integer not null default 0
-);
+```txt
+src/content/records/*.md
 ```
 
-`id` 값은 마크다운 파일명(slug)과 동일해야 합니다.  
-예: `src/content/posts/post1.md` → `id = 'post1'`
+This folder is intended to be used from Obsidian. Write normal Markdown notes there and keep frontmatter lightweight.
 
-### 3) 조회/업데이트 정책(RLS)
-
-```sql
-alter table public.posts enable row level security;
-
-create policy "public read posts"
-on public.posts
-for select
-using (true);
-
-create policy "public update views"
-on public.posts
-for update
-using (true)
-with check (true);
-```
-
-### 4) 조회수 증가 RPC 함수 생성
-
-```sql
-create or replace function public.increment_post_view(post_id text)
-returns void
-language plpgsql
-security definer
-as $$
-begin
-  insert into public.posts (id, views, trackbacks)
-  values (post_id, 1, 0)
-  on conflict (id)
-  do update set views = public.posts.views + 1;
-end;
-$$;
-```
-
-## 코드에 키 입력 위치/방법
-
-이 프로젝트는 **클라이언트에서 `import.meta.env.PUBLIC_*`** 값을 읽습니다. (`src/pages/index.astro`)
-
-### 로컬 개발
-프로젝트 루트에 `.env` 파일 생성:
-
-```bash
-PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
-```
-
-### GitHub Pages 배포 (GitHub Actions)
-1. GitHub 저장소 → **Settings → Secrets and variables → Actions**
-2. Repository secrets 추가
-   - `PUBLIC_SUPABASE_URL`
-   - `PUBLIC_SUPABASE_ANON_KEY`
-3. 워크플로우에서 빌드 step에 env 주입(아래 예시):
+Required frontmatter:
 
 ```yaml
-- name: Build with Astro
-  run: npm run build
-  env:
-    PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
-    PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+title: Example record
+date: 2026-05-23
+location: Seoul
+excerpt: Short human-readable summary
+tags: [archive, memory]
 ```
 
-## 실행
+Optional frontmatter:
+
+```yaml
+cover: https://YOUR_PROJECT.supabase.co/storage/v1/object/public/archive-images/example.jpg
+coverAlt: image description
+type: writing # writing | image | place | idea | note
+visibility: public # public | private
+manualCluster: 3
+manualScore: 0.72
+source: obsidian
+views: 0
+```
+
+`trackbacks` is not used.
+
+## Images
+
+Supabase Storage is the official image store.
+
+Recommended bucket:
+
+```txt
+archive-images
+```
+
+Upload from your local environment:
 
 ```bash
-npm install
-npm run dev
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co \
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY \
+npm run upload:image -- ./path/to/image.jpg
+```
+
+The command prints Markdown image syntax that can be pasted into an Obsidian note.
+
+## Archive Manifest
+
+The build generates:
+
+```txt
+public/archive-manifest.json
+```
+
+The manifest is public and intended for AI agents. It includes record metadata, image URLs, score, cluster, position, related IDs, content hash, and embedding status.
+
+Generate it locally:
+
+```bash
+npm run manifest
+```
+
+Build the site:
+
+```bash
 npm run build
 ```
+
+## Supabase Vector
+
+Use `supabase/archive-schema.sql` as the starting database schema.
+
+It defines:
+
+- `archive_records`
+- `archive_embeddings`
+- `archive_relations`
+- `increment_record_view(record_slug text)`
+
+The current site works without Supabase credentials. When credentials are present, the homepage can call the view RPC, and the manifest reserves Supabase Vector fields for semantic rebuild work.
+
+## Deployment
+
+GitHub Actions deploys to GitHub Pages on push, manual dispatch, and nightly schedule.
+
+Required repository secrets for full Supabase behavior:
+
+```txt
+PUBLIC_SUPABASE_URL
+PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+```
+
+The archive should remain stable. Rebuilds should feel like slow sediment and local drift, not a reshuffled feed.
