@@ -4,6 +4,31 @@ import { getCollection } from 'astro:content';
 const stripExtension = (id: string) => id.replace(/\.(md|markdown|mdx)$/i, '');
 const hashNumber = (value: string) => [...value].reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) % 100000, 17);
 const normalize = (value: number, min: number, max: number) => max <= min ? 0.5 : Number(((value - min) / (max - min)).toFixed(4));
+const COLS = 28;
+const ROWS = 18;
+
+function nearestOpenSlot(preferred: number, occupied: Set<number>) {
+  const total = COLS * ROWS;
+  if (!occupied.has(preferred)) return preferred;
+
+  const preferredCol = preferred % COLS;
+  const preferredRow = Math.floor(preferred / COLS);
+  let best = -1;
+  let bestDistance = Infinity;
+
+  for (let index = 0; index < total; index += 1) {
+    if (occupied.has(index)) continue;
+    const col = index % COLS;
+    const row = Math.floor(index / COLS);
+    const distance = Math.abs(col - preferredCol) + Math.abs(row - preferredRow);
+    if (distance < bestDistance) {
+      best = index;
+      bestDistance = distance;
+    }
+  }
+
+  return best;
+}
 
 const sourceRecords = await getCollection('records', ({ data }) => data.visibility !== 'private');
 const parsed = sourceRecords.map((record) => {
@@ -37,18 +62,29 @@ const parsed = sourceRecords.map((record) => {
 
 const minScore = Math.min(...parsed.map((record) => record.rawScore), 0);
 const maxScore = Math.max(...parsed.map((record) => record.rawScore), 1);
-const records = parsed.map((record, index) => {
+const occupied = new Set<number>();
+const records = parsed.map((record) => {
   const score = record.rawScore === record.rawScore ? normalize(record.rawScore, minScore, maxScore) : 0.5;
-  const angle = (hashNumber(`${record.id}:${record.cluster}`) / 100000) * Math.PI * 2;
-  const band = 0.16 + ((index + 1) / Math.max(parsed.length, 1)) * 0.68;
-  const radius = Math.max(0.1, Math.min(0.86, band - score * 0.18));
-  const x = 0.5 + Math.cos(angle) * radius * 0.46;
-  const y = 0.5 + Math.sin(angle) * radius * 0.36;
+  const seed = hashNumber(`${record.id}:${record.cluster}`);
+  const preferredCol = Math.floor((seed % COLS) * 0.68 + COLS * 0.16);
+  const preferredRow = Math.floor(((Math.floor(seed / COLS) % ROWS) * 0.68) + ROWS * 0.16);
+  const preferred = Math.max(0, Math.min(COLS * ROWS - 1, preferredRow * COLS + preferredCol));
+  const slot = nearestOpenSlot(preferred, occupied);
+  if (slot >= 0) occupied.add(slot);
+
+  const col = slot >= 0 ? slot % COLS : 0;
+  const row = slot >= 0 ? Math.floor(slot / COLS) : 0;
 
   return {
     ...record,
     score,
-    position: { x: Number(x.toFixed(4)), y: Number(y.toFixed(4)) },
+    slot,
+    position: {
+      col,
+      row,
+      x: Number(((col + 0.5) / COLS).toFixed(4)),
+      y: Number(((row + 0.5) / ROWS).toFixed(4)),
+    },
   };
 });
 
@@ -186,25 +222,16 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
 
       .field {
         background: rgba(247, 243, 235, 0.52);
+        display: grid;
+        gap: 5px;
+        grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+        grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
         height: 100%;
         margin-top: 18px;
         min-height: 0;
         overflow: hidden;
+        padding: 18px;
         position: relative;
-      }
-
-      .record-node {
-        color: inherit;
-        display: grid;
-        gap: 4px;
-        left: calc(var(--x) * 100%);
-        opacity: calc(0.48 + var(--score) * 0.48);
-        position: absolute;
-        text-decoration: none;
-        top: calc(var(--y) * 100%);
-        transform: translate(-50%, -50%);
-        width: 84px;
-        z-index: 3;
       }
 
       .relations {
@@ -214,29 +241,42 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       }
 
       .relations line {
-        stroke: rgba(91, 95, 63, 0.42);
+        stroke: rgba(91, 95, 63, 0.3);
         stroke-width: 1;
+      }
+
+      .record-node {
+        align-self: stretch;
+        background: rgba(247, 243, 235, 0.42);
+        border: 1px solid rgba(92, 83, 67, 0.16);
+        color: inherit;
+        display: block;
+        grid-column: calc(var(--col) + 1);
+        grid-row: calc(var(--row) + 1);
+        opacity: calc(0.5 + var(--score) * 0.42);
+        position: relative;
+        text-decoration: none;
+        z-index: 3;
+      }
+
+      .record-node::before {
+        background: var(--olive);
+        content: "";
+        inset: 4px;
+        opacity: 0.72;
+        position: absolute;
       }
 
       .record-node:focus,
       .record-node:hover,
       .record-node.is-selected {
         outline: 1px solid rgba(37, 35, 29, 0.45);
-        outline-offset: 8px;
+        outline-offset: 4px;
       }
 
-      .record-stripe {
-        background: var(--olive);
-        height: 4px;
-        width: calc(28px + var(--score) * 42px);
-      }
-
-      .record-stripe:nth-child(2n) { opacity: 0.72; width: calc(14px + var(--score) * 28px); }
-      .record-stripe:nth-child(3n) { opacity: 0.56; width: calc(28px + var(--score) * 28px); }
-
-      .record-node[data-density="high"] .record-stripe { background: var(--warm); }
-      .record-node[data-density="medium"] .record-stripe { background: var(--olive); }
-      .record-node[data-density="low"] .record-stripe { background: var(--soft); }
+      .record-node[data-density="high"]::before { background: var(--warm); }
+      .record-node[data-density="medium"]::before { background: var(--olive); }
+      .record-node[data-density="low"]::before { background: var(--soft); }
 
       .inspector {
         border: 1px solid var(--line);
@@ -277,32 +317,8 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         margin: 0;
       }
 
-      .thumbs {
-        align-content: end;
-        display: grid;
-        gap: 8px;
-        grid-template-columns: repeat(4, 1fr);
-        margin-top: 24px;
-      }
-
-      .thumb {
-        aspect-ratio: 1;
-        background: var(--paper-2);
-        border: 1px solid var(--line);
-        overflow: hidden;
-      }
-
-      .thumb img {
-        height: 100%;
-        object-fit: cover;
-        width: 100%;
-      }
-
-      .thumb.fallback {
-        background: var(--paper-2);
-      }
-
       .open-link {
+        align-self: end;
         color: var(--ink);
         display: inline-flex;
         font-size: 14px;
@@ -328,7 +344,7 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
           <span>archive as of</span>
           <span>{archiveDate}</span>
         </div>
-        <div class="field" id="field">
+        <div class="field" id="field" style={`--cols:${COLS};--rows:${ROWS};`}>
           <svg class="relations" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {lines.map((line) => line && <line x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} />)}
           </svg>
@@ -340,10 +356,8 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
                 data-record-id={record.id}
                 data-density={density}
                 href={record.url}
-                style={`--x:${record.position.x};--y:${record.position.y};--score:${record.score};`}
-              >
-                {Array.from({ length: 9 }).map(() => <span class="record-stripe" />)}
-              </a>
+                style={`--col:${record.position.col};--row:${record.position.row};--score:${record.score};`}
+              />
             );
           })}
         </div>
@@ -358,14 +372,7 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
           <dt>type</dt><dd id="detail-type">{selected?.type ?? '-'}</dd>
         </dl>
         <p class="excerpt" id="detail-excerpt">{selected?.excerpt ?? '기록이 쌓이면 이곳에 의미 밀도가 생깁니다.'}</p>
-        <div>
-          <div class="thumbs" id="detail-thumbs">
-            {selected?.imageUrls.length
-              ? selected.imageUrls.slice(0, 8).map((url) => <span class="thumb"><img src={url} alt={selected.coverAlt} /></span>)
-              : Array.from({ length: 8 }).map(() => <span class="thumb fallback" />)}
-          </div>
-          <a class="open-link" id="detail-open" href={selected?.url ?? '/archive-manifest.json'}>open</a>
-        </div>
+        <a class="open-link" id="detail-open" href={selected?.url ?? '/archive-manifest.json'}>open</a>
       </aside>
 
       <section class="status" aria-label="archive state">
@@ -386,7 +393,6 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       const date = document.getElementById('detail-date');
       const type = document.getElementById('detail-type');
       const excerpt = document.getElementById('detail-excerpt');
-      const thumbs = document.getElementById('detail-thumbs');
       const open = document.getElementById('detail-open');
 
       function selectRecord(record) {
@@ -398,20 +404,6 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         type.textContent = record.type;
         excerpt.textContent = record.excerpt;
         open.href = record.url;
-        thumbs.innerHTML = '';
-
-        const images = record.imageUrls?.length ? record.imageUrls.slice(0, 8) : Array.from({ length: 8 }, () => '');
-        for (const image of images) {
-          const item = document.createElement('span');
-          item.className = image ? 'thumb' : 'thumb fallback';
-          if (image) {
-            const img = document.createElement('img');
-            img.src = image;
-            img.alt = record.coverAlt || '';
-            item.appendChild(img);
-          }
-          thumbs.appendChild(item);
-        }
       }
 
       async function incrementRecord(id) {
