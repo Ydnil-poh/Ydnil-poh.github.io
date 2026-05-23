@@ -1,4 +1,4 @@
-import { createReadStream } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { basename } from 'node:path';
 
 const [, , filePath, desiredName] = process.argv;
@@ -19,22 +19,17 @@ if (!supabaseUrl || !serviceKey) {
 const cleanBase = (desiredName ?? basename(filePath)).replace(/[^A-Za-z0-9._/-]+/g, '-');
 const storagePath = cleanBase.includes('/') ? cleanBase : `${new Date().toISOString().slice(0, 10)}/${cleanBase}`;
 const endpoint = `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/${bucket}/${storagePath}`;
-
-const form = new FormData();
-const file = await import('node:fs/promises').then((fs) => fs.open(filePath, 'r')).then(async (handle) => {
-  await handle.close();
-  return createReadStream(filePath);
-});
-form.append('file', new Blob([await new Response(file).arrayBuffer()]), basename(storagePath));
+const bytes = await readFile(filePath);
 
 const response = await fetch(endpoint, {
   method: 'POST',
   headers: {
     Authorization: `Bearer ${serviceKey}`,
     apikey: serviceKey,
+    'Content-Type': 'application/octet-stream',
     'x-upsert': 'true',
   },
-  body: form,
+  body: bytes,
 });
 
 if (!response.ok) {
