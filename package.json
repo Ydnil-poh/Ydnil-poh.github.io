@@ -1,14 +1,17 @@
 {
-  "name": "nuclear-nebula",
+  "name": "ydnil-poh-archive-field",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "engines": {
     "node": ">=22.12.0"
   },
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "node scripts/build-archive-manifest.mjs",
     "build": "astro build",
     "preview": "astro preview",
+    "manifest": "node scripts/build-archive-manifest.mjs",
+    "upload:image": "node scripts/upload-archive-image.mjs",
     "astro": "astro"
   },
   "dependencies": {
