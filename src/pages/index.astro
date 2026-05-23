@@ -68,10 +68,10 @@ const relatedFor = (source: typeof records[number]) => records
 const fieldRecords = records.map((record) => ({ ...record, related: relatedFor(record) }));
 const ambientFragments = Array.from({ length: 360 }, (_, index) => {
   const seed = hashNumber(`ambient:${index}:${fieldRecords.length}`);
-  const x = ((seed * 37) % 10000) / 100;
-  const y = ((seed * 53) % 10000) / 100;
-  const w = 6 + (seed % 58);
-  const h = 2 + (seed % 5);
+  const x = Math.floor((((seed * 37) % 9400) / 100) / 2) * 2 + 3;
+  const y = Math.floor((((seed * 53) % 9400) / 100) / 2) * 2 + 3;
+  const w = [14, 28, 42, 56][seed % 4];
+  const h = [2, 3, 4][seed % 3];
   const density = seed % 100;
   const tint = density > 88 ? 'warm' : density > 58 ? 'olive' : density > 28 ? 'soft' : 'pale';
   return { index, x, y, w, h, tint, opacity: 0.16 + (density / 100) * 0.32 };
@@ -106,7 +106,6 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         --ink: #25231d;
         --muted: #6f6b60;
         --line: rgba(92, 83, 67, 0.2);
-        --grid: rgba(96, 90, 75, 0.11);
         --pale: rgba(108, 103, 89, 0.2);
         --soft: rgba(107, 105, 83, 0.34);
         --olive: rgba(91, 95, 63, 0.62);
@@ -134,8 +133,9 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
 
       .archive-shell {
         display: grid;
-        grid-template-columns: 178px 1fr 292px;
         gap: 24px;
+        grid-template-columns: 178px minmax(0, 1fr) 292px;
+        grid-template-rows: minmax(0, 1fr);
         height: 100vh;
         padding: 28px 30px 26px;
         position: relative;
@@ -143,6 +143,8 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
 
       .brand {
         align-self: start;
+        grid-column: 1;
+        grid-row: 1;
       }
 
       .brand h1 {
@@ -156,8 +158,7 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .brand span,
       .archive-meta,
       .status,
-      .inspector,
-      .footnote {
+      .inspector {
         color: var(--muted);
         font-size: 12px;
       }
@@ -166,6 +167,8 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         align-self: end;
         display: grid;
         gap: 10px;
+        grid-column: 1;
+        grid-row: 1;
         line-height: 1.4;
       }
 
@@ -176,43 +179,30 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
 
       .field-stage {
         border: 1px solid var(--line);
+        display: grid;
+        grid-column: 2;
+        grid-row: 1;
+        grid-template-rows: auto minmax(0, 1fr);
         min-height: 0;
-        padding: 28px;
+        min-width: 0;
+        padding: 20px 22px 22px;
         position: relative;
       }
 
       .archive-meta {
         display: flex;
         justify-content: space-between;
-        left: 28px;
-        position: absolute;
-        right: 28px;
-        top: 18px;
+        min-height: 16px;
         z-index: 4;
       }
 
       .field {
-        background:
-          linear-gradient(var(--grid) 1px, transparent 1px),
-          linear-gradient(90deg, var(--grid) 1px, transparent 1px),
-          rgba(247, 243, 235, 0.48);
-        background-size: 34px 34px;
-        height: calc(100vh - 112px);
-        margin-top: 26px;
+        background: rgba(247, 243, 235, 0.52);
+        height: 100%;
+        margin-top: 18px;
+        min-height: 0;
         overflow: hidden;
         position: relative;
-      }
-
-      .field::after {
-        border: 1px solid rgba(91, 95, 63, 0.26);
-        content: "";
-        height: 126px;
-        left: 48%;
-        pointer-events: none;
-        position: absolute;
-        top: 48%;
-        transform: translate(-50%, -50%);
-        width: 170px;
       }
 
       .ambient,
@@ -253,7 +243,7 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         text-decoration: none;
         top: calc(var(--y) * 100%);
         transform: translate(-50%, -50%);
-        width: 86px;
+        width: 84px;
         z-index: 3;
       }
 
@@ -267,11 +257,11 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .record-stripe {
         background: var(--olive);
         height: 4px;
-        width: calc(28px + var(--score) * 48px);
+        width: calc(28px + var(--score) * 42px);
       }
 
-      .record-stripe:nth-child(2n) { opacity: 0.72; width: calc(18px + var(--score) * 34px); }
-      .record-stripe:nth-child(3n) { opacity: 0.56; width: calc(22px + var(--score) * 52px); }
+      .record-stripe:nth-child(2n) { opacity: 0.72; width: calc(14px + var(--score) * 28px); }
+      .record-stripe:nth-child(3n) { opacity: 0.56; width: calc(28px + var(--score) * 28px); }
 
       .record-node[data-density="high"] .record-stripe { background: var(--warm); }
       .record-node[data-density="medium"] .record-stripe { background: var(--olive); }
@@ -280,6 +270,8 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .inspector {
         border: 1px solid var(--line);
         display: grid;
+        grid-column: 3;
+        grid-row: 1;
         grid-template-rows: auto auto 1fr auto;
         min-height: 0;
         padding: 26px;
@@ -336,7 +328,7 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       }
 
       .thumb.fallback {
-        background: repeating-linear-gradient(0deg, var(--soft), var(--soft) 4px, transparent 4px, transparent 9px), var(--paper-2);
+        background: var(--paper-2);
       }
 
       .open-link {
@@ -351,12 +343,6 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .open-link::after {
         content: "→";
         margin-left: 18px;
-      }
-
-      .footnote {
-        bottom: 20px;
-        left: 30px;
-        position: fixed;
       }
     </style>
   </head>
@@ -424,8 +410,6 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         <div class="status-row"><span>sleep</span><span>nightly</span></div>
       </section>
     </main>
-
-    <p class="footnote">the archive grows, connects, and reimagines itself while you rest.</p>
 
     <script type="application/json" id="archive-records">{JSON.stringify(fieldRecords)}</script>
     <script type="module">
