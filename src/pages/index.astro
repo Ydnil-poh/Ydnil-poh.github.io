@@ -259,12 +259,32 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         z-index: 3;
       }
 
-      .record-node::before {
+      .record-node::before,
+      .record-node::after {
         background: var(--olive);
         content: "";
-        inset: 4px;
         opacity: 0.72;
         position: absolute;
+      }
+
+      .record-node::before {
+        height: 3px;
+        left: 18%;
+        top: 30%;
+        width: 64%;
+        box-shadow:
+          -4px 6px 0 var(--olive),
+          6px 12px 0 var(--olive);
+      }
+
+      .record-node::after {
+        height: 3px;
+        left: 28%;
+        top: 58%;
+        width: 44%;
+        box-shadow:
+          -6px 6px 0 var(--olive),
+          8px -12px 0 var(--olive);
       }
 
       .record-node:focus,
@@ -274,9 +294,12 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         outline-offset: 4px;
       }
 
-      .record-node[data-density="high"]::before { background: var(--warm); }
-      .record-node[data-density="medium"]::before { background: var(--olive); }
-      .record-node[data-density="low"]::before { background: var(--soft); }
+      .record-node[data-density="high"]::before,
+      .record-node[data-density="high"]::after { background: var(--warm); box-shadow: -4px 6px 0 var(--warm), 6px 12px 0 var(--warm); }
+      .record-node[data-density="medium"]::before,
+      .record-node[data-density="medium"]::after { background: var(--olive); }
+      .record-node[data-density="low"]::before,
+      .record-node[data-density="low"]::after { background: var(--soft); box-shadow: -4px 6px 0 var(--soft), 6px 12px 0 var(--soft); }
 
       .inspector {
         border: 1px solid var(--line);
