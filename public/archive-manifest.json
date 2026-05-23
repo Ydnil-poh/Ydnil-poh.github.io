@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-05-23T00:00:00.000Z",
+  "source": "src/content/records",
+  "storage": {
+    "provider": "supabase",
+    "bucket": "archive-images"
+  },
+  "vector": {
+    "provider": "supabase-vector",
+    "table": "archive_embeddings",
+    "relationTable": "archive_relations"
+  },
+  "spatialPolicy": {
+    "interpretation": "semantic density terrain",
+    "scoreMeaning": [
+      "memory cohesion",
+      "semantic recurrence",
+      "relation density",
+      "revisit potential"
+    ],
+    "persistence": "nightly rebuilds should preserve spatial memory and allow only local drift"
+  },
+  "counts": {
+    "records": 0,
+    "images": 0,
+    "clusters": 0
+  },
+  "records": []
+}
