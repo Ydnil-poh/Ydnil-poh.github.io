@@ -22,9 +22,41 @@
     "persistence": "nightly rebuilds should preserve spatial memory and allow only local drift"
   },
   "counts": {
-    "records": 0,
+    "records": 1,
     "images": 0,
-    "clusters": 0
+    "clusters": 1
   },
-  "records": []
+  "records": [
+    {
+      "id": "post1",
+      "slug": "post1",
+      "title": "post1",
+      "date": "2026-05-21",
+      "location": "Seoul",
+      "type": "writing",
+      "excerpt": "블로그와 SNS 사이를 오래 오가던 기록 습관이, AI 시대를 지나며 조금 다른 방향으로 흘러가기 시작했다",
+      "tags": [
+        "blog",
+        "AI",
+        "archive"
+      ],
+      "cover": "",
+      "coverAlt": "sample",
+      "score": 1,
+      "cluster": 5,
+      "position": {
+        "x": 0.8,
+        "y": 0.4633
+      },
+      "related": [],
+      "imageUrls": [],
+      "contentHash": "seeded-from-records-post1",
+      "embedding": {
+        "provider": "supabase-vector",
+        "status": "pending",
+        "model": null
+      },
+      "url": "/records/post1/"
+    }
+  ]
 }
