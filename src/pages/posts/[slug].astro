@@ -1,11 +1,12 @@
 ---
 import { getCollection } from 'astro:content';
 
-const stripExtension = (id: string) => id.replace(/\.(md|markdown|mdx)$/i, '');
-
 export async function getStaticPaths() {
   const records = await getCollection('records', ({ data }) => data.visibility !== 'private');
-  return records.map((record) => ({ params: { slug: stripExtension(record.id) }, props: { slug: stripExtension(record.id) } }));
+  return records.map((record) => {
+    const slug = record.id.replace(/\.(md|markdown|mdx)$/i, '');
+    return { params: { slug }, props: { slug } };
+  });
 }
 
 const { slug } = Astro.props;
