@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const recordsDir = path.join(root, 'src', 'content', 'records');
 const outputPath = path.join(root, 'public', 'archive-manifest.json');
+const supabaseUrl = process.env.SUPABASE_URL ?? process.env.PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const markdownExtensions = new Set(['.md', '.markdown', '.mdx']);
 
@@ -92,6 +94,69 @@ function related(records, source) {
     .sort((a, b) => b.weight - a.weight)
     .slice(0, 8)
     .map((item) => item.id);
+}
+
+async function supabaseUpsert(table, rows, onConflict) {
+  if (!supabaseUrl || !supabaseServiceKey || rows.length === 0) return false;
+
+  const endpoint = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/${table}?on_conflict=${encodeURIComponent(onConflict)}`;
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      apikey: supabaseServiceKey,
+      Authorization: `Bearer ${supabaseServiceKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'resolution=merge-duplicates',
+    },
+    body: JSON.stringify(rows),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Supabase ${table} sync failed: ${response.status} ${await response.text()}`);
+  }
+
+  return true;
+}
+
+async function syncSupabase(records) {
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.log('supabase sync skipped: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set');
+    return;
+  }
+
+  const recordRows = records.map((record) => ({
+    slug: record.id,
+    title: record.title,
+    body_digest: record.contentHash,
+    metadata: {
+      date: record.date,
+      location: record.location,
+      type: record.type,
+      excerpt: record.excerpt,
+      tags: record.tags,
+      cover: record.cover,
+      coverAlt: record.coverAlt,
+      imageUrls: record.imageUrls,
+      url: record.url,
+      embedding: record.embedding,
+    },
+    score: record.score,
+    cluster: record.cluster,
+    position: record.position,
+    updated_at: new Date().toISOString(),
+  }));
+
+  const relationRows = records.flatMap((record) => record.related.map((targetId) => ({
+    source_slug: record.id,
+    target_slug: targetId,
+    cosine_distance: 1,
+    relation_weight: 1,
+    updated_at: new Date().toISOString(),
+  })));
+
+  await supabaseUpsert('archive_records', recordRows, 'slug');
+  await supabaseUpsert('archive_relations', relationRows, 'source_slug,target_slug');
+  console.log(`supabase sync complete: ${recordRows.length} records, ${relationRows.length} relations`);
 }
 
 const files = await listMarkdownFiles(recordsDir);
@@ -188,3 +253,4 @@ const manifest = {
 await mkdir(path.dirname(outputPath), { recursive: true });
 await writeFile(outputPath, `${JSON.stringify(manifest, null, 2)}\n`);
 console.log(`archive manifest written: ${path.relative(root, outputPath)} (${records.length} records)`);
+await syncSupabase(records);
