@@ -1,22 +1,25 @@
 ---
-import { getCollection, render } from 'astro:content';
-import PostLayout from '../../layouts/PostLayout.astro';
+import { getCollection } from 'astro:content';
+
+const stripExtension = (id: string) => id.replace(/\.(md|markdown|mdx)$/i, '');
 
 export async function getStaticPaths() {
-  const stripExtension = (id: string) => id.replace(/\.(md|markdown|mdx)$/i, '');
-  const posts = await getCollection('posts');
-  return posts.map((post) => ({ params: { slug: stripExtension(post.id) }, props: { post } }));
+  const records = await getCollection('records', ({ data }) => data.visibility !== 'private');
+  return records.map((record) => ({ params: { slug: stripExtension(record.id) }, props: { slug: stripExtension(record.id) } }));
 }
 
-const { post } = Astro.props;
-const { Content } = await render(post);
+const { slug } = Astro.props;
+const target = `/records/${slug}/`;
 ---
 
-<PostLayout
-  title={post.data.title}
-  date={post.data.date}
-  location={post.data.location}
-  tags={post.data.tags}
->
-  <Content />
-</PostLayout>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+    <link rel="canonical" href={target} />
+    <title>Redirecting to archive record</title>
+  </head>
+  <body>
+    <a href={target}>Open archive record</a>
+  </body>
+</html>
