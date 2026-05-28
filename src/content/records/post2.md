@@ -2,8 +2,13 @@
 title: PROJECT_VISION
 date: 2026-05-22
 location: 서울
-tags:
-  - AI
+excerpt: chatGPT가 작성한 PROJECT VISION
+tags: [blog, AI]
+cover: ""
+coverAlt: sample
+type: writing
+visibility: public
+views: 0
 ---
 
 # Ydnil-poh Archive System
