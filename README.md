@@ -67,7 +67,7 @@ The build generates:
 public/archive-manifest.json
 ```
 
-The manifest is public and intended for AI agents. It includes record metadata, image URLs, score, cluster, position, related IDs, content hash, and embedding status.
+The manifest is public and intended for rendering/AI inspection. It is a lightweight render snapshot: record metadata, image URLs, display density, cluster, position, related IDs, relation summaries, content hash, and lightweight embedding references. Raw embedding vectors stay out of the static payload and belong in Supabase `archive_embeddings`.
 
 Generate it locally:
 
@@ -90,9 +90,11 @@ It defines:
 - `archive_records`
 - `archive_embeddings`
 - `archive_relations`
-- `increment_record_view(record_slug text)`
+- `archive_events`
+- `record_archive_event(record_slug text, event_type text, event_metadata jsonb)`
+- `increment_record_view(record_slug text)` compatibility wrapper
 
-The current site works without Supabase credentials. When credentials are present, the homepage can call the view RPC, and the manifest reserves Supabase Vector fields for semantic rebuild work.
+The current site works without Supabase credentials. When credentials are present, field tile clicks, detail opens, and record page views are written to Supabase immediately, while semantic density and layout changes remain part of the static/nightly rebuild path.
 
 ## Deployment
 

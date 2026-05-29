@@ -8,7 +8,7 @@ const recordsDir = path.join(root, 'src', 'content', 'records');
 const outputPath = path.join(root, 'public', 'archive-manifest.json');
 const supabaseUrl = process.env.SUPABASE_URL ?? process.env.PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
+const embeddingDimensions = 64;
 const markdownExtensions = new Set(['.md', '.markdown', '.mdx']);
 
 async function listMarkdownFiles(dir) {
@@ -26,7 +26,6 @@ function parseFrontmatter(raw) {
   if (!raw.startsWith('---')) return { data: {}, body: raw };
   const end = raw.indexOf('\n---', 3);
   if (end === -1) return { data: {}, body: raw };
-
   const block = raw.slice(3, end).trim();
   const body = raw.slice(end + 4).trim();
   const data = {};
@@ -44,12 +43,20 @@ function parseFrontmatter(raw) {
       data[key] = value.replace(/^['"]|['"]$/g, '');
     }
   }
-
   return { data, body };
 }
 
 function slugFromFile(file) {
   return path.relative(recordsDir, file).replace(/\\/g, '/').replace(/\.(md|markdown|mdx)$/i, '');
+}
+
+function plainText(body) {
+  return body
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, ' ')
+    .replace(/[`*_>#\-[\]()]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function extractImages(body, cover) {
@@ -58,47 +65,80 @@ function extractImages(body, cover) {
   return [cover, ...markdownImages, ...htmlImages].filter(Boolean);
 }
 
+function tokensFor(text) {
+  const latin = text.toLowerCase().match(/[a-z0-9]{3,}/g) ?? [];
+  const hangul = text.match(/[가-힣]{2,}/g) ?? [];
+  const hangulNgrams = hangul.flatMap((word) => {
+    const chars = [...word];
+    if (chars.length <= 3) return [word];
+    return chars.slice(0, -2).map((_, index) => chars.slice(index, index + 3).join(''));
+  });
+  return [...latin, ...hangul, ...hangulNgrams];
+}
+
+function hashToken(token) {
+  const hash = createHash('sha1').update(token).digest();
+  return { index: hash[0] % embeddingDimensions, sign: hash[1] % 2 === 0 ? 1 : -1 };
+}
+
+function embeddingFor(text) {
+  const vector = Array.from({ length: embeddingDimensions }, () => 0);
+  for (const token of tokensFor(text)) {
+    const { index, sign } = hashToken(token);
+    vector[index] += sign;
+  }
+  const magnitude = Math.hypot(...vector) || 1;
+  return vector.map((value) => Number((value / magnitude).toFixed(6)));
+}
+
+function cosineSimilarity(a, b) {
+  return a.reduce((sum, value, index) => sum + value * b[index], 0);
+}
+
 function normalizeScore(value, min, max) {
   if (max <= min) return 0.5;
   return Number(((value - min) / (max - min)).toFixed(4));
 }
 
-function clusterFor(record, index) {
-  if (Number.isFinite(record.manualCluster)) return record.manualCluster;
-  const seed = [record.location, ...(record.tags ?? [])].join('|') || record.id;
-  const hash = createHash('sha1').update(seed).digest('hex');
-  return Number.parseInt(hash.slice(0, 4), 16) % Math.max(4, Math.ceil(Math.sqrt(index + 4)) + 3);
+function semanticCluster(record) {
+  const strongest = record.embedding.reduce((best, value, index) => Math.abs(value) > Math.abs(record.embedding[best]) ? index : best, 0);
+  return strongest % 8;
 }
 
-function positionFor(record, index, total) {
-  const hash = createHash('sha1').update(`${record.id}:${record.cluster}`).digest();
-  const angle = (hash[0] / 255) * Math.PI * 2;
-  const band = 0.12 + ((index + 1) / Math.max(total, 1)) * 0.76;
-  const gravity = 0.18 * record.score;
-  const radius = Math.max(0.1, Math.min(0.92, band - gravity));
-  const x = 0.5 + Math.cos(angle) * radius * 0.46;
-  const y = 0.5 + Math.sin(angle) * radius * 0.36;
-  return { x: Number(x.toFixed(4)), y: Number(y.toFixed(4)) };
+function positionFor(record, index, total, maxRuntimeScore) {
+  const xAxis = record.embedding[0] + record.embedding[2] * 0.6 + record.embedding[4] * 0.35;
+  const yAxis = record.embedding[1] + record.embedding[3] * 0.6 + record.embedding[5] * 0.35;
+  const hash = createHash('sha1').update(record.id).digest();
+  const jitterX = (hash[0] / 255 - 0.5) * 0.08;
+  const jitterY = (hash[1] / 255 - 0.5) * 0.08;
+  const activity = maxRuntimeScore <= 0 ? 0 : Math.log1p(record.runtimeSnapshot.runtimeScore) / maxRuntimeScore;
+  const driftX = (hash[2] / 255 - 0.5) * activity * 0.035;
+  const driftY = (hash[3] / 255 - 0.5) * activity * 0.035;
+  const fallbackAngle = ((index + 1) / Math.max(total, 1)) * Math.PI * 2;
+  const fallbackRadius = 0.12 + ((index % 5) * 0.035);
+  const x = 0.5 + (xAxis || Math.cos(fallbackAngle) * fallbackRadius) * 0.34 + jitterX + driftX;
+  const y = 0.5 + (yAxis || Math.sin(fallbackAngle) * fallbackRadius) * 0.3 + jitterY + driftY;
+  return {
+    x: Number(Math.max(0.08, Math.min(0.92, x)).toFixed(4)),
+    y: Number(Math.max(0.08, Math.min(0.92, y)).toFixed(4)),
+  };
 }
 
-function related(records, source) {
+function relationRows(records, source) {
   return records
     .filter((candidate) => candidate.id !== source.id)
     .map((candidate) => {
-      const sharedTags = candidate.tags.filter((tag) => source.tags.includes(tag)).length;
-      const location = candidate.location === source.location ? 1 : 0;
-      const cluster = candidate.cluster === source.cluster ? 1 : 0;
-      return { id: candidate.id, weight: sharedTags * 2 + location + cluster };
+      const similarity = cosineSimilarity(source.embedding, candidate.embedding);
+      const cosineDistance = Number(Math.max(0, Math.min(2, 1 - similarity)).toFixed(4));
+      const relationWeight = Number(Math.max(0, similarity).toFixed(4));
+      return { id: candidate.id, cosineDistance, relationWeight };
     })
-    .filter((item) => item.weight > 0)
-    .sort((a, b) => b.weight - a.weight)
-    .slice(0, 8)
-    .map((item) => item.id);
+    .sort((a, b) => a.cosineDistance - b.cosineDistance)
+    .slice(0, 8);
 }
 
 async function supabaseUpsert(table, rows, onConflict) {
   if (!supabaseUrl || !supabaseServiceKey || rows.length === 0) return false;
-
   const endpoint = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/${table}?on_conflict=${encodeURIComponent(onConflict)}`;
   const response = await fetch(endpoint, {
     method: 'POST',
@@ -110,12 +150,33 @@ async function supabaseUpsert(table, rows, onConflict) {
     },
     body: JSON.stringify(rows),
   });
-
-  if (!response.ok) {
-    throw new Error(`Supabase ${table} sync failed: ${response.status} ${await response.text()}`);
-  }
-
+  if (!response.ok) throw new Error(`Supabase ${table} sync failed: ${response.status} ${await response.text()}`);
   return true;
+}
+
+async function fetchRuntimeMetrics(ids) {
+  if (!supabaseUrl || !supabaseServiceKey || ids.length === 0) return new Map();
+  const quoted = ids.map((id) => `"${String(id).replaceAll('\"', '\\"')}"`).join(',');
+  const endpoint = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/archive_records?select=slug,views,tile_clicks,opens,page_views,runtime_score,last_event_at&slug=in.(${quoted})`;
+  const response = await fetch(endpoint, {
+    headers: {
+      apikey: supabaseServiceKey,
+      Authorization: `Bearer ${supabaseServiceKey}`,
+    },
+  });
+  if (!response.ok) {
+    console.warn(`runtime metrics fetch skipped: ${response.status} ${await response.text()}`);
+    return new Map();
+  }
+  const rows = await response.json();
+  return new Map(rows.map((row) => [row.slug, {
+    views: Number(row.views ?? 0),
+    tileClicks: Number(row.tile_clicks ?? 0),
+    opens: Number(row.opens ?? 0),
+    pageViews: Number(row.page_views ?? 0),
+    runtimeScore: Number(row.runtime_score ?? 0),
+    lastEventAt: row.last_event_at ?? null,
+  }]));
 }
 
 async function syncSupabase(records) {
@@ -123,7 +184,6 @@ async function syncSupabase(records) {
     console.log('supabase sync skipped: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set');
     return;
   }
-
   const recordRows = records.map((record) => ({
     slug: record.id,
     title: record.title,
@@ -131,116 +191,180 @@ async function syncSupabase(records) {
     metadata: {
       date: record.date,
       location: record.location,
-      type: record.type,
+      category: record.category,
       excerpt: record.excerpt,
-      tags: record.tags,
       cover: record.cover,
       coverAlt: record.coverAlt,
       imageUrls: record.imageUrls,
       url: record.url,
-      embedding: record.embedding,
+      embeddingRef: record.embeddingRef,
+      embeddingModel: record.embeddingModel,
     },
     score: record.score,
     cluster: record.cluster,
     position: record.position,
     updated_at: new Date().toISOString(),
   }));
-
-  const relationRows = records.flatMap((record) => record.related.map((targetId) => ({
+  const embeddingRows = records.map((record) => ({
+    record_slug: record.id,
+    embedding: `[${record.embedding.join(',')}]`,
+    model: record.embeddingModel,
+    content_hash: record.contentHash,
+    updated_at: new Date().toISOString(),
+  }));
+  const relationRowsForSync = records.flatMap((record) => record.relations.map((relation) => ({
     source_slug: record.id,
-    target_slug: targetId,
-    cosine_distance: 1,
-    relation_weight: 1,
+    target_slug: relation.id,
+    cosine_distance: relation.cosineDistance,
+    relation_weight: relation.relationWeight,
     updated_at: new Date().toISOString(),
   })));
-
   await supabaseUpsert('archive_records', recordRows, 'slug');
-  await supabaseUpsert('archive_relations', relationRows, 'source_slug,target_slug');
-  console.log(`supabase sync complete: ${recordRows.length} records, ${relationRows.length} relations`);
+  await supabaseUpsert('archive_embeddings', embeddingRows, 'record_slug');
+  await supabaseUpsert('archive_relations', relationRowsForSync, 'source_slug,target_slug');
+  console.log(`supabase sync complete: ${recordRows.length} records, ${embeddingRows.length} embeddings, ${relationRowsForSync.length} relations`);
 }
 
 const files = await listMarkdownFiles(recordsDir);
 const initial = await Promise.all(files.map(async (file) => {
   const raw = await readFile(file, 'utf8');
   const { data, body } = parseFrontmatter(raw);
-  const text = body.replace(/<[^>]+>/g, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '').trim();
+  const text = plainText(body);
   const images = extractImages(body, data.cover);
+  const searchableText = [data.title, data.excerpt, data.location, data.category, text].filter(Boolean).join('\n');
+  const embedding = embeddingFor(searchableText);
   const contentHash = createHash('sha256').update(`${JSON.stringify(data)}\n${body}`).digest('hex');
-  const rawScore = Number.isFinite(data.manualScore)
-    ? data.manualScore
-    : text.replace(/\s/g, '').length * 0.08 + images.length * 14 + (data.views ?? 0) * 0.8 + (data.tags?.length ?? 0) * 6;
 
   return {
     id: slugFromFile(file),
     title: data.title ?? slugFromFile(file),
     date: data.date ?? '',
     location: data.location ?? '',
-    type: data.type ?? (images.length > 0 ? 'image' : 'writing'),
+    category: data.category ?? data.type ?? (images.length > 0 ? 'image' : 'writing'),
+    type: data.type ?? data.category ?? (images.length > 0 ? 'image' : 'writing'),
     visibility: data.visibility ?? 'public',
     excerpt: data.excerpt ?? text.slice(0, 140),
     tags: data.tags ?? [],
     cover: data.cover ?? '',
     coverAlt: data.coverAlt ?? 'archive image',
     source: data.source ?? '',
-    manualCluster: data.manualCluster,
-    manualScore: data.manualScore,
     imageUrls: images,
     textLength: text.replace(/\s/g, '').length,
     contentHash,
-    rawScore,
+    embedding,
+    embeddingModel: `local-feature-hash-ko-en-${embeddingDimensions}`,
+    manualSemanticScore: data.semanticScore,
   };
 }));
 
 const publicRecords = initial.filter((record) => record.visibility !== 'private');
-const min = Math.min(...publicRecords.map((record) => record.rawScore), 0);
-const max = Math.max(...publicRecords.map((record) => record.rawScore), 1);
-
-const scored = publicRecords.map((record, index) => ({
+const runtimeMetrics = await fetchRuntimeMetrics(publicRecords.map((record) => record.id));
+const recordsWithRuntime = publicRecords.map((record) => ({
   ...record,
-  score: Number.isFinite(record.manualScore) ? Number(record.manualScore.toFixed(4)) : normalizeScore(record.rawScore, min, max),
-  cluster: clusterFor(record, index),
+  runtimeSnapshot: runtimeMetrics.get(record.id) ?? {
+    views: 0,
+    tileClicks: 0,
+    opens: 0,
+    pageViews: 0,
+    runtimeScore: 0,
+    lastEventAt: null,
+  },
+}));
+const maxRuntimeScore = Math.max(...recordsWithRuntime.map((record) => Math.log1p(record.runtimeSnapshot.runtimeScore)), 0);
+const withRelations = recordsWithRuntime.map((record) => ({ ...record, relations: relationRows(recordsWithRuntime, record) }));
+const rawDensities = withRelations.map((record) => {
+  const topRelations = record.relations.slice(0, 4);
+  const relationDensity = topRelations.length === 0 ? 0 : topRelations.reduce((sum, relation) => sum + Math.max(0, relation.relationWeight), 0) / topRelations.length;
+  const recurrence = Math.min(1, tokensFor([record.title, record.excerpt].join(' ')).length / 36);
+  return Number((relationDensity * 0.72 + recurrence * 0.28).toFixed(6));
+});
+const min = Math.min(...rawDensities, 0);
+const max = Math.max(...rawDensities, 1);
+
+const scored = withRelations.map((record, index) => ({
+  ...record,
+  score: Number.isFinite(record.manualSemanticScore) ? Number(record.manualSemanticScore.toFixed(4)) : normalizeScore(rawDensities[index], min, max),
+  cluster: semanticCluster(record),
 }));
 
-const positioned = scored.map((record, index) => ({
+const semanticRecords = scored.map((record, index) => ({
   ...record,
-  position: positionFor(record, index, scored.length),
+  position: positionFor(record, index, scored.length, maxRuntimeScore),
+  embeddingRef: {
+    provider: 'supabase',
+    table: 'archive_embeddings',
+    key: record.id,
+  },
+  url: `/records/${record.id}/`,
 }));
 
-const records = positioned.map((record) => ({
+const records = semanticRecords.map((record) => ({
   id: record.id,
   slug: record.id,
   title: record.title,
   date: record.date,
   location: record.location,
+  category: record.category,
   type: record.type,
   excerpt: record.excerpt,
   tags: record.tags,
   cover: record.cover,
   coverAlt: record.coverAlt,
+  displayDensity: record.score,
   score: record.score,
+  scoreMeaning: 'semantic density',
   cluster: record.cluster,
   position: record.position,
-  related: related(positioned, record),
+  related: record.relations.map((relation) => relation.id),
+  relationSummary: record.relations.slice(0, 4).map((relation) => ({
+    id: relation.id,
+    weight: relation.relationWeight,
+  })),
+  runtimeSnapshot: {
+    ...record.runtimeSnapshot,
+    frozenAt: new Date().toISOString(),
+    semantics: 'nightly snapshot only; live source of truth remains Supabase archive_events/archive_records',
+  },
+  texture: {
+    density: record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low',
+    imageCount: record.imageUrls.length,
+    textLength: record.textLength,
+  },
   imageUrls: record.imageUrls,
   contentHash: record.contentHash,
-  embedding: {
-    provider: 'supabase-vector',
-    status: process.env.SUPABASE_URL ? 'external' : 'pending',
-    model: process.env.EMBEDDING_MODEL ?? null,
-  },
-  url: `/records/${record.id}/`,
+  embeddingRef: record.embeddingRef,
+  embeddingModel: record.embeddingModel,
+  url: record.url,
 }));
 
 const manifest = {
-  schemaVersion: 1,
+  schemaVersion: 3,
   generatedAt: new Date().toISOString(),
   source: 'src/content/records',
   storage: { provider: 'supabase', bucket: process.env.SUPABASE_STORAGE_BUCKET ?? 'archive-images' },
-  vector: { provider: 'supabase-vector', table: 'archive_embeddings', relationTable: 'archive_relations' },
+  semanticLayer: {
+    provider: 'supabase-backed-nightly-precompute',
+    embeddingModel: `local-feature-hash-ko-en-${embeddingDimensions}`,
+    embeddingRef: { table: 'archive_embeddings', key: 'record_slug' },
+    relationRef: { table: 'archive_relations', distance: 'cosine' },
+    manifestPolicy: 'render snapshot only; raw vectors are excluded',
+  },
   spatialPolicy: {
     interpretation: 'semantic density terrain',
-    scoreMeaning: ['memory cohesion', 'semantic recurrence', 'relation density', 'revisit potential'],
+    scoreMeaning: ['semantic density', 'recurrence', 'relational gravity', 'archival weight'],
+    runtimeSignal: 'runtime activity may cause weak nightly spatial drift but is not semantic gravity',
+    excludes: ['raw embeddings', 'live views', 'engagement ranking', 'popularity'],
     persistence: 'nightly rebuilds should preserve spatial memory and allow only local drift',
+  },
+  analytics: {
+    provider: 'supabase',
+    table: 'archive_records',
+    eventTable: 'archive_events',
+    eventFunction: 'record_archive_event',
+    sourceOfTruth: 'backend',
+    frontmatterPolicy: 'ignored',
+    snapshotSemantics: 'runtime metrics in this manifest are frozen at rebuild time; live source of truth remains Supabase',
+    rebuildUse: 'nightly runtime metrics may weakly drift spatial placement but do not change semantic density directly',
   },
   counts: {
     records: records.length,
@@ -253,4 +377,4 @@ const manifest = {
 await mkdir(path.dirname(outputPath), { recursive: true });
 await writeFile(outputPath, `${JSON.stringify(manifest, null, 2)}\n`);
 console.log(`archive manifest written: ${path.relative(root, outputPath)} (${records.length} records)`);
-await syncSupabase(records);
+await syncSupabase(semanticRecords);
