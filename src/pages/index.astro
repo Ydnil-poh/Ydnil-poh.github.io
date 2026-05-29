@@ -98,9 +98,10 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
       .archive-shell {
         display: grid;
         gap: 24px;
-        grid-template-columns: 178px minmax(680px, 1fr);
-        min-height: 100vh;
-        padding: 28px 30px 26px;
+        grid-template-columns: 178px minmax(920px, 1fr);
+        grid-template-rows: minmax(0, 1fr);
+        height: 100vh;
+        padding: 22px 30px 20px;
         position: relative;
       }
 
@@ -136,7 +137,7 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
         display: grid;
         grid-column: 2;
         grid-row: 1;
-        grid-template-rows: auto minmax(560px, 1fr) auto;
+        grid-template-rows: auto minmax(0, 1fr) auto;
         min-height: 0;
         min-width: 0;
         padding: 20px 22px 22px;
@@ -145,7 +146,12 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
 
       .archive-meta { display: flex; justify-content: space-between; min-height: 16px; z-index: 4; }
 
-      .field-scroll { min-width: 0; overflow: auto; padding-bottom: 6px; }
+      .field-scroll {
+        min-height: 0;
+        min-width: 0;
+        overflow: hidden;
+        padding-bottom: 6px;
+      }
 
       .field {
         background: rgba(247, 243, 235, 0.52);
@@ -155,8 +161,8 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
         grid-template-rows: repeat(var(--rows), minmax(16px, 1fr));
         height: 100%;
         margin-top: 18px;
-        min-height: 520px;
-        min-width: 680px;
+        min-height: 0;
+        min-width: 0;
         background-image: linear-gradient(rgba(92, 83, 67, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(92, 83, 67, 0.08) 1px, transparent 1px);
         background-size: calc((100% - 36px) / var(--cols)) calc((100% - 36px) / var(--rows));
         background-position: 18px 18px;
@@ -289,21 +295,6 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
       .open-link { align-self: end; color: var(--ink); display: inline-flex; font-size: 14px; justify-self: start; margin-top: 24px; text-decoration: none; }
       .open-link::after { content: "→"; margin-left: 18px; }
 
-      @media (max-width: 1120px) {
-        .archive-shell { grid-template-columns: 1fr; padding: 20px; }
-        .brand, .field-stage, .status { grid-column: 1; grid-row: auto; }
-        .status { align-self: auto; grid-template-columns: repeat(4, minmax(0, 1fr)); order: 4; }
-        .field-stage { grid-template-rows: auto minmax(420px, 60vh) auto; }
-        .inspector { grid-template-rows: auto auto auto auto auto auto; }
-      }
-
-      @media (max-width: 640px) {
-        .archive-shell { gap: 16px; padding: 14px; }
-        .field-stage, .inspector { padding: 16px; }
-        .status { grid-template-columns: 1fr 1fr; }
-        .legend { flex-wrap: wrap; }
-        .field { min-width: 620px; }
-      }
     </style>
   </head>
   <body>
@@ -377,8 +368,8 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
       <section class="status" aria-label="archive state">
         <div class="status-row"><span>records</span><span>{fieldRecords.length}</span></div>
         <div class="status-row"><span>clusters</span><span>{clusterCount}</span></div>
-        <div class="status-row"><span>vector</span><span>{manifest.vector.model}</span></div>
-        <div class="status-row"><span>mode</span><span>light / sleep</span></div>
+        <div class="status-row"><span>view</span><span>field</span></div>
+        <div class="status-row"><span>sleep</span><span>nightly</span></div>
       </section>
     </main>
 
