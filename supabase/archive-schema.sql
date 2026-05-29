@@ -49,14 +49,24 @@ for select
 using (true);
 
 create or replace function public.increment_record_view(record_slug text)
-returns void
+returns integer
 language plpgsql
 security definer
+set search_path = public
 as $$
+declare
+  updated_views integer;
 begin
-  insert into public.archive_records (slug, title, views)
-  values (record_slug, record_slug, 1)
+  insert into public.archive_records (slug, title, views, updated_at)
+  values (record_slug, record_slug, 1, now())
   on conflict (slug)
-  do update set views = public.archive_records.views + 1;
+  do update set
+    views = public.archive_records.views + 1,
+    updated_at = now()
+  returning views into updated_views;
+
+  return updated_views;
 end;
 $$;
+
+grant execute on function public.increment_record_view(text) to anon, authenticated;
