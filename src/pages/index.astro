@@ -1,22 +1,20 @@
 ---
-import { getCollection } from 'astro:content';
+import manifest from '../../public/archive-manifest.json';
 
-const stripExtension = (id: string) => id.replace(/\.(md|markdown|mdx)$/i, '');
-const hashNumber = (value: string) => [...value].reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) % 100000, 17);
-const normalize = (value: number, min: number, max: number) => max <= min ? 0.5 : Number(((value - min) / (max - min)).toFixed(4));
 const COLS = 28;
 const ROWS = 18;
+const totalSlots = COLS * ROWS;
+
+type ManifestRecord = (typeof manifest.records)[number];
 
 function nearestOpenSlot(preferred: number, occupied: Set<number>) {
-  const total = COLS * ROWS;
   if (!occupied.has(preferred)) return preferred;
-
   const preferredCol = preferred % COLS;
   const preferredRow = Math.floor(preferred / COLS);
   let best = -1;
   let bestDistance = Infinity;
 
-  for (let index = 0; index < total; index += 1) {
+  for (let index = 0; index < totalSlots; index += 1) {
     if (occupied.has(index)) continue;
     const col = index % COLS;
     const row = Math.floor(index / COLS);
@@ -26,103 +24,46 @@ function nearestOpenSlot(preferred: number, occupied: Set<number>) {
       bestDistance = distance;
     }
   }
-
   return best;
 }
 
-const sourceRecords = await getCollection('records', ({ data }) => data.visibility !== 'private');
-const parsed = sourceRecords.map((record) => {
-  const id = stripExtension(record.id);
-  const body = record.body ?? '';
-  const textCount = body.replace(/<[^>]+>/g, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/\s/g, '').length;
-  const markdownImages = [...body.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)].map((match) => match[1]);
-  const htmlImages = [...body.matchAll(/<img\b[^>]*src=['"]([^'"]+)['"][^>]*>/gi)].map((match) => match[1]);
-  const imageUrls = [record.data.cover, ...markdownImages, ...htmlImages].filter(Boolean);
-  const rawScore = record.data.manualScore ?? textCount * 0.08 + imageUrls.length * 14 + record.data.tags.length * 6 + record.data.views * 0.8;
-  const clusterSeed = [record.data.location, ...record.data.tags].join('|') || id;
-
-  return {
-    id,
-    slug: id,
-    title: record.data.title,
-    date: record.data.date.toISOString(),
-    location: record.data.location,
-    excerpt: record.data.excerpt,
-    type: record.data.type,
-    tags: record.data.tags,
-    cover: record.data.cover ?? '',
-    coverAlt: record.data.coverAlt,
-    url: `/records/${id}/`,
-    imageUrls,
-    textCount,
-    rawScore,
-    cluster: record.data.manualCluster ?? hashNumber(clusterSeed) % Math.max(4, Math.ceil(Math.sqrt(sourceRecords.length + 4)) + 3),
-  };
-});
-
-const minScore = Math.min(...parsed.map((record) => record.rawScore), 0);
-const maxScore = Math.max(...parsed.map((record) => record.rawScore), 1);
-const occupied = new Set<number>();
-const records = parsed.map((record) => {
-  const score = record.rawScore === record.rawScore ? normalize(record.rawScore, minScore, maxScore) : 0.5;
-  const seed = hashNumber(`${record.id}:${record.cluster}`);
-  const preferredCol = Math.floor((seed % COLS) * 0.68 + COLS * 0.16);
-  const preferredRow = Math.floor(((Math.floor(seed / COLS) % ROWS) * 0.68) + ROWS * 0.16);
-  const preferred = Math.max(0, Math.min(COLS * ROWS - 1, preferredRow * COLS + preferredCol));
-  const slot = nearestOpenSlot(preferred, occupied);
-  if (slot >= 0) occupied.add(slot);
-
-  const col = slot >= 0 ? slot % COLS : 0;
-  const row = slot >= 0 ? Math.floor(slot / COLS) : 0;
-
+function slotFromPosition(record: ManifestRecord, occupied: Set<number>) {
+  const preferredCol = Math.max(0, Math.min(COLS - 1, Math.floor(record.position.x * COLS)));
+  const preferredRow = Math.max(0, Math.min(ROWS - 1, Math.floor(record.position.y * ROWS)));
+  const slot = nearestOpenSlot(preferredRow * COLS + preferredCol, occupied);
+  occupied.add(slot);
   return {
     ...record,
-    score,
     slot,
     position: {
-      col,
-      row,
-      x: Number(((col + 0.5) / COLS).toFixed(4)),
-      y: Number(((row + 0.5) / ROWS).toFixed(4)),
+      ...record.position,
+      col: slot % COLS,
+      row: Math.floor(slot / COLS),
     },
   };
-});
+}
 
-const relatedFor = (source: typeof records[number]) => records
-  .filter((candidate) => candidate.id !== source.id)
-  .map((candidate) => {
-    const sharedTags = candidate.tags.filter((tag) => source.tags.includes(tag)).length;
-    const location = candidate.location === source.location ? 1 : 0;
-    const cluster = candidate.cluster === source.cluster ? 1 : 0;
-    return { id: candidate.id, weight: sharedTags * 2 + location + cluster };
-  })
-  .filter((item) => item.weight > 0)
-  .sort((a, b) => b.weight - a.weight)
-  .slice(0, 8)
-  .map((item) => item.id);
+const occupied = new Set<number>();
+const fieldRecords = manifest.records.map((record) => slotFromPosition(record, occupied));
+const occupiedSlots = new Set(fieldRecords.map((record) => record.slot));
+const emptyTiles = Array.from({ length: totalSlots }, (_, slot) => ({
+  slot,
+  col: slot % COLS,
+  row: Math.floor(slot / COLS),
+  tone: (slot * 13 + Math.floor(slot / COLS) * 7) % 9,
+})).filter((tile) => !occupiedSlots.has(tile.slot));
 
-const fieldRecords = records.map((record) => ({ ...record, related: relatedFor(record) }));
-const lines = fieldRecords.flatMap((record) => record.related.map((targetId) => {
-  const target = fieldRecords.find((item) => item.id === targetId);
-  if (!target) return null;
-  return {
-    source: record.id,
-    target: target.id,
-    x1: record.position.x * 100,
-    y1: record.position.y * 100,
-    x2: target.position.x * 100,
-    y2: target.position.y * 100,
-  };
-}).filter(Boolean));
-
+const recordById = new Map(fieldRecords.map((record) => [record.id, record]));
 const selected = fieldRecords[0];
-const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(new Date());
+const selectedRelated = selected?.related.map((id) => recordById.get(id)).filter(Boolean).slice(0, 4) ?? [];
+const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(new Date(manifest.generatedAt));
+const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
 ---
 
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=1440, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ydnil-poh Archive Field</title>
     <style>
       :root {
@@ -158,10 +99,10 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .archive-shell {
         display: grid;
         gap: 24px;
-        grid-template-columns: 178px minmax(0, 1fr) 292px;
+        grid-template-columns: 178px minmax(920px, 1fr);
         grid-template-rows: minmax(0, 1fr);
         height: 100vh;
-        padding: 28px 30px 26px;
+        padding: 22px 30px 20px;
         position: relative;
       }
 
@@ -174,7 +115,6 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .brand h1 {
         font-size: 21px;
         font-weight: 500;
-        letter-spacing: 0;
         line-height: 1;
         margin: 0 0 4px;
       }
@@ -182,10 +122,9 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .brand span,
       .archive-meta,
       .status,
-      .inspector {
-        color: var(--muted);
-        font-size: 12px;
-      }
+      .inspector,
+      .legend,
+      .sleep-note { color: var(--muted); font-size: 12px; }
 
       .status {
         align-self: end;
@@ -196,103 +135,79 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         line-height: 1.4;
       }
 
-      .status-row {
-        display: flex;
-        justify-content: space-between;
-      }
+      .status-row { display: flex; justify-content: space-between; }
 
       .field-stage {
         border: 1px solid var(--line);
         display: grid;
         grid-column: 2;
         grid-row: 1;
-        grid-template-rows: auto minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr) auto;
         min-height: 0;
         min-width: 0;
-        padding: 20px 22px 44px;
+        padding: 20px 22px 22px;
         position: relative;
       }
 
-      .archive-meta {
-        display: flex;
-        justify-content: space-between;
-        min-height: 16px;
-        z-index: 4;
+      .archive-meta { display: flex; justify-content: space-between; min-height: 16px; z-index: 4; }
+
+      .field-scroll {
+        min-height: 0;
+        min-width: 0;
+        overflow: hidden;
+        padding-bottom: 6px;
       }
 
       .field {
         background: rgba(247, 243, 235, 0.52);
         display: grid;
-        gap: 5px;
-        grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
-        grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+        gap: 1px;
+        grid-template-columns: repeat(var(--cols), minmax(16px, 1fr));
+        grid-template-rows: repeat(var(--rows), minmax(16px, 1fr));
         height: 100%;
         margin-top: 18px;
         min-height: 0;
+        min-width: 0;
+        background-image: linear-gradient(rgba(92, 83, 67, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(92, 83, 67, 0.08) 1px, transparent 1px);
+        background-size: calc((100% - 36px) / var(--cols)) calc((100% - 36px) / var(--rows));
+        background-position: 18px 18px;
         overflow: hidden;
         padding: 18px;
         position: relative;
       }
 
-      .relations {
-        inset: 0;
-        pointer-events: none;
-        position: absolute;
-      }
-
-      .relations line {
-        stroke: rgba(91, 95, 63, 0.3);
-        stroke-width: 1;
-      }
-
+      .empty-tile,
       .record-node {
         align-self: stretch;
-        background: rgba(247, 243, 235, 0.42);
-        border: 1px solid rgba(92, 83, 67, 0.16);
-        color: inherit;
         display: block;
         grid-column: calc(var(--col) + 1);
         grid-row: calc(var(--row) + 1);
-        opacity: calc(0.5 + var(--score) * 0.42);
         position: relative;
+      }
+
+      .empty-tile {
+        background: rgba(247, 243, 235, calc(0.04 + var(--tone) * 0.012));
+        border: 0;
+        z-index: 1;
+      }
+
+      .record-node {
+        background: rgba(247, 243, 235, 0.55);
+        border: 1px solid rgba(92, 83, 67, 0.2);
+        color: inherit;
+        opacity: calc(0.58 + var(--score) * 0.36);
         text-decoration: none;
         z-index: 3;
       }
 
       .record-node::before,
-      .record-node::after {
-        background: var(--olive);
-        content: "";
-        opacity: 0.72;
-        position: absolute;
-      }
-
-      .record-node::before {
-        height: 3px;
-        left: 18%;
-        top: 30%;
-        width: 64%;
-        box-shadow:
-          -4px 6px 0 var(--olive),
-          6px 12px 0 var(--olive);
-      }
-
-      .record-node::after {
-        height: 3px;
-        left: 28%;
-        top: 58%;
-        width: 44%;
-        box-shadow:
-          -6px 6px 0 var(--olive),
-          8px -12px 0 var(--olive);
-      }
+      .record-node::after { background: var(--olive); content: ""; opacity: 0.72; position: absolute; }
+      .record-node::before { height: 3px; left: 18%; top: 30%; width: 64%; box-shadow: -4px 6px 0 var(--olive), 6px 12px 0 var(--olive); }
+      .record-node::after { height: 3px; left: 28%; top: 58%; width: 44%; box-shadow: -6px 6px 0 var(--olive), 8px -12px 0 var(--olive); }
 
       .record-node:focus,
       .record-node:hover,
-      .record-node.is-selected {
-        outline: 1px solid rgba(37, 35, 29, 0.45);
-        outline-offset: 4px;
-      }
+      .record-node.is-selected { outline: 1px solid rgba(37, 35, 29, 0.45); outline-offset: 4px; }
 
       .record-node[data-density="high"]::before,
       .record-node[data-density="high"]::after { background: var(--warm); box-shadow: -4px 6px 0 var(--warm), 6px 12px 0 var(--warm); }
@@ -301,59 +216,90 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .record-node[data-density="low"]::before,
       .record-node[data-density="low"]::after { background: var(--soft); box-shadow: -4px 6px 0 var(--soft), 6px 12px 0 var(--soft); }
 
+      .legend { border-top: 1px solid var(--line); display: flex; gap: 18px; justify-content: space-between; padding-top: 14px; }
+      .legend b { color: var(--ink); font-weight: 500; }
+      .sleep-note { margin-left: auto; }
+
+      .modal-backdrop {
+        background: rgba(37, 35, 29, 0.18);
+        inset: 0;
+        opacity: 0;
+        pointer-events: none;
+        position: fixed;
+        transition: opacity 180ms ease;
+        z-index: 20;
+      }
+
+      .modal-backdrop.is-open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
       .inspector {
-        border: 1px solid var(--line);
+        background: rgba(247, 243, 235, 0.96);
+        border-left: 1px solid var(--line);
+        box-shadow: -20px 0 48px rgba(37, 35, 29, 0.12);
         display: grid;
-        grid-column: 3;
-        grid-row: 1;
-        grid-template-rows: auto auto 1fr auto;
-        min-height: 0;
-        padding: 26px;
+        grid-template-rows: auto auto auto 1fr auto auto;
+        inset: 0 0 0 auto;
+        max-width: min(420px, 100vw);
+        min-height: 100vh;
+        opacity: 0;
+        padding: 28px;
+        pointer-events: none;
+        position: fixed;
+        transform: translateX(100%);
+        transition: transform 220ms ease, opacity 160ms ease;
+        width: 360px;
+        z-index: 30;
       }
 
-      .inspector h2 {
-        color: var(--ink);
-        font-size: 17px;
-        font-weight: 500;
-        letter-spacing: 0;
-        margin: 0 0 22px;
+      .inspector.is-open {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(0);
       }
 
-      .inspector dl {
-        border-bottom: 1px solid var(--line);
-        border-top: 1px solid var(--line);
-        display: grid;
-        gap: 7px;
-        grid-template-columns: 1fr 1fr;
-        margin: 0 0 22px;
-        padding: 16px 0;
+      .inspector-header {
+        align-items: start;
+        display: flex;
+        gap: 18px;
+        justify-content: space-between;
       }
 
+      .close-detail {
+        background: transparent;
+        border: 0;
+        color: var(--muted);
+        cursor: pointer;
+        font: inherit;
+        padding: 0;
+      }
+
+      .close-detail:hover { color: var(--ink); }
+
+      .inspector h2 { color: var(--ink); font-size: 17px; font-weight: 500; margin: 0 0 22px; }
+      .cover { aspect-ratio: 4 / 3; background: rgba(247, 243, 235, 0.6); border: 1px solid var(--line); display: grid; margin-bottom: 18px; overflow: hidden; place-items: center; }
+      .cover img { height: 100%; object-fit: cover; width: 100%; }
+      .cover-placeholder { color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+      .inspector dl { border-bottom: 1px solid var(--line); border-top: 1px solid var(--line); display: grid; gap: 7px; grid-template-columns: 1fr 1fr; margin: 0 0 22px; padding: 16px 0; }
       .inspector dt { color: var(--muted); }
       .inspector dd { color: var(--ink); margin: 0; }
 
-      .excerpt {
-        color: var(--ink);
-        font-family: "Iowan Old Style", "Apple SD Gothic Neo", "Noto Serif KR", serif;
-        font-size: 15px;
-        line-height: 1.8;
-        margin: 0;
-      }
+      .excerpt { color: var(--ink); font-family: "Iowan Old Style", "Apple SD Gothic Neo", "Noto Serif KR", serif; font-size: 15px; line-height: 1.8; margin: 0; }
+      .related { border-top: 1px solid var(--line); display: grid; gap: 10px; margin-top: 22px; padding-top: 14px; }
+      .related h3 { color: var(--muted); font-size: 12px; font-weight: 400; margin: 0; }
+      .related-list { display: grid; gap: 8px; }
+      .related-card { align-items: center; color: var(--ink); display: grid; gap: 10px; grid-template-columns: 44px 1fr; text-decoration: none; }
+      .related-thumb { aspect-ratio: 1; background: rgba(91, 95, 63, 0.12); border: 1px solid var(--line); display: grid; place-items: center; }
+      .related-thumb img { height: 100%; object-fit: cover; width: 100%; }
+      .related-dot { background: var(--olive); border-radius: 999px; height: 8px; width: 8px; }
+      .related-title { font-size: 12px; line-height: 1.35; }
 
-      .open-link {
-        align-self: end;
-        color: var(--ink);
-        display: inline-flex;
-        font-size: 14px;
-        justify-self: start;
-        margin-top: 24px;
-        text-decoration: none;
-      }
+      .open-link { align-self: end; color: var(--ink); display: inline-flex; font-size: 14px; justify-self: start; margin-top: 24px; text-decoration: none; }
+      .open-link::after { content: "→"; margin-left: 18px; }
 
-      .open-link::after {
-        content: "→";
-        margin-left: 18px;
-      }
     </style>
   </head>
   <body>
@@ -367,40 +313,66 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
           <span>archive as of</span>
           <span>{archiveDate}</span>
         </div>
-        <div class="field" id="field" style={`--cols:${COLS};--rows:${ROWS};`}>
-          <svg class="relations" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            {lines.map((line) => line && <line x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} />)}
-          </svg>
-          {fieldRecords.map((record, index) => {
-            const density = record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low';
-            return (
-              <a
-                class={`record-node ${index === 0 ? 'is-selected' : ''}`}
-                data-record-id={record.id}
-                data-density={density}
-                href={record.url}
-                style={`--col:${record.position.col};--row:${record.position.row};--score:${record.score};`}
-              ></a>
-            );
-          })}
+        <div class="field-scroll">
+          <div class="field" id="field" style={`--cols:${COLS};--rows:${ROWS};`}>
+            {emptyTiles.map((tile) => <span class="empty-tile" style={`--col:${tile.col};--row:${tile.row};--tone:${tile.tone};`} aria-hidden="true"></span>)}
+            {fieldRecords.map((record, index) => {
+              const density = record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low';
+              return (
+                <a
+                  class="record-node"
+                  data-record-id={record.id}
+                  data-density={density}
+                  href={record.url}
+                  style={`--col:${record.position.col};--row:${record.position.row};--score:${record.score};`}
+                  aria-label={record.title}
+                ></a>
+              );
+            })}
+          </div>
+        </div>
+        <div class="legend" aria-label="field legend">
+          <span><b>{fieldRecords.length}</b> records</span>
+          <span><b>{emptyTiles.length}</b> waiting cells</span>
+          <span>score = semantic density</span>
+          <span class="sleep-note">sleep rebuild: nightly</span>
         </div>
       </section>
 
-      <aside class="inspector" aria-label="selected record">
-        <h2 id="detail-title">{selected?.title ?? 'empty archive'}</h2>
+      <aside class="inspector" id="detail-panel" aria-label="selected record" aria-hidden="true">
+        <div class="inspector-header">
+          <h2 id="detail-title">{selected?.title ?? 'empty archive'}</h2>
+          <button class="close-detail" id="detail-close" type="button">close</button>
+        </div>
+        <div class="cover" id="detail-cover">
+          {selected?.cover ? <img src={selected.cover} alt={selected.coverAlt} /> : <span class="cover-placeholder">no cover</span>}
+        </div>
         <dl>
           <dt>score</dt><dd id="detail-score">{selected ? selected.score.toFixed(2) : '0.00'}</dd>
           <dt>cluster</dt><dd id="detail-cluster">{selected ? `# ${selected.cluster}` : '-'}</dd>
           <dt>created</dt><dd id="detail-date">{selected ? selected.date.slice(0, 10) : '-'}</dd>
-          <dt>type</dt><dd id="detail-type">{selected?.type ?? '-'}</dd>
+          <dt>category</dt><dd id="detail-category">{selected?.category ?? '-'}</dd>
+          <dt>views</dt><dd id="detail-views">backend</dd>
         </dl>
         <p class="excerpt" id="detail-excerpt">{selected?.excerpt ?? '기록이 쌓이면 이곳에 의미 밀도가 생깁니다.'}</p>
+        <div class="related" aria-label="related records">
+          <h3>related by semantic distance</h3>
+          <div class="related-list" id="detail-related">
+            {selectedRelated.map((record) => record && (
+              <a class="related-card" href={record.url}>
+                <span class="related-thumb">{record.cover ? <img src={record.cover} alt="" /> : <span class="related-dot"></span>}</span>
+                <span class="related-title">{record.title}</span>
+              </a>
+            ))}
+          </div>
+        </div>
         <a class="open-link" id="detail-open" href={selected?.url ?? '/archive-manifest.json'}>open</a>
       </aside>
+      <div class="modal-backdrop" id="detail-backdrop" aria-hidden="true"></div>
 
       <section class="status" aria-label="archive state">
         <div class="status-row"><span>records</span><span>{fieldRecords.length}</span></div>
-        <div class="status-row"><span>clusters</span><span>{new Set(fieldRecords.map((record) => record.cluster)).size}</span></div>
+        <div class="status-row"><span>clusters</span><span>{clusterCount}</span></div>
         <div class="status-row"><span>view</span><span>field</span></div>
         <div class="status-row"><span>sleep</span><span>nightly</span></div>
       </section>
@@ -414,9 +386,72 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       const score = document.getElementById('detail-score');
       const cluster = document.getElementById('detail-cluster');
       const date = document.getElementById('detail-date');
-      const type = document.getElementById('detail-type');
+      const category = document.getElementById('detail-category');
+      const views = document.getElementById('detail-views');
       const excerpt = document.getElementById('detail-excerpt');
       const open = document.getElementById('detail-open');
+      const cover = document.getElementById('detail-cover');
+      const related = document.getElementById('detail-related');
+      const panel = document.getElementById('detail-panel');
+      const close = document.getElementById('detail-close');
+      const backdrop = document.getElementById('detail-backdrop');
+
+      function coverMarkup(record) {
+        return record.cover
+          ? `<img src="${record.cover}" alt="${record.coverAlt || ''}">`
+          : '<span class="cover-placeholder">no cover</span>';
+      }
+
+      const backend = {
+        url: import.meta.env.PUBLIC_SUPABASE_URL,
+        key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+      };
+
+      function viewText(record) {
+        return Number.isFinite(record.views) ? String(record.views) : 'not loaded';
+      }
+
+      async function fetchBackendViews() {
+        if (!backend.url || !backend.key || records.length === 0) return;
+        const slugs = records.map((record) => `"${String(record.id).replaceAll('\"', '\\"')}"`).join(',');
+        const endpoint = `${backend.url.replace(/\/$/, '')}/rest/v1/archive_records?select=slug,views&slug=in.(${slugs})`;
+        const response = await fetch(endpoint, {
+          headers: { apikey: backend.key, Authorization: `Bearer ${backend.key}` },
+        });
+        if (!response.ok) return;
+        const rows = await response.json();
+        rows.forEach((row) => {
+          const record = records.find((item) => item.id === row.slug);
+          if (record) record.views = Number(row.views);
+        });
+      }
+
+      function relatedMarkup(record) {
+        return (record.related || [])
+          .map((id) => records.find((item) => item.id === id))
+          .filter(Boolean)
+          .slice(0, 4)
+          .map((item) => `
+            <a class="related-card" href="${item.url}">
+              <span class="related-thumb">${item.cover ? `<img src="${item.cover}" alt="">` : '<span class="related-dot"></span>'}</span>
+              <span class="related-title">${item.title}</span>
+            </a>
+          `)
+          .join('');
+      }
+
+      function openPanel() {
+        panel.classList.add('is-open');
+        backdrop.classList.add('is-open');
+        panel.setAttribute('aria-hidden', 'false');
+      }
+
+      function closePanel() {
+        panel.classList.remove('is-open');
+        backdrop.classList.remove('is-open');
+        panel.setAttribute('aria-hidden', 'true');
+        nodes.forEach((node) => node.classList.remove('is-selected'));
+      }
 
       function selectRecord(record) {
         nodes.forEach((node) => node.classList.toggle('is-selected', node.dataset.recordId === record.id));
@@ -424,21 +459,36 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         score.textContent = Number(record.score).toFixed(2);
         cluster.textContent = `# ${record.cluster}`;
         date.textContent = String(record.date).slice(0, 10);
-        type.textContent = record.type;
+        category.textContent = record.category || record.type;
+        views.textContent = viewText(record);
         excerpt.textContent = record.excerpt;
         open.href = record.url;
+        cover.innerHTML = coverMarkup(record);
+        related.innerHTML = relatedMarkup(record);
+        openPanel();
       }
 
       async function incrementRecord(id) {
-        const url = import.meta.env.PUBLIC_SUPABASE_URL;
-        const key = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
-        if (!url || !key) return;
-        await fetch(`${url}/rest/v1/rpc/increment_record_view`, {
+        if (!backend.url || !backend.key) return null;
+        const response = await fetch(`${backend.url.replace(/\/$/, '')}/rest/v1/rpc/increment_record_view`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', apikey: key, Authorization: `Bearer ${key}` },
+          headers: { 'Content-Type': 'application/json', apikey: backend.key, Authorization: `Bearer ${backend.key}` },
           body: JSON.stringify({ record_slug: id }),
         });
+        if (!response.ok) return null;
+        const payload = await response.json().catch(() => null);
+        if (typeof payload === 'number') return payload;
+        if (Array.isArray(payload)) return Number(payload[0]?.views ?? payload[0]);
+        return Number(payload?.views ?? payload);
       }
+
+      close.addEventListener('click', closePanel);
+      backdrop.addEventListener('click', closePanel);
+      window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closePanel();
+      });
+
+      fetchBackendViews().catch(() => {});
 
       nodes.forEach((node) => {
         node.addEventListener('click', (event) => {
@@ -447,7 +497,13 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
           const record = records.find((item) => item.id === node.dataset.recordId);
           if (!record) return;
           selectRecord(record);
-          incrementRecord(record.id).catch(() => {});
+          incrementRecord(record.id)
+            .then((nextViews) => {
+              if (!Number.isFinite(nextViews)) return;
+              record.views = nextViews;
+              if (node.classList.contains('is-selected')) views.textContent = viewText(record);
+            })
+            .catch(() => {});
         });
       });
     </script>
