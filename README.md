@@ -90,9 +90,11 @@ It defines:
 - `archive_records`
 - `archive_embeddings`
 - `archive_relations`
-- `increment_record_view(record_slug text)`
+- `archive_events`
+- `record_archive_event(record_slug text, event_type text, event_metadata jsonb)`
+- `increment_record_view(record_slug text)` compatibility wrapper
 
-The current site works without Supabase credentials. When credentials are present, the homepage can call the view RPC, and the manifest reserves Supabase Vector fields for semantic rebuild work.
+The current site works without Supabase credentials. When credentials are present, field tile clicks, detail opens, and record page views are written to Supabase immediately, while semantic density and layout changes remain part of the static/nightly rebuild path.
 
 ## Deployment
 
