@@ -154,7 +154,7 @@ async function supabaseUpsert(table, rows, onConflict) {
   return true;
 }
 
-async function fetchRuntimeMetrics(ids) {
+async function fetchRuntimeSnapshots(ids) {
   if (!supabaseUrl || !supabaseServiceKey || ids.length === 0) return new Map();
   const quoted = ids.map((id) => `"${String(id).replaceAll('\"', '\\"')}"`).join(',');
   const endpoint = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/archive_records?select=slug,views,tile_clicks,opens,page_views,runtime_score,last_event_at&slug=in.(${quoted})`;
@@ -258,10 +258,10 @@ const initial = await Promise.all(files.map(async (file) => {
 }));
 
 const publicRecords = initial.filter((record) => record.visibility !== 'private');
-const runtimeMetrics = await fetchRuntimeMetrics(publicRecords.map((record) => record.id));
+const runtimeSnapshots = await fetchRuntimeSnapshots(publicRecords.map((record) => record.id));
 const recordsWithRuntime = publicRecords.map((record) => ({
   ...record,
-  runtimeSnapshot: runtimeMetrics.get(record.id) ?? {
+  runtimeSnapshot: runtimeSnapshots.get(record.id) ?? {
     views: 0,
     tileClicks: 0,
     opens: 0,
@@ -272,18 +272,18 @@ const recordsWithRuntime = publicRecords.map((record) => ({
 }));
 const runtimeDriftScale = Math.max(...recordsWithRuntime.map((record) => Math.log1p(record.runtimeSnapshot.runtimeScore)), 0);
 const recordsWithRelations = recordsWithRuntime.map((record) => ({ ...record, relations: relationRows(recordsWithRuntime, record) }));
-const rawDensities = recordsWithRelations.map((record) => {
+const densityValues = recordsWithRelations.map((record) => {
   const topRelations = record.relations.slice(0, 4);
   const relationDensity = topRelations.length === 0 ? 0 : topRelations.reduce((sum, relation) => sum + Math.max(0, relation.relationWeight), 0) / topRelations.length;
   const recurrence = Math.min(1, tokensFor([record.title, record.excerpt].join(' ')).length / 36);
   return Number((relationDensity * 0.72 + recurrence * 0.28).toFixed(6));
 });
-const min = Math.min(...rawDensities, 0);
-const max = Math.max(...rawDensities, 1);
+const densityMin = Math.min(...densityValues, 0);
+const densityMax = Math.max(...densityValues, 1);
 
 const scored = recordsWithRelations.map((record, index) => ({
   ...record,
-  score: Number.isFinite(record.manualSemanticScore) ? Number(record.manualSemanticScore.toFixed(4)) : normalizeScore(rawDensities[index], min, max),
+  score: Number.isFinite(record.manualSemanticScore) ? Number(record.manualSemanticScore.toFixed(4)) : normalizeScore(densityValues[index], densityMin, densityMax),
   cluster: semanticCluster(record),
 }));
 const maxRuntimeScore = Math.max(...recordsWithRuntime.map((record) => Math.log1p(record.runtimeMetrics.runtimeScore)), 0);
