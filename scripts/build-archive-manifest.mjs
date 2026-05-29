@@ -271,8 +271,8 @@ const recordsWithRuntime = publicRecords.map((record) => ({
   },
 }));
 const runtimeDriftScale = Math.max(...recordsWithRuntime.map((record) => Math.log1p(record.runtimeSnapshot.runtimeScore)), 0);
-const withRelations = recordsWithRuntime.map((record) => ({ ...record, relations: relationRows(recordsWithRuntime, record) }));
-const rawDensities = withRelations.map((record) => {
+const recordsWithRelations = recordsWithRuntime.map((record) => ({ ...record, relations: relationRows(recordsWithRuntime, record) }));
+const rawDensities = recordsWithRelations.map((record) => {
   const topRelations = record.relations.slice(0, 4);
   const relationDensity = topRelations.length === 0 ? 0 : topRelations.reduce((sum, relation) => sum + Math.max(0, relation.relationWeight), 0) / topRelations.length;
   const recurrence = Math.min(1, tokensFor([record.title, record.excerpt].join(' ')).length / 36);
@@ -281,7 +281,7 @@ const rawDensities = withRelations.map((record) => {
 const min = Math.min(...rawDensities, 0);
 const max = Math.max(...rawDensities, 1);
 
-const scored = withRelations.map((record, index) => ({
+const scored = recordsWithRelations.map((record, index) => ({
   ...record,
   score: Number.isFinite(record.manualSemanticScore) ? Number(record.manualSemanticScore.toFixed(4)) : normalizeScore(rawDensities[index], min, max),
   cluster: semanticCluster(record),
