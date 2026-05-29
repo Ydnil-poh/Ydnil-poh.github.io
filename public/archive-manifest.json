@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-05-29T01:53:33.539Z",
+  "generatedAt": "2026-05-29T02:27:35.852Z",
   "source": "src/content/records",
   "storage": {
     "provider": "supabase",
@@ -32,9 +32,11 @@
   "analytics": {
     "provider": "supabase",
     "table": "archive_records",
-    "viewColumn": "views",
+    "eventTable": "archive_events",
+    "eventFunction": "record_archive_event",
     "sourceOfTruth": "backend",
-    "frontmatterPolicy": "ignored"
+    "frontmatterPolicy": "ignored",
+    "rebuildUse": "nightly runtime metrics are folded into semantic density as a low-weight revisit signal"
   },
   "counts": {
     "records": 3,
@@ -58,7 +60,7 @@
       ],
       "cover": "",
       "coverAlt": "sample",
-      "score": 0.3183,
+      "score": 0.275,
       "scoreMeaning": "semantic density",
       "cluster": 3,
       "position": {
@@ -81,6 +83,14 @@
           "relationWeight": 0
         }
       ],
+      "runtimeMetrics": {
+        "views": 0,
+        "tileClicks": 0,
+        "opens": 0,
+        "pageViews": 0,
+        "runtimeScore": 0,
+        "lastEventAt": null
+      },
       "imageUrls": [],
       "contentHash": "8c7d20400245eea0080fd08e6ff87173a17798fad97c69c659747fc009ce70b3",
       "embedding": [
@@ -164,7 +174,7 @@
       "tags": [],
       "cover": "",
       "coverAlt": "archive note",
-      "score": 0.3494,
+      "score": 0.3017,
       "scoreMeaning": "semantic density",
       "cluster": 0,
       "position": {
@@ -187,6 +197,14 @@
           "relationWeight": 0
         }
       ],
+      "runtimeMetrics": {
+        "views": 0,
+        "tileClicks": 0,
+        "opens": 0,
+        "pageViews": 0,
+        "runtimeScore": 0,
+        "lastEventAt": null
+      },
       "imageUrls": [],
       "contentHash": "c6d21c8078fa20f4fc4f55760a12090092a4b260a0f229eaa8b318bf3a365447",
       "embedding": [
@@ -274,7 +292,7 @@
       ],
       "cover": "",
       "coverAlt": "sample",
-      "score": 0.0933,
+      "score": 0.08,
       "scoreMeaning": "semantic density",
       "cluster": 5,
       "position": {
@@ -297,6 +315,14 @@
           "relationWeight": 0
         }
       ],
+      "runtimeMetrics": {
+        "views": 0,
+        "tileClicks": 0,
+        "opens": 0,
+        "pageViews": 0,
+        "runtimeScore": 0,
+        "lastEventAt": null
+      },
       "imageUrls": [],
       "contentHash": "156ec18c8bd1f937cac69a9afcdbeb25a51e7f774fcf7e0fbea3abd949cb59e0",
       "embedding": [

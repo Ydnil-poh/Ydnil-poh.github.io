@@ -105,7 +105,13 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
         position: relative;
       }
 
-      .brand { align-self: start; }
+      .brand {
+        left: 30px;
+        position: fixed;
+        top: 22px;
+        width: 178px;
+        z-index: 10;
+      }
 
       .brand h1 {
         font-size: 21px;
@@ -122,12 +128,14 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
       .sleep-note { color: var(--muted); font-size: 12px; }
 
       .status {
-        align-self: end;
+        bottom: 20px;
         display: grid;
         gap: 10px;
-        grid-column: 1;
-        grid-row: 1;
+        left: 30px;
         line-height: 1.4;
+        position: fixed;
+        width: 178px;
+        z-index: 10;
       }
 
       .status-row { display: flex; justify-content: space-between; }
@@ -402,6 +410,33 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
         key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
       };
 
+      function sessionId() {
+        const key = 'ydnil-poh-archive-session';
+        const existing = sessionStorage.getItem(key);
+        if (existing) return existing;
+        const next = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        sessionStorage.setItem(key, next);
+        return next;
+      }
+
+      function eventMetadata(extra = {}) {
+        return {
+          path: window.location.pathname,
+          referrer: document.referrer || '',
+          sessionId: sessionId(),
+          ...extra,
+        };
+      }
+
+      function applyRuntimeMetrics(record, payload) {
+        if (!payload || typeof payload !== 'object') return;
+        if (Number.isFinite(Number(payload.views))) record.views = Number(payload.views);
+        if (Number.isFinite(Number(payload.tileClicks))) record.tileClicks = Number(payload.tileClicks);
+        if (Number.isFinite(Number(payload.opens))) record.opens = Number(payload.opens);
+        if (Number.isFinite(Number(payload.pageViews))) record.pageViews = Number(payload.pageViews);
+        if (Number.isFinite(Number(payload.runtimeScore))) record.runtimeScore = Number(payload.runtimeScore);
+      }
+
       function viewText(record) {
         return Number.isFinite(record.views) ? String(record.views) : 'not loaded';
       }
@@ -409,7 +444,7 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
       async function fetchBackendViews() {
         if (!backend.url || !backend.key || records.length === 0) return;
         const slugs = records.map((record) => `"${String(record.id).replaceAll('\"', '\\"')}"`).join(',');
-        const endpoint = `${backend.url.replace(/\/$/, '')}/rest/v1/archive_records?select=slug,views&slug=in.(${slugs})`;
+        const endpoint = `${backend.url.replace(/\/$/, '')}/rest/v1/archive_records?select=slug,views,tile_clicks,opens,page_views,runtime_score&slug=in.(${slugs})`;
         const response = await fetch(endpoint, {
           headers: { apikey: backend.key, Authorization: `Bearer ${backend.key}` },
         });
@@ -417,7 +452,14 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
         const rows = await response.json();
         rows.forEach((row) => {
           const record = records.find((item) => item.id === row.slug);
-          if (record) record.views = Number(row.views);
+          if (!record) return;
+          applyRuntimeMetrics(record, {
+            views: row.views,
+            tileClicks: row.tile_clicks,
+            opens: row.opens,
+            pageViews: row.page_views,
+            runtimeScore: row.runtime_score,
+          });
         });
       }
 
@@ -463,18 +505,23 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
         openPanel();
       }
 
-      async function incrementRecord(id) {
+      async function recordArchiveEvent(record, eventType, metadata = {}) {
         if (!backend.url || !backend.key) return null;
-        const response = await fetch(`${backend.url.replace(/\/$/, '')}/rest/v1/rpc/increment_record_view`, {
+        const response = await fetch(`${backend.url.replace(/\/$/, '')}/rest/v1/rpc/record_archive_event`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', apikey: backend.key, Authorization: `Bearer ${backend.key}` },
-          body: JSON.stringify({ record_slug: id }),
+          body: JSON.stringify({
+            record_slug: record.id,
+            event_type: eventType,
+            event_metadata: eventMetadata(metadata),
+          }),
+          keepalive: true,
         });
         if (!response.ok) return null;
         const payload = await response.json().catch(() => null);
-        if (typeof payload === 'number') return payload;
-        if (Array.isArray(payload)) return Number(payload[0]?.views ?? payload[0]);
-        return Number(payload?.views ?? payload);
+        const result = Array.isArray(payload) ? payload[0] : payload;
+        applyRuntimeMetrics(record, result);
+        return result;
       }
 
       close.addEventListener('click', closePanel);
@@ -485,6 +532,11 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
 
       fetchBackendViews().catch(() => {});
 
+      open.addEventListener('click', () => {
+        const record = records.find((item) => item.url === open.getAttribute('href'));
+        if (record) recordArchiveEvent(record, 'record_open', { surface: 'detail_open' }).catch(() => {});
+      });
+
       nodes.forEach((node) => {
         node.addEventListener('click', (event) => {
           if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -492,10 +544,8 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
           const record = records.find((item) => item.id === node.dataset.recordId);
           if (!record) return;
           selectRecord(record);
-          incrementRecord(record.id)
-            .then((nextViews) => {
-              if (!Number.isFinite(nextViews)) return;
-              record.views = nextViews;
+          recordArchiveEvent(record, 'tile_click', { surface: 'field' })
+            .then(() => {
               if (node.classList.contains('is-selected')) views.textContent = viewText(record);
             })
             .catch(() => {});

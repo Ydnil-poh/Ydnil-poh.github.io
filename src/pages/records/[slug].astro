@@ -11,6 +11,7 @@ export async function getStaticPaths() {
 }
 
 const { record } = Astro.props;
+const slug = record.id.replace(/\.(md|markdown|mdx)$/i, '');
 const { Content } = await render(record);
 ---
 
@@ -22,6 +23,7 @@ const { Content } = await render(record);
   type={record.data.type}
   cover={record.data.cover}
   coverAlt={record.data.coverAlt}
+  slug={slug}
 >
   <Content />
 </RecordLayout>

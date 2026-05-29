@@ -151,6 +151,31 @@ async function supabaseUpsert(table, rows, onConflict) {
   return true;
 }
 
+async function fetchRuntimeMetrics(ids) {
+  if (!supabaseUrl || !supabaseServiceKey || ids.length === 0) return new Map();
+  const quoted = ids.map((id) => `"${String(id).replaceAll('\"', '\\"')}"`).join(',');
+  const endpoint = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/archive_records?select=slug,views,tile_clicks,opens,page_views,runtime_score,last_event_at&slug=in.(${quoted})`;
+  const response = await fetch(endpoint, {
+    headers: {
+      apikey: supabaseServiceKey,
+      Authorization: `Bearer ${supabaseServiceKey}`,
+    },
+  });
+  if (!response.ok) {
+    console.warn(`runtime metrics fetch skipped: ${response.status} ${await response.text()}`);
+    return new Map();
+  }
+  const rows = await response.json();
+  return new Map(rows.map((row) => [row.slug, {
+    views: Number(row.views ?? 0),
+    tileClicks: Number(row.tile_clicks ?? 0),
+    opens: Number(row.opens ?? 0),
+    pageViews: Number(row.page_views ?? 0),
+    runtimeScore: Number(row.runtime_score ?? 0),
+    lastEventAt: row.last_event_at ?? null,
+  }]));
+}
+
 async function syncSupabase(records) {
   if (!supabaseUrl || !supabaseServiceKey) {
     console.log('supabase sync skipped: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set');
@@ -222,12 +247,26 @@ const initial = await Promise.all(files.map(async (file) => {
 }));
 
 const publicRecords = initial.filter((record) => record.visibility !== 'private');
-const withRelations = publicRecords.map((record) => ({ ...record, relations: relationRows(publicRecords, record) }));
+const runtimeMetrics = await fetchRuntimeMetrics(publicRecords.map((record) => record.id));
+const recordsWithRuntime = publicRecords.map((record) => ({
+  ...record,
+  runtimeMetrics: runtimeMetrics.get(record.id) ?? {
+    views: 0,
+    tileClicks: 0,
+    opens: 0,
+    pageViews: 0,
+    runtimeScore: 0,
+    lastEventAt: null,
+  },
+}));
+const maxRuntimeScore = Math.max(...recordsWithRuntime.map((record) => Math.log1p(record.runtimeMetrics.runtimeScore)), 0);
+const withRelations = recordsWithRuntime.map((record) => ({ ...record, relations: relationRows(recordsWithRuntime, record) }));
 const rawDensities = withRelations.map((record) => {
   const topRelations = record.relations.slice(0, 4);
   const relationDensity = topRelations.length === 0 ? 0 : topRelations.reduce((sum, relation) => sum + Math.max(0, relation.relationWeight), 0) / topRelations.length;
   const recurrence = Math.min(1, tokensFor([record.title, record.excerpt].join(' ')).length / 36);
-  return Number((relationDensity * 0.72 + recurrence * 0.28).toFixed(6));
+  const behaviorDensity = maxRuntimeScore <= 0 ? 0 : Math.log1p(record.runtimeMetrics.runtimeScore) / maxRuntimeScore;
+  return Number((relationDensity * 0.64 + recurrence * 0.24 + behaviorDensity * 0.12).toFixed(6));
 });
 const min = Math.min(...rawDensities, 0);
 const max = Math.max(...rawDensities, 1);
@@ -256,6 +295,7 @@ const records = scored.map((record, index) => ({
   position: positionFor(record, index, scored.length),
   related: record.relations.map((relation) => relation.id),
   relations: record.relations,
+  runtimeMetrics: record.runtimeMetrics,
   imageUrls: record.imageUrls,
   contentHash: record.contentHash,
   embedding: record.embedding,
@@ -285,9 +325,11 @@ const manifest = {
   analytics: {
     provider: 'supabase',
     table: 'archive_records',
-    viewColumn: 'views',
+    eventTable: 'archive_events',
+    eventFunction: 'record_archive_event',
     sourceOfTruth: 'backend',
     frontmatterPolicy: 'ignored',
+    rebuildUse: 'nightly runtime metrics are folded into semantic density as a low-weight revisit signal',
   },
   counts: {
     records: records.length,
