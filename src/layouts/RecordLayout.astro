@@ -7,9 +7,10 @@ interface Props {
   type: string;
   cover?: string;
   coverAlt?: string;
+  slug: string;
 }
 
-const { title, date, location, tags, type, cover, coverAlt } = Astro.props;
+const { title, date, location, tags, type, cover, coverAlt, slug } = Astro.props;
 const formattedDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'long' }).format(date);
 ---
 
@@ -131,5 +132,41 @@ const formattedDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'long' }).fo
         <slot />
       </article>
     </main>
+    <script type="module" define:vars={{ slug }}>
+      const backend = {
+        url: import.meta.env.PUBLIC_SUPABASE_URL,
+        key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+      };
+
+      function sessionId() {
+        const key = 'ydnil-poh-archive-session';
+        const existing = sessionStorage.getItem(key);
+        if (existing) return existing;
+        const next = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        sessionStorage.setItem(key, next);
+        return next;
+      }
+
+      async function recordPageView() {
+        if (!backend.url || !backend.key || !slug) return;
+        await fetch(`${backend.url.replace(/\/$/, '')}/rest/v1/rpc/record_archive_event`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: backend.key, Authorization: `Bearer ${backend.key}` },
+          body: JSON.stringify({
+            record_slug: slug,
+            event_type: 'page_view',
+            event_metadata: {
+              path: window.location.pathname,
+              referrer: document.referrer || '',
+              sessionId: sessionId(),
+              surface: 'record_page',
+            },
+          }),
+          keepalive: true,
+        });
+      }
+
+      recordPageView().catch(() => {});
+    </script>
   </body>
 </html>
