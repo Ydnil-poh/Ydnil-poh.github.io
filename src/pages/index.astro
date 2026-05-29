@@ -83,9 +83,8 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
         background: var(--paper);
         color: var(--ink);
         font-family: "Inter", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
-        height: 100vh;
         margin: 0;
-        overflow: hidden;
+        min-height: 100vh;
       }
 
       body::before {
