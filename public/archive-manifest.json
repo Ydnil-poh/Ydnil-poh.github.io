@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-05-29T02:53:56.163Z",
+  "generatedAt": "2026-05-29T06:05:57.568Z",
   "source": "src/content/records",
   "storage": {
     "provider": "supabase",
@@ -97,7 +97,7 @@
         "pageViews": 0,
         "runtimeScore": 0,
         "lastEventAt": null,
-        "frozenAt": "2026-05-29T02:53:56.162Z",
+        "frozenAt": "2026-05-29T06:05:57.567Z",
         "semantics": "nightly snapshot only; live source of truth remains Supabase archive_events/archive_records"
       },
       "texture": {
@@ -156,7 +156,7 @@
         "pageViews": 0,
         "runtimeScore": 0,
         "lastEventAt": null,
-        "frozenAt": "2026-05-29T02:53:56.163Z",
+        "frozenAt": "2026-05-29T06:05:57.568Z",
         "semantics": "nightly snapshot only; live source of truth remains Supabase archive_events/archive_records"
       },
       "texture": {
@@ -219,7 +219,7 @@
         "pageViews": 0,
         "runtimeScore": 0,
         "lastEventAt": null,
-        "frozenAt": "2026-05-29T02:53:56.163Z",
+        "frozenAt": "2026-05-29T06:05:57.568Z",
         "semantics": "nightly snapshot only; live source of truth remains Supabase archive_events/archive_records"
       },
       "texture": {

@@ -105,13 +105,13 @@ function semanticCluster(record) {
   return strongest % 8;
 }
 
-function positionFor(record, index, total, maxRuntimeScore) {
+function positionFor(record, index, total, runtimeDriftScale) {
   const xAxis = record.embedding[0] + record.embedding[2] * 0.6 + record.embedding[4] * 0.35;
   const yAxis = record.embedding[1] + record.embedding[3] * 0.6 + record.embedding[5] * 0.35;
   const hash = createHash('sha1').update(record.id).digest();
   const jitterX = (hash[0] / 255 - 0.5) * 0.08;
   const jitterY = (hash[1] / 255 - 0.5) * 0.08;
-  const activity = maxRuntimeScore <= 0 ? 0 : Math.log1p(record.runtimeSnapshot.runtimeScore) / maxRuntimeScore;
+  const activity = runtimeDriftScale <= 0 ? 0 : Math.log1p(record.runtimeSnapshot.runtimeScore) / runtimeDriftScale;
   const driftX = (hash[2] / 255 - 0.5) * activity * 0.035;
   const driftY = (hash[3] / 255 - 0.5) * activity * 0.035;
   const fallbackAngle = ((index + 1) / Math.max(total, 1)) * Math.PI * 2;
@@ -270,7 +270,7 @@ const recordsWithRuntime = publicRecords.map((record) => ({
     lastEventAt: null,
   },
 }));
-const maxRuntimeScore = Math.max(...recordsWithRuntime.map((record) => Math.log1p(record.runtimeSnapshot.runtimeScore)), 0);
+const runtimeDriftScale = Math.max(...recordsWithRuntime.map((record) => Math.log1p(record.runtimeSnapshot.runtimeScore)), 0);
 const withRelations = recordsWithRuntime.map((record) => ({ ...record, relations: relationRows(recordsWithRuntime, record) }));
 const rawDensities = withRelations.map((record) => {
   const topRelations = record.relations.slice(0, 4);
@@ -300,7 +300,7 @@ const max = Math.max(...rawDensities, 1);
 
 const semanticRecords = scored.map((record, index) => ({
   ...record,
-  position: positionFor(record, index, scored.length, maxRuntimeScore),
+  position: positionFor(record, index, scored.length, runtimeDriftScale),
   embeddingRef: {
     provider: 'supabase',
     table: 'archive_embeddings',
