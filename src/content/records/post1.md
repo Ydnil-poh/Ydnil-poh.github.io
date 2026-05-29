@@ -8,7 +8,6 @@ cover: ""
 coverAlt: sample
 type: writing
 visibility: public
-views: 0
 ---
 
 블로그 서비스를 떠나보려고 한다. 시작점이 어딘지를 되짚어본다. 네이버에서, 2007년이다. 사진을 올려두려 싸이월드 꾸리던 시절까지 더하면 몇 년쯤 더 거슬러 오른다.

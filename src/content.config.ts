@@ -6,17 +6,16 @@ const records = defineCollection({
   schema: z.object({
     title: z.string(),
     date: z.coerce.date(),
-    location: z.string(),
+    category: z.enum(['writing', 'image', 'place', 'idea', 'note']).default('writing'),
+    location: z.string().optional().default(''),
     excerpt: z.string(),
-    tags: z.array(z.string()).default([]),
     cover: z.string().optional(),
     coverAlt: z.string().default('archive image'),
-    type: z.enum(['writing', 'image', 'place', 'idea', 'note']).default('writing'),
+    type: z.enum(['writing', 'image', 'place', 'idea', 'note']).optional(),
     visibility: z.enum(['public', 'private']).default('public'),
-    manualCluster: z.number().int().nonnegative().optional(),
-    manualScore: z.number().nonnegative().optional(),
+    semanticScore: z.number().min(0).max(1).optional(),
+    tags: z.array(z.string()).optional().default([]),
     source: z.string().optional(),
-    views: z.number().int().nonnegative().default(0),
   }),
 });
 
