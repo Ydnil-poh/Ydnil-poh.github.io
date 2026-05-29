@@ -1,30 +1,55 @@
 {
-  "schemaVersion": 1,
-  "generatedAt": "2026-05-23T00:00:00.000Z",
+  "schemaVersion": 3,
+  "generatedAt": "2026-05-29T06:46:27.614Z",
   "source": "src/content/records",
   "storage": {
     "provider": "supabase",
     "bucket": "archive-images"
   },
-  "vector": {
-    "provider": "supabase-vector",
-    "table": "archive_embeddings",
-    "relationTable": "archive_relations"
+  "semanticLayer": {
+    "provider": "supabase-backed-nightly-precompute",
+    "embeddingModel": "local-feature-hash-ko-en-64",
+    "embeddingRef": {
+      "table": "archive_embeddings",
+      "key": "record_slug"
+    },
+    "relationRef": {
+      "table": "archive_relations",
+      "distance": "cosine"
+    },
+    "manifestPolicy": "render snapshot only; raw vectors are excluded"
   },
   "spatialPolicy": {
     "interpretation": "semantic density terrain",
     "scoreMeaning": [
-      "memory cohesion",
-      "semantic recurrence",
-      "relation density",
-      "revisit potential"
+      "semantic density",
+      "recurrence",
+      "relational gravity",
+      "archival weight"
+    ],
+    "runtimeSignal": "runtime activity may cause weak nightly spatial drift but is not semantic gravity",
+    "excludes": [
+      "raw embeddings",
+      "live views",
+      "engagement ranking",
+      "popularity"
     ],
     "persistence": "nightly rebuilds should preserve spatial memory and allow only local drift"
   },
+  "analytics": {
+    "provider": "supabase",
+    "table": "archive_records",
+    "eventTable": "archive_events",
+    "eventFunction": "record_archive_event",
+    "sourceOfTruth": "backend",
+    "frontmatterPolicy": "ignored",
+    "snapshotSemantics": "runtime metrics in this manifest are frozen at rebuild time; live source of truth remains Supabase",
+    "rebuildUse": "nightly runtime metrics may weakly drift spatial placement but do not change semantic density directly"
+  },
   "counts": {
-    "records": 1,
+    "records": 3,
     "images": 0,
-    "clusters": 1
+    "clusters": 3
   },
   "records": [
     {
@@ -33,6 +58,7 @@
       "title": "post1",
       "date": "2026-05-21",
       "location": "Seoul",
+      "category": "writing",
       "type": "writing",
       "excerpt": "블로그와 SNS 사이를 오래 오가던 기록 습관이, AI 시대를 지나며 조금 다른 방향으로 흘러가기 시작했다",
       "tags": [
@@ -42,21 +68,174 @@
       ],
       "cover": "",
       "coverAlt": "sample",
-      "score": 1,
+      "displayDensity": 0.3183,
+      "score": 0.3183,
+      "scoreMeaning": "semantic density",
+      "cluster": 3,
+      "position": {
+        "x": 0.5787,
+        "y": 0.5289
+      },
+      "related": [
+        "post2",
+        "post3"
+      ],
+      "relationSummary": [
+        {
+          "id": "post2",
+          "weight": 0.1927
+        },
+        {
+          "id": "post3",
+          "weight": 0
+        }
+      ],
+      "runtimeSnapshot": {
+        "views": 0,
+        "tileClicks": 0,
+        "opens": 0,
+        "pageViews": 0,
+        "runtimeScore": 0,
+        "lastEventAt": null,
+        "frozenAt": "2026-05-29T06:46:27.613Z",
+        "semantics": "nightly snapshot only; live source of truth remains Supabase archive_events/archive_records"
+      },
+      "texture": {
+        "density": "low",
+        "imageCount": 0,
+        "textLength": 538
+      },
+      "imageUrls": [],
+      "contentHash": "8c7d20400245eea0080fd08e6ff87173a17798fad97c69c659747fc009ce70b3",
+      "embeddingRef": {
+        "provider": "supabase",
+        "table": "archive_embeddings",
+        "key": "post1"
+      },
+      "embeddingModel": "local-feature-hash-ko-en-64",
+      "url": "/records/post1/"
+    },
+    {
+      "id": "post2",
+      "slug": "post2",
+      "title": "조용한 기록 벽을 다시 세우기",
+      "date": "2026-05-22",
+      "location": "서울",
+      "category": "note",
+      "type": "note",
+      "excerpt": "프로젝트 비전 문서를 기록 본문에서 분리하고, 개인 아카이브의 첫 화면이 가져야 할 태도를 다시 정리한다.",
+      "tags": [],
+      "cover": "",
+      "coverAlt": "archive note",
+      "displayDensity": 0.3494,
+      "score": 0.3494,
+      "scoreMeaning": "semantic density",
+      "cluster": 0,
+      "position": {
+        "x": 0.4726,
+        "y": 0.5053
+      },
+      "related": [
+        "post1",
+        "post3"
+      ],
+      "relationSummary": [
+        {
+          "id": "post1",
+          "weight": 0.1927
+        },
+        {
+          "id": "post3",
+          "weight": 0
+        }
+      ],
+      "runtimeSnapshot": {
+        "views": 0,
+        "tileClicks": 0,
+        "opens": 0,
+        "pageViews": 0,
+        "runtimeScore": 0,
+        "lastEventAt": null,
+        "frozenAt": "2026-05-29T06:46:27.614Z",
+        "semantics": "nightly snapshot only; live source of truth remains Supabase archive_events/archive_records"
+      },
+      "texture": {
+        "density": "low",
+        "imageCount": 0,
+        "textLength": 220
+      },
+      "imageUrls": [],
+      "contentHash": "c6d21c8078fa20f4fc4f55760a12090092a4b260a0f229eaa8b318bf3a365447",
+      "embeddingRef": {
+        "provider": "supabase",
+        "table": "archive_embeddings",
+        "key": "post2"
+      },
+      "embeddingModel": "local-feature-hash-ko-en-64",
+      "url": "/records/post2/"
+    },
+    {
+      "id": "post3",
+      "slug": "post3",
+      "title": "어떻게 만들 것인가",
+      "date": "2026-05-27",
+      "location": "서울",
+      "category": "writing",
+      "type": "writing",
+      "excerpt": "AI와 함께 일하는 감각",
+      "tags": [
+        "blog",
+        "AI",
+        "archive"
+      ],
+      "cover": "",
+      "coverAlt": "sample",
+      "displayDensity": 0.0933,
+      "score": 0.0933,
+      "scoreMeaning": "semantic density",
       "cluster": 5,
       "position": {
-        "x": 0.8,
-        "y": 0.4633
+        "x": 0.5651,
+        "y": 0.5527
       },
-      "related": [],
+      "related": [
+        "post1",
+        "post2"
+      ],
+      "relationSummary": [
+        {
+          "id": "post1",
+          "weight": 0
+        },
+        {
+          "id": "post2",
+          "weight": 0
+        }
+      ],
+      "runtimeSnapshot": {
+        "views": 0,
+        "tileClicks": 0,
+        "opens": 0,
+        "pageViews": 0,
+        "runtimeScore": 0,
+        "lastEventAt": null,
+        "frozenAt": "2026-05-29T06:46:27.614Z",
+        "semantics": "nightly snapshot only; live source of truth remains Supabase archive_events/archive_records"
+      },
+      "texture": {
+        "density": "low",
+        "imageCount": 0,
+        "textLength": 503
+      },
       "imageUrls": [],
-      "contentHash": "seeded-from-records-post1",
-      "embedding": {
-        "provider": "supabase-vector",
-        "status": "pending",
-        "model": null
+      "contentHash": "156ec18c8bd1f937cac69a9afcdbeb25a51e7f774fcf7e0fbea3abd949cb59e0",
+      "embeddingRef": {
+        "provider": "supabase",
+        "table": "archive_embeddings",
+        "key": "post3"
       },
-      "url": "/records/post1/"
+      "embeddingModel": "local-feature-hash-ko-en-64",
+      "url": "/records/post3/"
     }
   ]
 }

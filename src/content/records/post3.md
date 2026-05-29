@@ -8,7 +8,6 @@ cover: ""
 coverAlt: sample
 type: writing
 visibility: public
-views: 0
 ---
 처음에는 설치형 블로그 만드는 것처럼 생각했다. 레이아웃을 정하고, 어떻게 보일지를 고민했다. 곧 시각적인 요소들을 정의하고 구현되는 것에 정신이 팔리게 된다. 
 
