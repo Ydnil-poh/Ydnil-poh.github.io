@@ -67,7 +67,7 @@ The build generates:
 public/archive-manifest.json
 ```
 
-The manifest is public and intended for AI agents. It includes record metadata, image URLs, score, cluster, position, related IDs, content hash, and embedding status.
+The manifest is public and intended for rendering/AI inspection. It is a lightweight render snapshot: record metadata, image URLs, display density, cluster, position, related IDs, relation summaries, content hash, and lightweight embedding references. Raw embedding vectors stay out of the static payload and belong in Supabase `archive_embeddings`.
 
 Generate it locally:
 

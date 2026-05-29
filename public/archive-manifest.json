@@ -1,18 +1,23 @@
 {
-  "schemaVersion": 2,
-  "generatedAt": "2026-05-29T02:27:35.852Z",
+  "schemaVersion": 3,
+  "generatedAt": "2026-05-29T02:53:56.163Z",
   "source": "src/content/records",
   "storage": {
     "provider": "supabase",
     "bucket": "archive-images"
   },
-  "vector": {
-    "provider": "local-static-precompute",
-    "model": "local-feature-hash-ko-en-64",
-    "dimensions": 64,
-    "distance": "cosine",
-    "externalTable": "archive_embeddings",
-    "relationTable": "archive_relations"
+  "semanticLayer": {
+    "provider": "supabase-backed-nightly-precompute",
+    "embeddingModel": "local-feature-hash-ko-en-64",
+    "embeddingRef": {
+      "table": "archive_embeddings",
+      "key": "record_slug"
+    },
+    "relationRef": {
+      "table": "archive_relations",
+      "distance": "cosine"
+    },
+    "manifestPolicy": "render snapshot only; raw vectors are excluded"
   },
   "spatialPolicy": {
     "interpretation": "semantic density terrain",
@@ -22,8 +27,10 @@
       "relational gravity",
       "archival weight"
     ],
+    "runtimeSignal": "runtime activity may cause weak nightly spatial drift but is not semantic gravity",
     "excludes": [
-      "views",
+      "raw embeddings",
+      "live views",
       "engagement ranking",
       "popularity"
     ],
@@ -36,7 +43,8 @@
     "eventFunction": "record_archive_event",
     "sourceOfTruth": "backend",
     "frontmatterPolicy": "ignored",
-    "rebuildUse": "nightly runtime metrics are folded into semantic density as a low-weight revisit signal"
+    "snapshotSemantics": "runtime metrics in this manifest are frozen at rebuild time; live source of truth remains Supabase",
+    "rebuildUse": "nightly runtime metrics may weakly drift spatial placement but do not change semantic density directly"
   },
   "counts": {
     "records": 3,
@@ -60,7 +68,8 @@
       ],
       "cover": "",
       "coverAlt": "sample",
-      "score": 0.275,
+      "displayDensity": 0.3183,
+      "score": 0.3183,
       "scoreMeaning": "semantic density",
       "cluster": 3,
       "position": {
@@ -71,94 +80,38 @@
         "post2",
         "post3"
       ],
-      "relations": [
+      "relationSummary": [
         {
           "id": "post2",
-          "cosineDistance": 0.8073,
-          "relationWeight": 0.1927
+          "weight": 0.1927
         },
         {
           "id": "post3",
-          "cosineDistance": 1.0017,
-          "relationWeight": 0
+          "weight": 0
         }
       ],
-      "runtimeMetrics": {
+      "runtimeSnapshot": {
         "views": 0,
         "tileClicks": 0,
         "opens": 0,
         "pageViews": 0,
         "runtimeScore": 0,
-        "lastEventAt": null
+        "lastEventAt": null,
+        "frozenAt": "2026-05-29T02:53:56.162Z",
+        "semantics": "nightly snapshot only; live source of truth remains Supabase archive_events/archive_records"
+      },
+      "texture": {
+        "density": "low",
+        "imageCount": 0,
+        "textLength": 538
       },
       "imageUrls": [],
       "contentHash": "8c7d20400245eea0080fd08e6ff87173a17798fad97c69c659747fc009ce70b3",
-      "embedding": [
-        0.164399,
-        0,
-        0,
-        0,
-        0.082199,
-        -0.082199,
-        -0.123299,
-        -0.082199,
-        0,
-        0.164399,
-        0,
-        0.0411,
-        -0.082199,
-        0.0411,
-        -0.123299,
-        -0.0411,
-        -0.082199,
-        -0.0411,
-        -0.0411,
-        -0.164399,
-        0.164399,
-        0.123299,
-        0,
-        0.082199,
-        -0.287698,
-        0.0411,
-        0,
-        -0.287698,
-        0,
-        -0.123299,
-        0.205499,
-        0.123299,
-        0,
-        0.082199,
-        -0.205499,
-        -0.123299,
-        -0.164399,
-        0.0411,
-        -0.164399,
-        -0.0411,
-        -0.082199,
-        -0.205499,
-        -0.082199,
-        0,
-        0.0411,
-        0.082199,
-        -0.082199,
-        0.164399,
-        -0.205499,
-        -0.082199,
-        -0.0411,
-        0.369898,
-        0.082199,
-        0,
-        -0.123299,
-        0.0411,
-        0.123299,
-        -0.205499,
-        0.082199,
-        -0.164399,
-        0.164399,
-        0.082199,
-        -0.0411,
-        0
-      ],
+      "embeddingRef": {
+        "provider": "supabase",
+        "table": "archive_embeddings",
+        "key": "post1"
+      },
       "embeddingModel": "local-feature-hash-ko-en-64",
       "url": "/records/post1/"
     },
@@ -174,7 +127,8 @@
       "tags": [],
       "cover": "",
       "coverAlt": "archive note",
-      "score": 0.3017,
+      "displayDensity": 0.3494,
+      "score": 0.3494,
       "scoreMeaning": "semantic density",
       "cluster": 0,
       "position": {
@@ -185,94 +139,38 @@
         "post1",
         "post3"
       ],
-      "relations": [
+      "relationSummary": [
         {
           "id": "post1",
-          "cosineDistance": 0.8073,
-          "relationWeight": 0.1927
+          "weight": 0.1927
         },
         {
           "id": "post3",
-          "cosineDistance": 1.0033,
-          "relationWeight": 0
+          "weight": 0
         }
       ],
-      "runtimeMetrics": {
+      "runtimeSnapshot": {
         "views": 0,
         "tileClicks": 0,
         "opens": 0,
         "pageViews": 0,
         "runtimeScore": 0,
-        "lastEventAt": null
+        "lastEventAt": null,
+        "frozenAt": "2026-05-29T02:53:56.163Z",
+        "semantics": "nightly snapshot only; live source of truth remains Supabase archive_events/archive_records"
+      },
+      "texture": {
+        "density": "low",
+        "imageCount": 0,
+        "textLength": 220
       },
       "imageUrls": [],
       "contentHash": "c6d21c8078fa20f4fc4f55760a12090092a4b260a0f229eaa8b318bf3a365447",
-      "embedding": [
-        0,
-        0,
-        -0.080128,
-        0.040064,
-        -0.120192,
-        0.320513,
-        -0.240385,
-        0.160257,
-        -0.080128,
-        0.080128,
-        -0.120192,
-        -0.080128,
-        -0.040064,
-        0,
-        0.200321,
-        -0.080128,
-        -0.120192,
-        -0.040064,
-        -0.080128,
-        -0.040064,
-        0.040064,
-        0.240385,
-        0.080128,
-        0.040064,
-        -0.48077,
-        0.040064,
-        0,
-        -0.040064,
-        -0.080128,
-        0,
-        0.160257,
-        0,
-        -0.040064,
-        0.080128,
-        0.080128,
-        0.080128,
-        0.040064,
-        -0.080128,
-        -0.240385,
-        -0.040064,
-        0.040064,
-        -0.040064,
-        0.040064,
-        0.320513,
-        0.040064,
-        -0.240385,
-        0,
-        0,
-        0.080128,
-        -0.040064,
-        -0.120192,
-        -0.080128,
-        0,
-        0.080128,
-        0.080128,
-        0,
-        0,
-        0.040064,
-        0,
-        -0.160257,
-        0,
-        0.080128,
-        -0.080128,
-        -0.120192
-      ],
+      "embeddingRef": {
+        "provider": "supabase",
+        "table": "archive_embeddings",
+        "key": "post2"
+      },
       "embeddingModel": "local-feature-hash-ko-en-64",
       "url": "/records/post2/"
     },
@@ -292,7 +190,8 @@
       ],
       "cover": "",
       "coverAlt": "sample",
-      "score": 0.08,
+      "displayDensity": 0.0933,
+      "score": 0.0933,
       "scoreMeaning": "semantic density",
       "cluster": 5,
       "position": {
@@ -303,94 +202,38 @@
         "post1",
         "post2"
       ],
-      "relations": [
+      "relationSummary": [
         {
           "id": "post1",
-          "cosineDistance": 1.0017,
-          "relationWeight": 0
+          "weight": 0
         },
         {
           "id": "post2",
-          "cosineDistance": 1.0033,
-          "relationWeight": 0
+          "weight": 0
         }
       ],
-      "runtimeMetrics": {
+      "runtimeSnapshot": {
         "views": 0,
         "tileClicks": 0,
         "opens": 0,
         "pageViews": 0,
         "runtimeScore": 0,
-        "lastEventAt": null
+        "lastEventAt": null,
+        "frozenAt": "2026-05-29T02:53:56.163Z",
+        "semantics": "nightly snapshot only; live source of truth remains Supabase archive_events/archive_records"
+      },
+      "texture": {
+        "density": "low",
+        "imageCount": 0,
+        "textLength": 503
       },
       "imageUrls": [],
       "contentHash": "156ec18c8bd1f937cac69a9afcdbeb25a51e7f774fcf7e0fbea3abd949cb59e0",
-      "embedding": [
-        0.285536,
-        0.081582,
-        -0.122373,
-        -0.081582,
-        -0.081582,
-        0.081582,
-        -0.163163,
-        -0.163163,
-        0.081582,
-        0.040791,
-        0.203954,
-        0.081582,
-        -0.040791,
-        0.326327,
-        0.040791,
-        -0.081582,
-        0.163163,
-        0,
-        -0.040791,
-        0,
-        0,
-        -0.163163,
-        0.203954,
-        0.203954,
-        0,
-        0.244745,
-        0.040791,
-        0.122373,
-        0.081582,
-        -0.040791,
-        0.163163,
-        -0.081582,
-        -0.122373,
-        -0.244745,
-        0,
-        0.163163,
-        -0.040791,
-        0,
-        0.040791,
-        -0.040791,
-        0,
-        -0.040791,
-        0.244745,
-        -0.163163,
-        -0.163163,
-        -0.122373,
-        0.081582,
-        0,
-        -0.040791,
-        -0.040791,
-        0,
-        0.081582,
-        -0.122373,
-        0.163163,
-        0.122373,
-        -0.081582,
-        -0.040791,
-        -0.081582,
-        -0.203954,
-        0.040791,
-        -0.081582,
-        0.081582,
-        0.081582,
-        0.081582
-      ],
+      "embeddingRef": {
+        "provider": "supabase",
+        "table": "archive_embeddings",
+        "key": "post3"
+      },
       "embeddingModel": "local-feature-hash-ko-en-64",
       "url": "/records/post3/"
     }

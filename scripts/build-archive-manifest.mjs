@@ -105,16 +105,19 @@ function semanticCluster(record) {
   return strongest % 8;
 }
 
-function positionFor(record, index, total) {
+function positionFor(record, index, total, maxRuntimeScore) {
   const xAxis = record.embedding[0] + record.embedding[2] * 0.6 + record.embedding[4] * 0.35;
   const yAxis = record.embedding[1] + record.embedding[3] * 0.6 + record.embedding[5] * 0.35;
   const hash = createHash('sha1').update(record.id).digest();
   const jitterX = (hash[0] / 255 - 0.5) * 0.08;
   const jitterY = (hash[1] / 255 - 0.5) * 0.08;
+  const activity = maxRuntimeScore <= 0 ? 0 : Math.log1p(record.runtimeSnapshot.runtimeScore) / maxRuntimeScore;
+  const driftX = (hash[2] / 255 - 0.5) * activity * 0.035;
+  const driftY = (hash[3] / 255 - 0.5) * activity * 0.035;
   const fallbackAngle = ((index + 1) / Math.max(total, 1)) * Math.PI * 2;
   const fallbackRadius = 0.12 + ((index % 5) * 0.035);
-  const x = 0.5 + (xAxis || Math.cos(fallbackAngle) * fallbackRadius) * 0.34 + jitterX;
-  const y = 0.5 + (yAxis || Math.sin(fallbackAngle) * fallbackRadius) * 0.3 + jitterY;
+  const x = 0.5 + (xAxis || Math.cos(fallbackAngle) * fallbackRadius) * 0.34 + jitterX + driftX;
+  const y = 0.5 + (yAxis || Math.sin(fallbackAngle) * fallbackRadius) * 0.3 + jitterY + driftY;
   return {
     x: Number(Math.max(0.08, Math.min(0.92, x)).toFixed(4)),
     y: Number(Math.max(0.08, Math.min(0.92, y)).toFixed(4)),
@@ -194,12 +197,19 @@ async function syncSupabase(records) {
       coverAlt: record.coverAlt,
       imageUrls: record.imageUrls,
       url: record.url,
-      embedding: record.embedding,
+      embeddingRef: record.embeddingRef,
       embeddingModel: record.embeddingModel,
     },
     score: record.score,
     cluster: record.cluster,
     position: record.position,
+    updated_at: new Date().toISOString(),
+  }));
+  const embeddingRows = records.map((record) => ({
+    record_slug: record.id,
+    embedding: `[${record.embedding.join(',')}]`,
+    model: record.embeddingModel,
+    content_hash: record.contentHash,
     updated_at: new Date().toISOString(),
   }));
   const relationRowsForSync = records.flatMap((record) => record.relations.map((relation) => ({
@@ -210,8 +220,9 @@ async function syncSupabase(records) {
     updated_at: new Date().toISOString(),
   })));
   await supabaseUpsert('archive_records', recordRows, 'slug');
+  await supabaseUpsert('archive_embeddings', embeddingRows, 'record_slug');
   await supabaseUpsert('archive_relations', relationRowsForSync, 'source_slug,target_slug');
-  console.log(`supabase sync complete: ${recordRows.length} records, ${relationRowsForSync.length} relations`);
+  console.log(`supabase sync complete: ${recordRows.length} records, ${embeddingRows.length} embeddings, ${relationRowsForSync.length} relations`);
 }
 
 const files = await listMarkdownFiles(recordsDir);
@@ -250,7 +261,7 @@ const publicRecords = initial.filter((record) => record.visibility !== 'private'
 const runtimeMetrics = await fetchRuntimeMetrics(publicRecords.map((record) => record.id));
 const recordsWithRuntime = publicRecords.map((record) => ({
   ...record,
-  runtimeMetrics: runtimeMetrics.get(record.id) ?? {
+  runtimeSnapshot: runtimeMetrics.get(record.id) ?? {
     views: 0,
     tileClicks: 0,
     opens: 0,
@@ -258,6 +269,22 @@ const recordsWithRuntime = publicRecords.map((record) => ({
     runtimeScore: 0,
     lastEventAt: null,
   },
+}));
+const maxRuntimeScore = Math.max(...recordsWithRuntime.map((record) => Math.log1p(record.runtimeSnapshot.runtimeScore)), 0);
+const withRelations = recordsWithRuntime.map((record) => ({ ...record, relations: relationRows(recordsWithRuntime, record) }));
+const rawDensities = withRelations.map((record) => {
+  const topRelations = record.relations.slice(0, 4);
+  const relationDensity = topRelations.length === 0 ? 0 : topRelations.reduce((sum, relation) => sum + Math.max(0, relation.relationWeight), 0) / topRelations.length;
+  const recurrence = Math.min(1, tokensFor([record.title, record.excerpt].join(' ')).length / 36);
+  return Number((relationDensity * 0.72 + recurrence * 0.28).toFixed(6));
+});
+const min = Math.min(...rawDensities, 0);
+const max = Math.max(...rawDensities, 1);
+
+const scored = withRelations.map((record, index) => ({
+  ...record,
+  score: Number.isFinite(record.manualSemanticScore) ? Number(record.manualSemanticScore.toFixed(4)) : normalizeScore(rawDensities[index], min, max),
+  cluster: semanticCluster(record),
 }));
 const maxRuntimeScore = Math.max(...recordsWithRuntime.map((record) => Math.log1p(record.runtimeMetrics.runtimeScore)), 0);
 const withRelations = recordsWithRuntime.map((record) => ({ ...record, relations: relationRows(recordsWithRuntime, record) }));
@@ -271,13 +298,18 @@ const rawDensities = withRelations.map((record) => {
 const min = Math.min(...rawDensities, 0);
 const max = Math.max(...rawDensities, 1);
 
-const scored = withRelations.map((record, index) => ({
+const semanticRecords = scored.map((record, index) => ({
   ...record,
-  score: Number.isFinite(record.manualSemanticScore) ? Number(record.manualSemanticScore.toFixed(4)) : normalizeScore(rawDensities[index], min, max),
-  cluster: semanticCluster(record),
+  position: positionFor(record, index, scored.length, maxRuntimeScore),
+  embeddingRef: {
+    provider: 'supabase',
+    table: 'archive_embeddings',
+    key: record.id,
+  },
+  url: `/records/${record.id}/`,
 }));
 
-const records = scored.map((record, index) => ({
+const records = semanticRecords.map((record) => ({
   id: record.id,
   slug: record.id,
   title: record.title,
@@ -289,37 +321,50 @@ const records = scored.map((record, index) => ({
   tags: record.tags,
   cover: record.cover,
   coverAlt: record.coverAlt,
+  displayDensity: record.score,
   score: record.score,
   scoreMeaning: 'semantic density',
   cluster: record.cluster,
-  position: positionFor(record, index, scored.length),
+  position: record.position,
   related: record.relations.map((relation) => relation.id),
-  relations: record.relations,
-  runtimeMetrics: record.runtimeMetrics,
+  relationSummary: record.relations.slice(0, 4).map((relation) => ({
+    id: relation.id,
+    weight: relation.relationWeight,
+  })),
+  runtimeSnapshot: {
+    ...record.runtimeSnapshot,
+    frozenAt: new Date().toISOString(),
+    semantics: 'nightly snapshot only; live source of truth remains Supabase archive_events/archive_records',
+  },
+  texture: {
+    density: record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low',
+    imageCount: record.imageUrls.length,
+    textLength: record.textLength,
+  },
   imageUrls: record.imageUrls,
   contentHash: record.contentHash,
-  embedding: record.embedding,
+  embeddingRef: record.embeddingRef,
   embeddingModel: record.embeddingModel,
-  url: `/records/${record.id}/`,
+  url: record.url,
 }));
 
 const manifest = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   generatedAt: new Date().toISOString(),
   source: 'src/content/records',
   storage: { provider: 'supabase', bucket: process.env.SUPABASE_STORAGE_BUCKET ?? 'archive-images' },
-  vector: {
-    provider: 'local-static-precompute',
-    model: `local-feature-hash-ko-en-${embeddingDimensions}`,
-    dimensions: embeddingDimensions,
-    distance: 'cosine',
-    externalTable: 'archive_embeddings',
-    relationTable: 'archive_relations',
+  semanticLayer: {
+    provider: 'supabase-backed-nightly-precompute',
+    embeddingModel: `local-feature-hash-ko-en-${embeddingDimensions}`,
+    embeddingRef: { table: 'archive_embeddings', key: 'record_slug' },
+    relationRef: { table: 'archive_relations', distance: 'cosine' },
+    manifestPolicy: 'render snapshot only; raw vectors are excluded',
   },
   spatialPolicy: {
     interpretation: 'semantic density terrain',
     scoreMeaning: ['semantic density', 'recurrence', 'relational gravity', 'archival weight'],
-    excludes: ['views', 'engagement ranking', 'popularity'],
+    runtimeSignal: 'runtime activity may cause weak nightly spatial drift but is not semantic gravity',
+    excludes: ['raw embeddings', 'live views', 'engagement ranking', 'popularity'],
     persistence: 'nightly rebuilds should preserve spatial memory and allow only local drift',
   },
   analytics: {
@@ -329,7 +374,8 @@ const manifest = {
     eventFunction: 'record_archive_event',
     sourceOfTruth: 'backend',
     frontmatterPolicy: 'ignored',
-    rebuildUse: 'nightly runtime metrics are folded into semantic density as a low-weight revisit signal',
+    snapshotSemantics: 'runtime metrics in this manifest are frozen at rebuild time; live source of truth remains Supabase',
+    rebuildUse: 'nightly runtime metrics may weakly drift spatial placement but do not change semantic density directly',
   },
   counts: {
     records: records.length,
@@ -342,4 +388,4 @@ const manifest = {
 await mkdir(path.dirname(outputPath), { recursive: true });
 await writeFile(outputPath, `${JSON.stringify(manifest, null, 2)}\n`);
 console.log(`archive manifest written: ${path.relative(root, outputPath)} (${records.length} records)`);
-await syncSupabase(records);
+await syncSupabase(semanticRecords);
