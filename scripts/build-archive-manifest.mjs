@@ -137,6 +137,26 @@ function relationRows(records, source) {
     .slice(0, 8);
 }
 
+function emptyRuntimeSnapshot() {
+  return {
+    views: 0,
+    tileClicks: 0,
+    opens: 0,
+    pageViews: 0,
+    runtimeScore: 0,
+    lastEventAt: null,
+  };
+}
+
+function semanticDensityFor(record) {
+  const topRelations = record.relations.slice(0, 4);
+  const relationDensity = topRelations.length === 0
+    ? 0
+    : topRelations.reduce((sum, relation) => sum + Math.max(0, relation.relationWeight), 0) / topRelations.length;
+  const recurrence = Math.min(1, tokensFor([record.title, record.excerpt].join(' ')).length / 36);
+  return Number((relationDensity * 0.72 + recurrence * 0.28).toFixed(6));
+}
+
 async function supabaseUpsert(table, rows, onConflict) {
   if (!supabaseUrl || !supabaseServiceKey || rows.length === 0) return false;
   const endpoint = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/${table}?on_conflict=${encodeURIComponent(onConflict)}`;
@@ -261,23 +281,11 @@ const publicRecords = initial.filter((record) => record.visibility !== 'private'
 const runtimeSnapshots = await fetchRuntimeSnapshots(publicRecords.map((record) => record.id));
 const recordsWithRuntime = publicRecords.map((record) => ({
   ...record,
-  runtimeSnapshot: runtimeSnapshots.get(record.id) ?? {
-    views: 0,
-    tileClicks: 0,
-    opens: 0,
-    pageViews: 0,
-    runtimeScore: 0,
-    lastEventAt: null,
-  },
+  runtimeSnapshot: runtimeSnapshots.get(record.id) ?? emptyRuntimeSnapshot(),
 }));
 const runtimeDriftScale = Math.max(...recordsWithRuntime.map((record) => Math.log1p(record.runtimeSnapshot.runtimeScore)), 0);
 const recordsWithRelations = recordsWithRuntime.map((record) => ({ ...record, relations: relationRows(recordsWithRuntime, record) }));
-const densityValues = recordsWithRelations.map((record) => {
-  const topRelations = record.relations.slice(0, 4);
-  const relationDensity = topRelations.length === 0 ? 0 : topRelations.reduce((sum, relation) => sum + Math.max(0, relation.relationWeight), 0) / topRelations.length;
-  const recurrence = Math.min(1, tokensFor([record.title, record.excerpt].join(' ')).length / 36);
-  return Number((relationDensity * 0.72 + recurrence * 0.28).toFixed(6));
-});
+const densityValues = recordsWithRelations.map(semanticDensityFor);
 const densityMin = Math.min(...densityValues, 0);
 const densityMax = Math.max(...densityValues, 1);
 
