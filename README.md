@@ -81,6 +81,8 @@ Record Page
 
 AI 에이전트와 검색 엔진이 어떤 기록에 관심을 보이는지 측정한다.
 
+향후 도입 예정인 계층이다.
+
 예상 데이터 소스:
 
 - OpenAI crawler
@@ -238,12 +240,17 @@ updated_at
 
 Semantic Score는 조회수 점수가 아니다.
 
-다음 요소를 기반으로 계산된다.
+현재는 다음 요소를 기반으로 계산된다.
 
-- 의미적 연결 수
-- 관계 밀도
-- 클러스터 내부 위치
-- 기록 네트워크 중심성
+- 기록 간 의미적 유사도
+- 관계 밀도(Relation Density)
+- 기록 내 키워드 재출현성(Recurrence)
+
+향후에는 다음 요소가 추가될 수 있다.
+
+- 네트워크 중심성
+- 클러스터 구조
+- 장기적 Attention 신호
 
 즉,
 
@@ -258,7 +265,12 @@ Semantic Score
 
 # Nightly Semantic Rebuild
 
-매일 실행되는 작업.
+목표 구조:
+
+매일 자동 실행되는 Semantic Rebuild Workflow.
+
+현재는 build 과정에서 수행되고 있으며,
+향후 Site Build와 분리할 예정이다.
 
 역할:
 
