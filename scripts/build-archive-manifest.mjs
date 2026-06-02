@@ -105,13 +105,13 @@ function semanticCluster(record) {
   return strongest % 8;
 }
 
-function positionFor(record, index, total, runtimeDriftScale) {
+function positionFor(record, index, total, attentionDriftScale) {
   const xAxis = record.embedding[0] + record.embedding[2] * 0.6 + record.embedding[4] * 0.35;
   const yAxis = record.embedding[1] + record.embedding[3] * 0.6 + record.embedding[5] * 0.35;
   const hash = createHash('sha1').update(record.id).digest();
   const jitterX = (hash[0] / 255 - 0.5) * 0.08;
   const jitterY = (hash[1] / 255 - 0.5) * 0.08;
-  const activity = runtimeDriftScale <= 0 ? 0 : Math.log1p(record.runtimeSnapshot.runtimeScore) / runtimeDriftScale;
+  const activity = attentionDriftScale <= 0 ? 0 : Math.log1p(record.attentionSnapshot.humanScore) / attentionDriftScale;
   const driftX = (hash[2] / 255 - 0.5) * activity * 0.035;
   const driftY = (hash[3] / 255 - 0.5) * activity * 0.035;
   const fallbackAngle = ((index + 1) / Math.max(total, 1)) * Math.PI * 2;
@@ -137,13 +137,18 @@ function relationRows(records, source) {
     .slice(0, 8);
 }
 
-function emptyRuntimeSnapshot() {
+function emptyAttentionSnapshot() {
   return {
     views: 0,
     tileClicks: 0,
     opens: 0,
     pageViews: 0,
     runtimeScore: 0,
+    humanModalOpen: 0,
+    humanFullOpen: 0,
+    humanScore: 0,
+    machineAccess: 0,
+    machineScore: 0,
     lastEventAt: null,
   };
 }
@@ -174,10 +179,10 @@ async function supabaseUpsert(table, rows, onConflict) {
   return true;
 }
 
-async function fetchRuntimeSnapshots(ids) {
+async function fetchAttentionSnapshots(ids) {
   if (!supabaseUrl || !supabaseServiceKey || ids.length === 0) return new Map();
   const quoted = ids.map((id) => `"${String(id).replaceAll('\"', '\\"')}"`).join(',');
-  const endpoint = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/archive_records?select=slug,views,tile_clicks,opens,page_views,runtime_score,last_event_at&slug=in.(${quoted})`;
+  const endpoint = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/archive_records?select=slug,views,tile_clicks,opens,page_views,runtime_score,human_modal_open,human_full_open,human_score,machine_access,machine_score,last_event_at&slug=in.(${quoted})`;
   const response = await fetch(endpoint, {
     headers: {
       apikey: supabaseServiceKey,
@@ -185,7 +190,7 @@ async function fetchRuntimeSnapshots(ids) {
     },
   });
   if (!response.ok) {
-    console.warn(`runtime metrics fetch skipped: ${response.status} ${await response.text()}`);
+    console.warn(`attention metrics fetch skipped: ${response.status} ${await response.text()}`);
     return new Map();
   }
   const rows = await response.json();
@@ -195,6 +200,11 @@ async function fetchRuntimeSnapshots(ids) {
     opens: Number(row.opens ?? 0),
     pageViews: Number(row.page_views ?? 0),
     runtimeScore: Number(row.runtime_score ?? 0),
+    humanModalOpen: Number(row.human_modal_open ?? row.tile_clicks ?? 0),
+    humanFullOpen: Number(row.human_full_open ?? row.opens ?? 0),
+    humanScore: Number(row.human_score ?? row.runtime_score ?? 0),
+    machineAccess: Number(row.machine_access ?? 0),
+    machineScore: Number(row.machine_score ?? 0),
     lastEventAt: row.last_event_at ?? null,
   }]));
 }
@@ -278,13 +288,13 @@ const initial = await Promise.all(files.map(async (file) => {
 }));
 
 const publicRecords = initial.filter((record) => record.visibility !== 'private');
-const runtimeSnapshots = await fetchRuntimeSnapshots(publicRecords.map((record) => record.id));
-const recordsWithRuntime = publicRecords.map((record) => ({
+const attentionSnapshots = await fetchAttentionSnapshots(publicRecords.map((record) => record.id));
+const recordsWithAttention = publicRecords.map((record) => ({
   ...record,
-  runtimeSnapshot: runtimeSnapshots.get(record.id) ?? emptyRuntimeSnapshot(),
+  attentionSnapshot: attentionSnapshots.get(record.id) ?? emptyAttentionSnapshot(),
 }));
-const runtimeDriftScale = Math.max(...recordsWithRuntime.map((record) => Math.log1p(record.runtimeSnapshot.runtimeScore)), 0);
-const recordsWithRelations = recordsWithRuntime.map((record) => ({ ...record, relations: relationRows(recordsWithRuntime, record) }));
+const attentionDriftScale = Math.max(...recordsWithAttention.map((record) => Math.log1p(record.attentionSnapshot.humanScore)), 0);
+const recordsWithRelations = recordsWithAttention.map((record) => ({ ...record, relations: relationRows(recordsWithAttention, record) }));
 const densityValues = recordsWithRelations.map(semanticDensityFor);
 const densityMin = Math.min(...densityValues, 0);
 const densityMax = Math.max(...densityValues, 1);
@@ -297,7 +307,7 @@ const scored = recordsWithRelations.map((record, index) => ({
 
 const semanticRecords = scored.map((record, index) => ({
   ...record,
-  position: positionFor(record, index, scored.length, runtimeDriftScale),
+  position: positionFor(record, index, scored.length, attentionDriftScale),
   embeddingRef: {
     provider: 'supabase',
     table: 'archive_embeddings',
@@ -328,9 +338,9 @@ const records = semanticRecords.map((record) => ({
     id: relation.id,
     weight: relation.relationWeight,
   })),
-  runtimeSnapshot: {
-    ...record.runtimeSnapshot,
-    semantics: 'nightly snapshot only; live source of truth remains Supabase archive_events/archive_records',
+  attentionSnapshot: {
+    ...record.attentionSnapshot,
+    semantics: 'nightly snapshot only; source of truth remains Supabase archive_events/archive_records',
   },
   texture: {
     density: record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low',
@@ -359,7 +369,7 @@ const manifest = {
   spatialPolicy: {
     interpretation: 'semantic density terrain',
     scoreMeaning: ['semantic density', 'recurrence', 'relational gravity', 'archival weight'],
-    runtimeSignal: 'runtime activity may cause weak nightly spatial drift but is not semantic gravity',
+    attentionSignal: 'human attention may cause weak nightly spatial drift but is not semantic gravity',
     excludes: ['raw embeddings', 'live views', 'engagement ranking', 'popularity'],
     persistence: 'nightly rebuilds should preserve spatial memory and allow only local drift',
   },
@@ -370,8 +380,8 @@ const manifest = {
     eventFunction: 'record_archive_event',
     sourceOfTruth: 'backend',
     frontmatterPolicy: 'ignored',
-    snapshotSemantics: 'runtime metrics in this manifest are frozen at rebuild time; live source of truth remains Supabase',
-    rebuildUse: 'nightly runtime metrics may weakly drift spatial placement but do not change semantic density directly',
+    snapshotSemantics: 'attention metrics in this manifest are frozen at rebuild time; live source of truth remains Supabase',
+    rebuildUse: 'nightly attention metrics may weakly drift spatial placement but do not change semantic density directly',
   },
   counts: {
     records: records.length,

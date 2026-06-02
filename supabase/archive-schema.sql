@@ -13,6 +13,11 @@ create table if not exists public.archive_records (
   page_views integer not null default 0,
   opens integer not null default 0,
   runtime_score double precision not null default 0,
+  human_modal_open integer not null default 0,
+  human_full_open integer not null default 0,
+  human_score double precision not null default 0,
+  machine_access integer not null default 0,
+  machine_score double precision not null default 0,
   last_event_at timestamptz,
   updated_at timestamptz not null default now()
 );
@@ -22,6 +27,11 @@ add column if not exists tile_clicks integer not null default 0,
 add column if not exists page_views integer not null default 0,
 add column if not exists opens integer not null default 0,
 add column if not exists runtime_score double precision not null default 0,
+add column if not exists human_modal_open integer not null default 0,
+add column if not exists human_full_open integer not null default 0,
+add column if not exists human_score double precision not null default 0,
+add column if not exists machine_access integer not null default 0,
+add column if not exists machine_score double precision not null default 0,
 add column if not exists last_event_at timestamptz;
 
 create table if not exists public.archive_events (
@@ -135,6 +145,13 @@ begin
     opens = opens + case when normalized_event = 'record_open' then 1 else 0 end,
     page_views = page_views + case when normalized_event = 'page_view' then 1 else 0 end,
     runtime_score = runtime_score + runtime_delta,
+    human_modal_open = human_modal_open + case when normalized_event = 'tile_click' then 1 else 0 end,
+    human_full_open = human_full_open + case when normalized_event = 'record_open' then 1 else 0 end,
+    human_score = human_score + case normalized_event
+      when 'tile_click' then 0.15
+      when 'record_open' then 0.35
+      else 0
+    end,
     last_event_at = now(),
     updated_at = now()
   where slug = record_slug
@@ -147,6 +164,11 @@ begin
     'opens', updated_record.opens,
     'pageViews', updated_record.page_views,
     'runtimeScore', updated_record.runtime_score,
+    'humanModalOpen', updated_record.human_modal_open,
+    'humanFullOpen', updated_record.human_full_open,
+    'humanScore', updated_record.human_score,
+    'machineAccess', updated_record.machine_access,
+    'machineScore', updated_record.machine_score,
     'lastEventAt', updated_record.last_event_at
   );
 end;
