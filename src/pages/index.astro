@@ -55,7 +55,6 @@ const emptyTiles = Array.from({ length: totalSlots }, (_, slot) => ({
 
 const recordById = new Map(fieldRecords.map((record) => [record.id, record]));
 const selected = fieldRecords[0];
-const selectedRelated = selected?.related.map((id) => recordById.get(id)).filter(Boolean).slice(0, 4) ?? [];
 const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(new Date(manifest.generatedAt));
 const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
 ---
@@ -243,7 +242,7 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
         border-left: 1px solid var(--line);
         box-shadow: -20px 0 48px rgba(37, 35, 29, 0.12);
         display: grid;
-        grid-template-rows: auto auto auto 1fr auto auto;
+        grid-template-rows: auto auto auto 1fr auto;
         inset: 0 0 0 auto;
         max-width: min(420px, 100vw);
         min-height: 100vh;
@@ -281,27 +280,23 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
 
       .close-detail:hover { color: var(--ink); }
 
-      .inspector h2 { color: var(--ink); font-size: 17px; font-weight: 500; margin: 0 0 22px; }
-      .cover { aspect-ratio: 4 / 3; background: rgba(247, 243, 235, 0.6); border: 1px solid var(--line); display: grid; margin-bottom: 18px; overflow: hidden; place-items: center; }
-      .cover img { height: 100%; object-fit: cover; width: 100%; }
-      .cover-placeholder { color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+      .inspector-date { color: var(--ink); font-size: 15px; font-weight: 400; letter-spacing: 0.02em; margin: 0 0 28px; }
+      .texture-preview { aspect-ratio: 4 / 3; background: rgba(247, 243, 235, 0.6); border: 1px solid var(--line); display: grid; margin-bottom: 24px; overflow: hidden; place-items: center; position: relative; }
+      .texture-preview::after { background-image: linear-gradient(90deg, rgba(91, 95, 63, 0.12) 1px, transparent 1px), linear-gradient(rgba(197, 112, 67, 0.08) 1px, transparent 1px); background-size: 14px 18px; content: ""; inset: 0; mix-blend-mode: multiply; opacity: 0.72; position: absolute; }
+      .texture-preview img { filter: saturate(0.78) contrast(0.92); height: 100%; object-fit: cover; width: 100%; }
+      .texture-placeholder { color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
 
-      .inspector dl { border-bottom: 1px solid var(--line); border-top: 1px solid var(--line); display: grid; gap: 7px; grid-template-columns: 1fr 1fr; margin: 0 0 22px; padding: 16px 0; }
-      .inspector dt { color: var(--muted); }
-      .inspector dd { color: var(--ink); margin: 0; }
-
-      .excerpt { color: var(--ink); font-family: "Iowan Old Style", "Apple SD Gothic Neo", "Noto Serif KR", serif; font-size: 15px; line-height: 1.8; margin: 0; }
-      .related { border-top: 1px solid var(--line); display: grid; gap: 10px; margin-top: 22px; padding-top: 14px; }
+      .related { border-top: 1px solid var(--line); display: grid; gap: 14px; margin-top: 4px; padding-top: 18px; }
+      .related-header { align-items: baseline; display: flex; justify-content: space-between; }
       .related h3 { color: var(--muted); font-size: 12px; font-weight: 400; margin: 0; }
-      .related-list { display: grid; gap: 8px; }
-      .related-card { align-items: center; color: var(--ink); display: grid; gap: 10px; grid-template-columns: 44px 1fr; text-decoration: none; }
-      .related-thumb { aspect-ratio: 1; background: rgba(91, 95, 63, 0.12); border: 1px solid var(--line); display: grid; place-items: center; }
-      .related-thumb img { height: 100%; object-fit: cover; width: 100%; }
-      .related-dot { background: var(--olive); border-radius: 999px; height: 8px; width: 8px; }
-      .related-title { font-size: 12px; line-height: 1.35; }
+      .related-count { color: var(--ink); font-size: 24px; line-height: 1; }
+      .related-list { display: flex; flex-wrap: wrap; gap: 8px; }
+      .related-marker { align-items: center; aspect-ratio: 1; background: rgba(91, 95, 63, 0.1); border: 1px solid var(--line); color: transparent; display: inline-grid; overflow: hidden; place-items: center; position: relative; text-decoration: none; width: 34px; }
+      .related-marker::before { background: var(--olive); border-radius: 999px; content: ""; height: 7px; opacity: 0.78; width: 7px; }
+      .related-marker:nth-child(2n)::before { background: var(--warm); }
+      .related-marker:nth-child(3n)::before { box-shadow: -7px 5px 0 var(--soft), 7px -5px 0 var(--olive); }
 
       .open-link { align-self: end; color: var(--ink); display: inline-flex; font-size: 14px; justify-self: start; margin-top: 24px; text-decoration: none; }
-      .open-link::after { content: "→"; margin-left: 18px; }
 
     </style>
   </head>
@@ -344,32 +339,25 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
 
       <aside class="inspector" id="detail-panel" aria-label="selected record" aria-hidden="true">
         <div class="inspector-header">
-          <h2 id="detail-title">{selected?.title ?? 'empty archive'}</h2>
+          <p class="inspector-date" id="detail-date">{selected ? selected.date.slice(0, 10) : '-'}</p>
           <button class="close-detail" id="detail-close" type="button">close</button>
         </div>
-        <div class="cover" id="detail-cover">
-          {selected?.cover ? <img src={selected.cover} alt={selected.coverAlt} /> : <span class="cover-placeholder">no cover</span>}
+        <div class="texture-preview" id="detail-texture" aria-label={selected?.title ?? 'record texture'}>
+          {selected?.cover ? <img src={selected.cover} alt="" /> : <span class="texture-placeholder">texture preview</span>}
         </div>
-        <dl>
-          <dt>score</dt><dd id="detail-score">{selected ? selected.score.toFixed(2) : '0.00'}</dd>
-          <dt>cluster</dt><dd id="detail-cluster">{selected ? `# ${selected.cluster}` : '-'}</dd>
-          <dt>created</dt><dd id="detail-date">{selected ? selected.date.slice(0, 10) : '-'}</dd>
-          <dt>category</dt><dd id="detail-category">{selected?.category ?? '-'}</dd>
-          <dt>views</dt><dd id="detail-views">backend</dd>
-        </dl>
-        <p class="excerpt" id="detail-excerpt">{selected?.excerpt ?? '기록이 쌓이면 이곳에 의미 밀도가 생깁니다.'}</p>
-        <div class="related" aria-label="related records">
-          <h3>related by semantic distance</h3>
+        <div class="related" aria-label="nearby records">
+          <div class="related-header">
+            <h3>Nearby Records</h3>
+            <span class="related-count" id="detail-related-count">{selected?.related.length ?? 0}</span>
+          </div>
           <div class="related-list" id="detail-related">
-            {selectedRelated.map((record) => record && (
-              <a class="related-card" href={record.url}>
-                <span class="related-thumb">{record.cover ? <img src={record.cover} alt="" /> : <span class="related-dot"></span>}</span>
-                <span class="related-title">{record.title}</span>
-              </a>
-            ))}
+            {(selected?.related ?? []).slice(0, 8).map((id, index) => {
+              const nearby = recordById.get(id);
+              return nearby && <a class="related-marker" href={nearby.url} aria-label={`nearby record ${index + 1}`}>{index + 1}</a>;
+            })}
           </div>
         </div>
-        <a class="open-link" id="detail-open" href={selected?.url ?? '/archive-manifest.json'}>open</a>
+        <a class="open-link" id="detail-open" href={selected?.url ?? '/archive-manifest.json'}>Open Record →</a>
       </aside>
       <div class="modal-backdrop" id="detail-backdrop" aria-hidden="true"></div>
 
@@ -385,24 +373,19 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
     <script type="module">
       const records = JSON.parse(document.getElementById('archive-records')?.textContent || '[]');
       const nodes = [...document.querySelectorAll('.record-node')];
-      const title = document.getElementById('detail-title');
-      const score = document.getElementById('detail-score');
-      const cluster = document.getElementById('detail-cluster');
       const date = document.getElementById('detail-date');
-      const category = document.getElementById('detail-category');
-      const views = document.getElementById('detail-views');
-      const excerpt = document.getElementById('detail-excerpt');
       const open = document.getElementById('detail-open');
-      const cover = document.getElementById('detail-cover');
+      const texture = document.getElementById('detail-texture');
       const related = document.getElementById('detail-related');
+      const relatedCount = document.getElementById('detail-related-count');
       const panel = document.getElementById('detail-panel');
       const close = document.getElementById('detail-close');
       const backdrop = document.getElementById('detail-backdrop');
 
-      function coverMarkup(record) {
+      function textureMarkup(record) {
         return record.cover
-          ? `<img src="${record.cover}" alt="${record.coverAlt || ''}">`
-          : '<span class="cover-placeholder">no cover</span>';
+          ? `<img src="${record.cover}" alt="">`
+          : '<span class="texture-placeholder">texture preview</span>';
       }
 
       const backend = {
@@ -428,23 +411,24 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
         };
       }
 
-      function applyRuntimeMetrics(record, payload) {
+      function applyAttentionMetrics(record, payload) {
         if (!payload || typeof payload !== 'object') return;
         if (Number.isFinite(Number(payload.views))) record.views = Number(payload.views);
         if (Number.isFinite(Number(payload.tileClicks))) record.tileClicks = Number(payload.tileClicks);
         if (Number.isFinite(Number(payload.opens))) record.opens = Number(payload.opens);
         if (Number.isFinite(Number(payload.pageViews))) record.pageViews = Number(payload.pageViews);
         if (Number.isFinite(Number(payload.runtimeScore))) record.runtimeScore = Number(payload.runtimeScore);
+        if (Number.isFinite(Number(payload.humanModalOpen))) record.humanModalOpen = Number(payload.humanModalOpen);
+        if (Number.isFinite(Number(payload.humanFullOpen))) record.humanFullOpen = Number(payload.humanFullOpen);
+        if (Number.isFinite(Number(payload.humanScore))) record.humanScore = Number(payload.humanScore);
+        if (Number.isFinite(Number(payload.machineAccess))) record.machineAccess = Number(payload.machineAccess);
+        if (Number.isFinite(Number(payload.machineScore))) record.machineScore = Number(payload.machineScore);
       }
 
-      function viewText(record) {
-        return Number.isFinite(record.views) ? String(record.views) : 'not loaded';
-      }
-
-      async function fetchBackendViews() {
+      async function fetchBackendAttention() {
         if (!backend.url || !backend.key || records.length === 0) return;
         const slugs = records.map((record) => `"${String(record.id).replaceAll('\"', '\\"')}"`).join(',');
-        const endpoint = `${backend.url.replace(/\/$/, '')}/rest/v1/archive_records?select=slug,views,tile_clicks,opens,page_views,runtime_score&slug=in.(${slugs})`;
+        const endpoint = `${backend.url.replace(/\/$/, '')}/rest/v1/archive_records?select=slug,views,tile_clicks,opens,page_views,runtime_score,human_modal_open,human_full_open,human_score,machine_access,machine_score&slug=in.(${slugs})`;
         const response = await fetch(endpoint, {
           headers: { apikey: backend.key, Authorization: `Bearer ${backend.key}` },
         });
@@ -453,12 +437,17 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
         rows.forEach((row) => {
           const record = records.find((item) => item.id === row.slug);
           if (!record) return;
-          applyRuntimeMetrics(record, {
+          applyAttentionMetrics(record, {
             views: row.views,
             tileClicks: row.tile_clicks,
             opens: row.opens,
             pageViews: row.page_views,
             runtimeScore: row.runtime_score,
+            humanModalOpen: row.human_modal_open,
+            humanFullOpen: row.human_full_open,
+            humanScore: row.human_score,
+            machineAccess: row.machine_access,
+            machineScore: row.machine_score,
           });
         });
       }
@@ -467,13 +456,8 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
         return (record.related || [])
           .map((id) => records.find((item) => item.id === id))
           .filter(Boolean)
-          .slice(0, 4)
-          .map((item) => `
-            <a class="related-card" href="${item.url}">
-              <span class="related-thumb">${item.cover ? `<img src="${item.cover}" alt="">` : '<span class="related-dot"></span>'}</span>
-              <span class="related-title">${item.title}</span>
-            </a>
-          `)
+          .slice(0, 8)
+          .map((item, index) => `<a class="related-marker" href="${item.url}" aria-label="nearby record ${index + 1}">${index + 1}</a>`)
           .join('');
       }
 
@@ -492,15 +476,11 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
 
       function selectRecord(record) {
         nodes.forEach((node) => node.classList.toggle('is-selected', node.dataset.recordId === record.id));
-        title.textContent = record.title;
-        score.textContent = Number(record.score).toFixed(2);
-        cluster.textContent = `# ${record.cluster}`;
         date.textContent = String(record.date).slice(0, 10);
-        category.textContent = record.category || record.type;
-        views.textContent = viewText(record);
-        excerpt.textContent = record.excerpt;
         open.href = record.url;
-        cover.innerHTML = coverMarkup(record);
+        texture.setAttribute('aria-label', `${record.title} texture`);
+        texture.innerHTML = textureMarkup(record);
+        relatedCount.textContent = String((record.related || []).length);
         related.innerHTML = relatedMarkup(record);
         openPanel();
       }
@@ -520,7 +500,7 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
         if (!response.ok) return null;
         const payload = await response.json().catch(() => null);
         const result = Array.isArray(payload) ? payload[0] : payload;
-        applyRuntimeMetrics(record, result);
+        applyAttentionMetrics(record, result);
         return result;
       }
 
@@ -530,7 +510,7 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
         if (event.key === 'Escape') closePanel();
       });
 
-      fetchBackendViews().catch(() => {});
+      fetchBackendAttention().catch(() => {});
 
       open.addEventListener('click', () => {
         const record = records.find((item) => item.url === open.getAttribute('href'));
@@ -545,9 +525,6 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
           if (!record) return;
           selectRecord(record);
           recordArchiveEvent(record, 'tile_click', { surface: 'field' })
-            .then(() => {
-              if (node.classList.contains('is-selected')) views.textContent = viewText(record);
-            })
             .catch(() => {});
         });
       });
