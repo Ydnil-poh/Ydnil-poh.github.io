@@ -369,7 +369,11 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
       </section>
     </main>
 
-    <script type="application/json" id="archive-records">{JSON.stringify(fieldRecords)}</script>
+    <script 
+      type="application/json" 
+      id="archive-records"
+      set:html={JSON.stringify(fieldRecords)}
+    ></script>
     <script type="module">
       const records = JSON.parse(document.getElementById('archive-records')?.textContent || '[]');
       const nodes = [...document.querySelectorAll('.record-node')];
