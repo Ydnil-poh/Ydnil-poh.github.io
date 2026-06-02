@@ -346,6 +346,10 @@ const records = semanticRecords.map((record) => ({
     density: record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low',
     imageCount: record.imageUrls.length,
     textLength: record.textLength,
+    width: 32,
+    height: 32,
+
+    cells: Array.from({ length: 32 * 32 }, () => 0.5),
   },
   imageUrls: record.imageUrls,
   contentHash: record.contentHash,
