@@ -55,6 +55,10 @@ const emptyTiles = Array.from({ length: totalSlots }, (_, slot) => ({
 
 const recordById = new Map(fieldRecords.map((record) => [record.id, record]));
 const selected = fieldRecords[0];
+const backendConfig = {
+  url: import.meta.env.PUBLIC_SUPABASE_URL ?? '',
+  key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '',
+};
 const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(new Date(manifest.generatedAt));
 const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
 ---
@@ -374,8 +378,14 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
       id="archive-records"
       set:html={JSON.stringify(fieldRecords)}
     ></script>
+    <script
+      type="application/json"
+      id="archive-backend"
+      set:html={JSON.stringify(backendConfig)}
+    ></script>
     <script type="module">
       const records = JSON.parse(document.getElementById('archive-records')?.textContent || '[]');
+      const backend = JSON.parse(document.getElementById('archive-backend')?.textContent || '{}');
       const nodes = [...document.querySelectorAll('.record-node')];
       const date = document.getElementById('detail-date');
       const open = document.getElementById('detail-open');
@@ -391,11 +401,6 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
           ? `<img src="${record.cover}" alt="">`
           : '<span class="texture-placeholder">texture preview</span>';
       }
-
-      const backend = {
-        url: import.meta.env.PUBLIC_SUPABASE_URL,
-        key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
-      };
 
       function sessionId() {
         const key = 'ydnil-poh-archive-session';
