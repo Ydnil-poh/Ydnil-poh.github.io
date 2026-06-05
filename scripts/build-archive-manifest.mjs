@@ -164,18 +164,19 @@ function semanticDensityFor(record) {
 
 function generateTexture(record) {
   const width = 32;
-  const height =
-    Math.max(
-      1,
-      paragraphs.length
-    );
-  
+   
   const paragraphs =
     record.rawBody
       .split(/\n\s*\n/)
       .map(p => plainText(p))
       .filter(Boolean);
 
+   const height =
+     Math.max(
+      1,
+      paragraphs.length
+     );
+  
   const cells = [];
 
   for (let y = 0; y < height; y++) {
