@@ -209,7 +209,7 @@ function generateTexture(record) {
          1,
          Math.min(
            width,
-           Math.round(paragraphLength / 25)
+           Math.round(paragraphLength / 10)
          )
        );    
     
