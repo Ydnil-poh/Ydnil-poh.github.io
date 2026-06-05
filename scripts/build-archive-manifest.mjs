@@ -185,22 +185,42 @@ function generateTexture(record) {
 
     const paragraphLength = paragraph.length;
 
-    const fillWidth =
-      Math.max(
+    const paragraphWeight =
+      Math.min(
         1,
-        Math.min(
-          width,
-          Math.round(paragraphLength / 12)
-        )
+        paragraphLength / 1000
       );
 
-    for (let x = 0; x < width; x++) {
-      cells.push(
-        x < fillWidth
-          ? 0.8
-          : 0.05
-      );
+     const fillWidth =
+       Math.max(
+         1,
+         Math.min(
+           width,
+           Math.round(paragraphLength / 25)
+         )
+       );    
+    
+  for (let x = 0; x < width; x++) {
+
+    if (x >= fillWidth) {
+      cells.push(0.05);
+      continue;
     }
+
+    const noise =
+      ((x * 17 + y * 31) % 100) / 100;
+
+    const value =
+      0.3 +
+      paragraphWeight * 0.5 +
+      noise * 0.15;
+
+    cells.push(
+      Number(
+        Math.min(1, value).toFixed(3)
+      )
+    );
+   }
   }
 
   return {
