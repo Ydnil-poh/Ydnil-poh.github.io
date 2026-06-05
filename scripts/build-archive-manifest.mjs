@@ -166,30 +166,40 @@ function generateTexture(record) {
   const width = 32;
   const height = 32;
 
-  const seed = createHash('sha1')
-    .update(record.contentHash)
-    .digest();
+  const paragraphs =
+    record.rawBody
+      .split(/\n\s*\n/)
+      .map(p => plainText(p))
+      .filter(Boolean);
 
   const cells = [];
 
   for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
 
-      const idx = (x + y * width) % seed.length;
+    const paragraph =
+      paragraphs[
+        Math.floor(
+          (y / height) * paragraphs.length
+        )
+      ] ?? '';
 
-      const noise =
-        (seed[idx] / 255) * 0.4;
+    const paragraphLength = paragraph.length;
 
-      const density =
+    const fillWidth =
+      Math.max(
+        1,
         Math.min(
-          1,
-          0.2 +
-          noise +
-          Math.log1p(record.textLength) / 20 +
-          record.imageUrls.length * 0.03
-        );
+          width,
+          Math.round(paragraphLength / 12)
+        )
+      );
 
-      cells.push(Number(density.toFixed(3)));
+    for (let x = 0; x < width; x++) {
+      cells.push(
+        x < fillWidth
+          ? 0.8
+          : 0.05
+      );
     }
   }
 
@@ -318,6 +328,7 @@ const initial = await Promise.all(files.map(async (file) => {
     source: data.source ?? '',
     imageUrls: images,
     textLength: text.replace(/\s/g, '').length,
+    rawBody: body,
     contentHash,
     embedding,
     embeddingModel: `local-feature-hash-ko-en-${embeddingDimensions}`,
