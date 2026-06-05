@@ -9,7 +9,7 @@ coverAlt: sample
 type: writing
 visibility: public
 ---
-[https://youtu.be/P1IBy_7QhLg?si=hgP5hzdx28myOJDA]()
+!youtube https://youtu.be/P1IBy_7QhLg?si=hgP5hzdx28myOJDA
 
 로마 인, 바르셀로나 아웃 일정의 9박 10일. 지난해 12월에 신혼여행을 다녀왔다. 피렌체와 니스를 포함해 네 개 도시에서 머물렀다. 두번째 방문자인 내가 여행 일정을 정하면서, 13년 전 배낭여행자로서 좋았던 기억들에 많이 기댔다고 생각한다.
 
