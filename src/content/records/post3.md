@@ -3,7 +3,7 @@ title: 어떻게 만들 것인가
 date: 2026-05-27
 location: 서울
 excerpt: AI와 함께 일하는 감각
-tags: [blog, AI, archive]
+tags: [뚝딱뚝딱]
 cover: ""
 coverAlt: sample
 type: writing
