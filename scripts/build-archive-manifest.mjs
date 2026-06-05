@@ -162,6 +162,44 @@ function semanticDensityFor(record) {
   return Number((relationDensity * 0.72 + recurrence * 0.28).toFixed(6));
 }
 
+function generateTexture(record) {
+  const width = 32;
+  const height = 32;
+
+  const seed = createHash('sha1')
+    .update(record.contentHash)
+    .digest();
+
+  const cells = [];
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+
+      const idx = (x + y * width) % seed.length;
+
+      const noise =
+        (seed[idx] / 255) * 0.4;
+
+      const density =
+        Math.min(
+          1,
+          0.2 +
+          noise +
+          Math.log1p(record.textLength) / 20 +
+          record.imageUrls.length * 0.03
+        );
+
+      cells.push(Number(density.toFixed(3)));
+    }
+  }
+
+  return {
+    width,
+    height,
+    cells,
+  };
+}
+
 async function supabaseUpsert(table, rows, onConflict) {
   if (!supabaseUrl || !supabaseServiceKey || rows.length === 0) return false;
   const endpoint = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/${table}?on_conflict=${encodeURIComponent(onConflict)}`;
@@ -346,10 +384,7 @@ const records = semanticRecords.map((record) => ({
     density: record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low',
     imageCount: record.imageUrls.length,
     textLength: record.textLength,
-    width: 32,
-    height: 32,
-
-    cells: Array.from({ length: 32 * 32 }, () => 0.5),
+    ...generateTexture(record),
   },
   imageUrls: record.imageUrls,
   contentHash: record.contentHash,
