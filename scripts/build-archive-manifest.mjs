@@ -174,18 +174,26 @@ function generateTexture(record) {
    const height =
      Math.max(
       1,
-      paragraphs.length
+      paragraphs.length * 2 - 1
      );
   
   const cells = [];
 
   for (let y = 0; y < height; y++) {
 
+    if (y % 2 === 1) {
+
+      for (let x = 0; x < width; x++) {
+        cells.push(0.02);
+      }
+
+      continue;
+    }
+
+    
     const paragraph =
       paragraphs[
-        Math.floor(
-          (y / height) * paragraphs.length
-        )
+        Math.floor(y / 2)        
       ] ?? '';
 
     const paragraphLength = paragraph.length;
