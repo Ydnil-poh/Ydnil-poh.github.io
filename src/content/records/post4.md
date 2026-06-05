@@ -7,7 +7,7 @@ tags:
   - 뚜벅뚜벅
 cover:
 coverAlt: sample
-type: video
+type: writing
 visibility: public
 ---
 [https://youtu.be/P1IBy_7QhLg?si=hgP5hzdx28myOJDA]()
