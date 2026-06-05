@@ -3,8 +3,7 @@ title: 신혼여행
 date: 2026-05-21
 location: 유럽
 excerpt: 25년 겨울 유럽으로의 신혼여행 후기
-tags:
-  - 뚜벅뚜벅
+tags:[뚜벅뚜벅]
 cover:""
 coverAlt: sample
 type: writing
