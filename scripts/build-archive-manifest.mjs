@@ -164,8 +164,12 @@ function semanticDensityFor(record) {
 
 function generateTexture(record) {
   const width = 32;
-  const height = 32;
-
+  const height =
+    Math.max(
+      1,
+      paragraphs.length
+    );
+  
   const paragraphs =
     record.rawBody
       .split(/\n\s*\n/)
