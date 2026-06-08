@@ -117,6 +117,18 @@ const formattedDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'long' }).fo
         text-decoration-thickness: 1px;
         text-underline-offset: 4px;
       }
+      article :global(.youtube-embed) {
+        width: 100%;
+        margin: 32px 0;
+      }
+
+        article :global(.youtube-embed iframe) {
+          width: 100%;
+          aspect-ratio: 16 / 9;
+          display: block;
+          border: 0;
+      }
+
     </style>
   </head>
   <body>
