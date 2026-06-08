@@ -3,7 +3,12 @@ import { visit } from 'unist-util-visit';
 export default function remarkYoutube() {
   return (tree) => {
     visit(tree, 'paragraph', (node) => {
-      console.log(JSON.stringify(node, null, 2));
+      const text = JSON.stringify(node);
+
+      if (text.includes('!youtube')) {
+        console.log('FOUND YOUTUBE NODE');
+        console.log(JSON.stringify(node, null, 2));
+      }
     });
   };
 }
