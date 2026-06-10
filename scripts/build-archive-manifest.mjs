@@ -164,76 +164,56 @@ function semanticDensityFor(record) {
 
 function generateTexture(record) {
   const width = 32;
-   
+  const height = 24;
+
+  const margin = 4;
+  const textWidth = width - margin * 2;
+  const charsPerLine = textWidth;
+
   const paragraphs =
     record.rawBody
       .split(/\n\s*\n/)
       .map(p => plainText(p))
       .filter(Boolean);
 
-   const height =
-     Math.max(
-      1,
-      paragraphs.length * 2 - 1
-     );
-  
+  const lines = [];
+
+  for (const paragraph of paragraphs) {
+    let remaining = paragraph.length;
+
+    while (remaining > 0) {
+      lines.push(
+        Math.min(charsPerLine, remaining)
+      );
+
+      remaining -= charsPerLine;
+    }
+
+    // 문단 간 공백
+    lines.push(0);
+  }
+
+  if (lines.length > 0 && lines.at(-1) === 0) {
+    lines.pop();
+  }
+
   const cells = [];
 
   for (let y = 0; y < height; y++) {
+    const fillWidth = lines[y] ?? 0;
 
-    if (y % 2 === 1) {
+    for (let x = 0; x < width; x++) {
+      const insideText =
+        fillWidth > 0 &&
+        x >= margin &&
+        x < margin + fillWidth;
 
-      for (let x = 0; x < width; x++) {
-        cells.push(0.02);
+      if (insideText) {
+        cells.push(0.85);
+      } else {
+        cells.push(0.05);
       }
-
-      continue;
     }
-
-    
-    const paragraph =
-      paragraphs[
-        Math.floor(y / 2)        
-      ] ?? '';
-
-    const paragraphLength = paragraph.length;
-
-    const paragraphWeight =
-      Math.min(
-        1,
-        paragraphLength / 1000
-      );
-
-     const fillWidth =
-       Math.max(
-         1,
-         Math.min(
-           width,
-           Math.round(paragraphLength / 10)
-         )
-       );    
-    
-  for (let x = 0; x < width; x++) {
-
-    if (x >= fillWidth) {
-      cells.push(0.05);
-      continue;
-    }
-
-    const noise =
-      ((x * 17 + y * 31) % 100) / 100;
-
-    const value =
-      0.3 +
-      paragraphWeight * 0.5 +
-      noise * 0.15;
-
-    cells.push(
-      Number(
-        Math.min(1, value).toFixed(3)
-      )
-    );
-   }
   }
 
   return {
