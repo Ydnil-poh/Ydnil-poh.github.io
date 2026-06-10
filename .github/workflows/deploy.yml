@@ -20,6 +20,14 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    env:
+        PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+        PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        SUPABASE_STORAGE_BUCKET: archive-images    
+        
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,12 +42,6 @@ jobs:
         run: npm ci
       - name: Build archive field
         run: npm run build
-        env:
-          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
-          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          SUPABASE_STORAGE_BUCKET: archive-images
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
