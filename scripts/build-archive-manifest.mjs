@@ -1,3 +1,9 @@
+console.log("ENV DUMP", {
+  SUPABASE_URL: process.env.SUPABASE_URL,
+  PUBLIC_SUPABASE_URL: process.env.PUBLIC_SUPABASE_URL,
+  SERVICE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+});
+
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
