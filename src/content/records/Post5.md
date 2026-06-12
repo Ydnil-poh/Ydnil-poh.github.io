@@ -1,10 +1,9 @@
 ---
 title: 기능공간을 점유하기
-date: <% tp.date.now("YYYY-MM-DD") %>
+date: 2026-06-12
 location: 서울
 excerpt: 기능하는 거대공간에 새로운 사건이 개입하는 순간, 익숙한 풍경은 전혀 다른 의미를 갖게 된다
-tags:
-  - 흥얼흥얼
+tags:[흥얼흥얼]
 type: standard
 visibility: public
 source: obsidian
@@ -14,6 +13,7 @@ source: obsidian
 코르티스의 REDRED 퍼포먼스 필름을 봤을 때, 나는 배경에 먼저 시선을 보냈다. 일산같은데? 더 글로우 2026 관람을 위해 올 초 방문했기 때문에 더 빨리 눈치챘던 것 같다. 근데 아마도 배경이 일산이 아니었다 한들 1기 신도시적 풍경에 반응하지 않을 수는 없었을 것 같다. 
 
 !youtube https://youtu.be/XgmdslsEJ1M?si=Z_HU13mjAI6XghZi
+
 !youtube https://youtu.be/MoZbwLzg47w?si=dWsR_l_Zv09fYkvN
 
 그들의 다음 곡인 TNT의 퍼포먼스 필름도 역시 마음에 들었다. 이 비디오는 REDRED만큼 장소 특정적이지 않지만, 왠지 비슷한 감상을 갖게 한다. 사실 퍼포먼스 필름보다는 온더스팟의 영상이 더 마음에 들었는데, 역시 물류센터와 중공업단지의 풍경이 눈길을 끈다.
