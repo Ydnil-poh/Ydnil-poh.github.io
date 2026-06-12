@@ -3,7 +3,7 @@ title: 기능공간을 점유하기
 date: 2026-06-12
 location: 서울
 excerpt: 기능하는 거대공간에 새로운 사건이 개입하는 순간, 익숙한 풍경은 전혀 다른 의미를 갖게 된다
-tags:[흥얼흥얼]
+tags: [흥얼흥얼]
 type: standard
 visibility: public
 source: obsidian
