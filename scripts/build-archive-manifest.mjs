@@ -166,6 +166,10 @@ function semanticDensityFor(record) {
   return Number((relationDensity * 0.72 + recurrence * 0.28).toFixed(6));
 }
 
+function isYoutubeDirective(block) {
+  return /^!youtube\s+https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\//i.test(block.trim());
+}
+
 function generateTexture(record) {
   const width = 32;
   const height = 24;
@@ -173,50 +177,75 @@ function generateTexture(record) {
   const margin = 4;
   const textWidth = width - margin * 2;
   const charsPerLine = textWidth;
+  const youtubeBlockHeight = 4;
 
-  const paragraphs =
-    record.rawBody
-      .split(/\n\s*\n/)
-      .map(p => plainText(p))
-      .filter(Boolean);
+  const rows = [];
 
-  const lines = [];
+  for (const block of record.rawBody.split(/\n\s*\n/)) {
+    if (isYoutubeDirective(block)) {
+      for (let index = 0; index < youtubeBlockHeight; index += 1) {
+        rows.push({ type: 'youtube', edge: index === 0 || index === youtubeBlockHeight - 1 });
+      }
+      rows.push({ type: 'space' });
+      continue;
+    }
 
-  for (const paragraph of paragraphs) {
+    const paragraph = plainText(block);
+    if (!paragraph) continue;
+
     let remaining = paragraph.length;
 
     while (remaining > 0) {
-      lines.push(
-        Math.min(charsPerLine, remaining)
-      );
+      rows.push({
+        type: 'text',
+        fillWidth: Math.min(charsPerLine, remaining),
+      });
 
       remaining -= charsPerLine;
     }
 
     // 문단 간 공백
-    lines.push(0);
+    rows.push({ type: 'space' });
   }
 
-  if (lines.length > 0 && lines.at(-1) === 0) {
-    lines.pop();
+  if (rows.length > 0 && rows.at(-1).type === 'space') {
+    rows.pop();
   }
 
   const cells = [];
 
   for (let y = 0; y < height; y++) {
-    const fillWidth = lines[y] ?? 0;
+    const row = rows[y] ?? { type: 'space' };
 
     for (let x = 0; x < width; x++) {
-      const insideText =
-        fillWidth > 0 &&
-        x >= margin &&
-        x < margin + fillWidth;
+      if (row.type === 'text') {
+        const insideText =
+          row.fillWidth > 0 &&
+          x >= margin &&
+          x < margin + row.fillWidth;
 
-      if (insideText) {
-        cells.push(0.85);
-      } else {
-        cells.push(0.05);
+        cells.push(insideText ? 0.85 : 0.05);
+        continue;
       }
+
+      if (row.type === 'youtube') {
+        const insideMedia = x >= margin && x < margin + textWidth;
+        const onVerticalEdge = x === margin || x === margin + textWidth - 1;
+        const playMarker = !row.edge && x >= margin + 11 && x <= margin + 13;
+
+        if (!insideMedia) {
+          cells.push(0.05);
+        } else if (row.edge || onVerticalEdge) {
+          cells.push(0.72);
+        } else if (playMarker) {
+          cells.push(0.85);
+        } else {
+          cells.push(0.24);
+        }
+        continue;
+      }
+
+      cells.push(0.05);
     }
   }
 

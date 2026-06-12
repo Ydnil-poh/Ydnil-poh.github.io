@@ -53,10 +53,11 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
       .record-body--mediaRail { align-items: start; display: grid; gap: 0 var(--rail-gap); grid-template-columns: var(--rail) minmax(0, 760px); }
       .record-body--mediaRail::before { align-self: stretch; border-left: 1px solid var(--line); content: ""; grid-column: 1; grid-row: 1 / span 999; margin-left: -24px; min-height: 100%; }
       .record-body--mediaRail :global(*) { grid-column: 2; }
-      .record-body--mediaRail :global(img),
-      .record-body--mediaRail :global(.youtube-embed) { border-radius: 8px; grid-column: 1; margin: 0 0 14px; overflow: hidden; width: 100%; }
-      .record-body--mediaRail :global(img) { aspect-ratio: 4 / 3; object-fit: cover; }
-      .record-body--mediaRail :global(.youtube-embed iframe) { border-radius: 8px; }
+      .record-body--mediaRail :global(.gallery),
+      .record-body--mediaRail :global([data-gallery]) { grid-column: 1; margin: 0 0 14px; width: 100%; }
+      .record-body--mediaRail :global(.gallery img),
+      .record-body--mediaRail :global([data-gallery] img) { aspect-ratio: 4 / 3; border-radius: 8px; margin: 0 0 14px; object-fit: cover; overflow: hidden; width: 100%; }
+      .record-body--mediaRail :global(.youtube-embed) { grid-column: 2; }
       .record-body--mediaRail :global(hr) { background: var(--line); border: 0; height: 1px; margin: 32px 0; width: 100%; }
       .record-body--mediaRail :global(blockquote) { background: rgba(247, 244, 236, 0.72); border: 0; border-radius: 6px; margin: 28px 0; padding: 18px 28px; }
       .record-body--mediaRail :global(h2),
@@ -68,7 +69,8 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
         .record-header--mediaRail,
         .record-body--mediaRail { display: block; }
         .record-body--mediaRail::before { content: none; }
-        .record-body--mediaRail :global(img),
+        .record-body--mediaRail :global(.gallery),
+        .record-body--mediaRail :global([data-gallery]),
         .record-body--mediaRail :global(.youtube-embed) { margin: 28px 0 34px; }
       }
     </style>
