@@ -1,5 +1,6 @@
 ---
 import manifest from '../../public/archive-manifest.json';
+import { renderTextureSvg } from '../lib/archiveTexture';
 
 const COLS = 28;
 const ROWS = 18;
@@ -44,7 +45,16 @@ function slotFromPosition(record: ManifestRecord, occupied: Set<number>) {
 }
 
 const occupied = new Set<number>();
-const fieldRecords = manifest.records.map((record) => slotFromPosition(record, occupied));
+const fieldRecords = manifest.records.map((record) => {
+  const positioned = slotFromPosition(record, occupied);
+  return {
+    ...positioned,
+    textureSvg: {
+      field: renderTextureSvg(positioned.texture, 'field'),
+      modal: renderTextureSvg(positioned.texture, 'modal'),
+    },
+  };
+});
 const occupiedSlots = new Set(fieldRecords.map((record) => record.slot));
 const emptyTiles = Array.from({ length: totalSlots }, (_, slot) => ({
   slot,
@@ -200,27 +210,23 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
       .record-node {
         background: rgba(247, 243, 235, 0.55);
         border: 1px solid rgba(92, 83, 67, 0.2);
-        color: inherit;
+        color: var(--olive);
         opacity: calc(0.58 + var(--score) * 0.36);
+        overflow: hidden;
         text-decoration: none;
         z-index: 3;
       }
-
-      .record-node::before,
-      .record-node::after { background: var(--olive); content: ""; opacity: 0.72; position: absolute; }
-      .record-node::before { height: 3px; left: 18%; top: 30%; width: 64%; box-shadow: -4px 6px 0 var(--olive), 6px 12px 0 var(--olive); }
-      .record-node::after { height: 3px; left: 28%; top: 58%; width: 44%; box-shadow: -6px 6px 0 var(--olive), 8px -12px 0 var(--olive); }
 
       .record-node:focus,
       .record-node:hover,
       .record-node.is-selected { outline: 1px solid rgba(37, 35, 29, 0.45); outline-offset: 4px; }
 
-      .record-node[data-density="high"]::before,
-      .record-node[data-density="high"]::after { background: var(--warm); box-shadow: -4px 6px 0 var(--warm), 6px 12px 0 var(--warm); }
-      .record-node[data-density="medium"]::before,
-      .record-node[data-density="medium"]::after { background: var(--olive); }
-      .record-node[data-density="low"]::before,
-      .record-node[data-density="low"]::after { background: var(--soft); box-shadow: -4px 6px 0 var(--soft), 6px 12px 0 var(--soft); }
+      .record-node[data-density="high"] { color: var(--warm); }
+      .record-node[data-density="medium"] { color: var(--olive); }
+      .record-node[data-density="low"] { color: var(--soft); }
+      .record-node .texture-mount,
+      .record-node .archive-texture { display: block; height: 100%; width: 100%; }
+      .record-node .archive-texture--field { filter: saturate(0.82) contrast(0.92); }
 
       .legend { border-top: 1px solid var(--line); display: flex; gap: 18px; justify-content: space-between; padding-top: 14px; }
       .legend b { color: var(--ink); font-weight: 500; }
@@ -287,7 +293,9 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
       .inspector-date { color: var(--ink); font-size: 15px; font-weight: 400; letter-spacing: 0.02em; margin: 0 0 28px; }
       .texture-preview { aspect-ratio: 4 / 3; background: rgba(247, 243, 235, 0.6); border: 1px solid var(--line); display: grid; margin-bottom: 24px; overflow: hidden; place-items: center; position: relative; }
       .texture-preview::after { background-image: linear-gradient(90deg, rgba(91, 95, 63, 0.12) 1px, transparent 1px), linear-gradient(rgba(197, 112, 67, 0.08) 1px, transparent 1px); background-size: 14px 18px; content: ""; inset: 0; mix-blend-mode: multiply; opacity: 0.72; position: absolute; }
-      .texture-preview img { filter: saturate(0.78) contrast(0.92); height: 100%; object-fit: cover; width: 100%; }
+      .texture-preview .texture-mount,
+      .texture-preview .archive-texture { color: rgba(91,95,63,.85); display: block; height: 100%; width: 100%; }
+      .texture-preview .archive-texture--modal { filter: saturate(0.78) contrast(0.92); }
       .texture-placeholder { color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
 
       .related { border-top: 1px solid var(--line); display: grid; gap: 14px; margin-top: 4px; padding-top: 18px; }
@@ -318,7 +326,7 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
         <div class="field-scroll">
           <div class="field" id="field" style={`--cols:${COLS};--rows:${ROWS};`}>
             {emptyTiles.map((tile) => <span class="empty-tile" style={`--col:${tile.col};--row:${tile.row};--tone:${tile.tone};`} aria-hidden="true"></span>)}
-            {fieldRecords.map((record, index) => {
+            {fieldRecords.map((record) => {
               const density = record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low';
               return (
                 <a
@@ -328,7 +336,9 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
                   href={record.url}
                   style={`--col:${record.position.col};--row:${record.position.row};--score:${record.score};`}
                   aria-label={record.title}
-                ></a>
+                >
+                  <span class="texture-mount" set:html={record.textureSvg.field}></span>
+                </a>
               );
             })}
           </div>
@@ -347,7 +357,7 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
           <button class="close-detail" id="detail-close" type="button">close</button>
         </div>
         <div class="texture-preview" id="detail-texture" aria-label={selected?.title ?? 'record texture'}>
-          {selected?.imageUrls?.[0] ? <img src={selected.imageUrls[0]} alt="" /> : <span class="texture-placeholder">texture preview</span>}
+          {selected ? <span class="texture-mount" set:html={selected.textureSvg.modal}></span> : <span class="texture-placeholder">texture preview</span>}
         </div>
         <div class="related" aria-label="nearby records">
           <div class="related-header">
@@ -397,44 +407,8 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
       const backdrop = document.getElementById('detail-backdrop');
 
       function textureMarkup(record) {
-        const texture = record.texture;
-
-        if (!texture?.cells?.length) {
-          return '<span class="texture-placeholder">no texture</span>';
-  }
-
-  const cells = texture.cells;
-  const width = texture.width || 32;
-  const height = texture.height || 32;
-
-  const rects = cells.map((value, index) => {
-    const x = index % width;
-    const y = Math.floor(index / width);
-
-    const opacity = Math.max(0.05, value);
-
-    return `
-      <rect
-        x="${x}"
-        y="${y}"
-        width="1"
-        height="1"
-        fill="currentColor"
-        opacity="${opacity}"
-      />
-    `;
-  }).join('');
-
-  return `
-    <svg
-      viewBox="0 0 ${width} ${height}"
-      preserveAspectRatio="none"
-      style="width:100%;height:100%;color:rgba(91,95,63,.85)"
-    >
-      ${rects}
-    </svg>
-  `;
-}
+        return record.textureSvg?.modal || '<span class="texture-placeholder">no texture</span>';
+      }
 
       function sessionId() {
         const key = 'ydnil-poh-archive-session';
