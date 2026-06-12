@@ -1,9 +1,3 @@
-console.log("ENV DUMP", {
-  SUPABASE_URL: process.env.SUPABASE_URL,
-  PUBLIC_SUPABASE_URL: process.env.PUBLIC_SUPABASE_URL,
-  SERVICE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
-});
-
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -53,7 +47,11 @@ function parseFrontmatter(raw) {
 }
 
 function slugFromFile(file) {
-  return path.relative(recordsDir, file).replace(/\\/g, '/').replace(/\.(md|markdown|mdx)$/i, '');
+  return path
+    .relative(recordsDir, file)
+    .replace(/\\/g, '/')
+    .replace(/\.(md|markdown|mdx)$/i, '')
+    .toLowerCase();
 }
 
 function plainText(body) {
