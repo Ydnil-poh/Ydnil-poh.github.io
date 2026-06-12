@@ -347,7 +347,7 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
           <button class="close-detail" id="detail-close" type="button">close</button>
         </div>
         <div class="texture-preview" id="detail-texture" aria-label={selected?.title ?? 'record texture'}>
-          {selected?.cover ? <img src={selected.cover} alt="" /> : <span class="texture-placeholder">texture preview</span>}
+          {selected?.imageUrls?.[0] ? <img src={selected.imageUrls[0]} alt="" /> : <span class="texture-placeholder">texture preview</span>}
         </div>
         <div class="related" aria-label="nearby records">
           <div class="related-header">

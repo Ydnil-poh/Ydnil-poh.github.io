@@ -65,10 +65,10 @@ function plainText(body) {
     .trim();
 }
 
-function extractImages(body, cover) {
+function extractImages(body) {
   const markdownImages = [...body.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)].map((match) => match[1]);
   const htmlImages = [...body.matchAll(/<img\b[^>]*src=['"]([^'"]+)['"][^>]*>/gi)].map((match) => match[1]);
-  return [cover, ...markdownImages, ...htmlImages].filter(Boolean);
+  return [...markdownImages, ...htmlImages].filter(Boolean);
 }
 
 function tokensFor(text) {
@@ -288,10 +288,8 @@ async function syncSupabase(records) {
     metadata: {
       date: record.date,
       location: record.location,
-      category: record.category,
+      type: record.type,
       excerpt: record.excerpt,
-      cover: record.cover,
-      coverAlt: record.coverAlt,
       imageUrls: record.imageUrls,
       url: record.url,
       embeddingRef: record.embeddingRef,
@@ -327,8 +325,9 @@ const initial = await Promise.all(files.map(async (file) => {
   const raw = await readFile(file, 'utf8');
   const { data, body } = parseFrontmatter(raw);
   const text = plainText(body);
-  const images = extractImages(body, data.cover);
-  const searchableText = [data.title, data.excerpt, data.location, data.category, text].filter(Boolean).join('\n');
+  const images = extractImages(body);
+  const normalizedType = data.type === 'mediaRail' ? 'mediaRail' : 'standard';
+  const searchableText = [data.title, data.excerpt, data.location, normalizedType, text].filter(Boolean).join('\n');
   const embedding = embeddingFor(searchableText);
   const contentHash = createHash('sha256').update(`${JSON.stringify(data)}\n${body}`).digest('hex');
 
@@ -337,13 +336,10 @@ const initial = await Promise.all(files.map(async (file) => {
     title: data.title ?? slugFromFile(file),
     date: data.date ?? '',
     location: data.location ?? '',
-    category: data.category ?? data.type ?? (images.length > 0 ? 'image' : 'writing'),
-    type: data.type ?? data.category ?? (images.length > 0 ? 'image' : 'writing'),
+    type: normalizedType,
     visibility: data.visibility ?? 'public',
     excerpt: data.excerpt ?? text.slice(0, 140),
     tags: data.tags ?? [],
-    cover: data.cover ?? '',
-    coverAlt: data.coverAlt ?? 'archive image',
     source: data.source ?? '',
     imageUrls: images,
     textLength: text.replace(/\s/g, '').length,
@@ -390,12 +386,9 @@ const records = semanticRecords.map((record) => ({
   title: record.title,
   date: record.date,
   location: record.location,
-  category: record.category,
   type: record.type,
   excerpt: record.excerpt,
   tags: record.tags,
-  cover: record.cover,
-  coverAlt: record.coverAlt,
   displayDensity: record.score,
   score: record.score,
   scoreMeaning: 'semantic density',
@@ -424,7 +417,7 @@ const records = semanticRecords.map((record) => ({
 }));
 
 const manifest = {
-  schemaVersion: 3,
+  schemaVersion: 4,
   generatedAt: new Date().toISOString(),
   source: 'src/content/records',
   storage: { provider: 'supabase', bucket: process.env.SUPABASE_STORAGE_BUCKET ?? 'archive-images' },

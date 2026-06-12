@@ -118,7 +118,7 @@ Metadata should remain lightweight.
 
 Preferred metadata:
 - date
-- category
+- type (`standard` or `mediaRail`)
 - optional location
 - optional score
 
