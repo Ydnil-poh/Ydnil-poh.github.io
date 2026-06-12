@@ -5,13 +5,13 @@ import RecordLayout from '../../layouts/RecordLayout.astro';
 export async function getStaticPaths() {
   const records = await getCollection('records', ({ data }) => data.visibility !== 'private');
   return records.map((record) => {
-    const slug = record.id.replace(/\.(md|markdown|mdx)$/i, '');
+    const slug = record.id.replace(/\.(md|markdown|mdx)$/i, '').toLowerCase();
     return { params: { slug }, props: { record } };
   });
 }
 
 const { record } = Astro.props;
-const slug = record.id.replace(/\.(md|markdown|mdx)$/i, '');
+const slug = record.id.replace(/\.(md|markdown|mdx)$/i, '').toLowerCase();
 const { Content } = await render(record);
 ---
 
