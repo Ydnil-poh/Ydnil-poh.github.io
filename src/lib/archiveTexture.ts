@@ -1,10 +1,14 @@
 export type TextureRenderVariant = 'field' | 'modal';
 
+type TextureRleRun = [value: number, count: number];
+
 type ArchiveTexture = {
   cells?: number[];
   width?: number;
   height?: number;
   density?: 'high' | 'medium' | 'low' | string;
+  encoding?: 'rle4' | string;
+  rle?: TextureRleRun[];
 };
 
 type TextureProfile = {
@@ -32,6 +36,8 @@ const profiles: Record<TextureRenderVariant, TextureProfile> = {
   },
 };
 
+const rle4OpacityByValue = [0.05, 0.24, 0.72, 0.85];
+
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
@@ -42,10 +48,30 @@ function normalizedCell(value: unknown) {
   return clamp(numberValue, 0, 1);
 }
 
-function downsampleTexture(texture: ArchiveTexture, targetWidth: number, targetHeight: number) {
+function decodeTexture(texture: ArchiveTexture) {
+  if (texture.encoding !== 'rle4') {
+    return (texture.cells || []).map(normalizedCell);
+  }
+
+  const expectedLength = Math.max(1, Math.floor(texture.width || 32)) * Math.max(1, Math.floor(texture.height || 32));
+  const cells: number[] = [];
+
+  for (const run of texture.rle || []) {
+    const [value, count] = run;
+    const opacity = rle4OpacityByValue[value] ?? rle4OpacityByValue[0];
+    const runLength = Math.max(0, Math.floor(Number(count) || 0));
+
+    for (let index = 0; index < runLength && cells.length < expectedLength; index += 1) {
+      cells.push(opacity);
+    }
+  }
+
+  return cells;
+}
+
+function downsampleTexture(texture: ArchiveTexture, sourceCells: number[], targetWidth: number, targetHeight: number) {
   const sourceWidth = Math.max(1, Math.floor(texture.width || 32));
   const sourceHeight = Math.max(1, Math.floor(texture.height || 32));
-  const sourceCells = texture.cells || [];
   const cells: number[] = [];
 
   for (let y = 0; y < targetHeight; y += 1) {
@@ -76,7 +102,13 @@ function downsampleTexture(texture: ArchiveTexture, targetWidth: number, targetH
 export function renderTextureSvg(texture: ArchiveTexture | undefined, variant: TextureRenderVariant) {
   const profile = profiles[variant];
 
-  if (!texture?.cells?.length) {
+  if (!texture) {
+    return '<span class="texture-placeholder">no texture</span>';
+  }
+
+  const sourceCells = decodeTexture(texture);
+
+  if (!sourceCells.length) {
     return '<span class="texture-placeholder">no texture</span>';
   }
 
@@ -84,8 +116,8 @@ export function renderTextureSvg(texture: ArchiveTexture | undefined, variant: T
   const sourceHeight = Math.max(1, Math.floor(texture.height || 32));
   const useNativeResolution = sourceWidth === profile.width && sourceHeight === profile.height;
   const cells = useNativeResolution
-    ? texture.cells.map(normalizedCell)
-    : downsampleTexture(texture, profile.width, profile.height);
+    ? sourceCells.map(normalizedCell)
+    : downsampleTexture(texture, sourceCells, profile.width, profile.height);
 
   const rects = cells.map((value, index) => {
     const x = index % profile.width;

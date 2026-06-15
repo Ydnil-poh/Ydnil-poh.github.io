@@ -170,6 +170,38 @@ function isYoutubeDirective(block) {
   return /^!youtube\s+https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\//i.test(block.trim());
 }
 
+const textureOpacityByValue = [0.05, 0.24, 0.72, 0.85];
+
+function quantizeTextureOpacity(opacity) {
+  let closestValue = 0;
+  let closestDistance = Infinity;
+
+  for (let value = 0; value < textureOpacityByValue.length; value += 1) {
+    const distance = Math.abs(opacity - textureOpacityByValue[value]);
+    if (distance < closestDistance) {
+      closestValue = value;
+      closestDistance = distance;
+    }
+  }
+
+  return closestValue;
+}
+
+function encodeRle4(values) {
+  const rle = [];
+
+  for (const value of values) {
+    const previous = rle.at(-1);
+    if (previous && previous[0] === value) {
+      previous[1] += 1;
+    } else {
+      rle.push([value, 1]);
+    }
+  }
+
+  return rle;
+}
+
 function generateTexture(record) {
   const width = 32;
   const height = 24;
@@ -212,7 +244,7 @@ function generateTexture(record) {
     rows.pop();
   }
 
-  const cells = [];
+  const quantizedCells = [];
 
   for (let y = 0; y < height; y++) {
     const row = rows[y] ?? { type: 'space' };
@@ -224,7 +256,7 @@ function generateTexture(record) {
           x >= margin &&
           x < margin + row.fillWidth;
 
-        cells.push(insideText ? 0.85 : 0.05);
+        quantizedCells.push(quantizeTextureOpacity(insideText ? 0.85 : 0.05));
         continue;
       }
 
@@ -234,25 +266,26 @@ function generateTexture(record) {
         const playMarker = !row.edge && x >= margin + 11 && x <= margin + 13;
 
         if (!insideMedia) {
-          cells.push(0.05);
+          quantizedCells.push(quantizeTextureOpacity(0.05));
         } else if (row.edge || onVerticalEdge) {
-          cells.push(0.72);
+          quantizedCells.push(quantizeTextureOpacity(0.72));
         } else if (playMarker) {
-          cells.push(0.85);
+          quantizedCells.push(quantizeTextureOpacity(0.85));
         } else {
-          cells.push(0.24);
+          quantizedCells.push(quantizeTextureOpacity(0.24));
         }
         continue;
       }
 
-      cells.push(0.05);
+      quantizedCells.push(quantizeTextureOpacity(0.05));
     }
   }
 
   return {
     width,
     height,
-    cells,
+    encoding: 'rle4',
+    rle: encodeRle4(quantizedCells),
   };
 }
 
@@ -481,6 +514,24 @@ const manifest = {
 };
 
 await mkdir(path.dirname(outputPath), { recursive: true });
-await writeFile(outputPath, `${JSON.stringify(manifest, null, 2)}\n`);
-console.log(`archive manifest written: ${path.relative(root, outputPath)} (${records.length} records)`);
+const manifestJson = `${JSON.stringify(manifest, null, 2)}\n`;
+await writeFile(outputPath, manifestJson);
+
+const legacyTextureBytes = Buffer.byteLength(JSON.stringify(records.map((record) => ({
+  width: record.texture.width,
+  height: record.texture.height,
+  cells: record.texture.rle.flatMap(([value, count]) => Array.from({ length: count }, () => textureOpacityByValue[value] ?? 0.05)),
+}))));
+const rleTextureBytes = Buffer.byteLength(JSON.stringify(records.map((record) => ({
+  width: record.texture.width,
+  height: record.texture.height,
+  encoding: record.texture.encoding,
+  rle: record.texture.rle,
+}))));
+const textureReduction = legacyTextureBytes > 0
+  ? ((1 - rleTextureBytes / legacyTextureBytes) * 100).toFixed(1)
+  : '0.0';
+
+console.log(`archive manifest written: ${path.relative(root, outputPath)} (${records.length} records, ${Buffer.byteLength(manifestJson)} bytes)`);
+console.log(`texture encoding rle4: ${legacyTextureBytes} bytes legacy cells -> ${rleTextureBytes} bytes rle4 (${textureReduction}% smaller)`);
 await syncSupabase(semanticRecords);
