@@ -42,6 +42,25 @@ jobs:
         run: npm ci
       - name: Build archive field
         run: npm run build
+      - name: Debug manifest
+        run: |
+          echo "=== records ==="
+          ls -R src/content/records
+
+          echo "=== post6 check ==="
+          ls -al src/content/records | grep post6 || true
+
+          echo "=== dist ==="
+          ls -al dist || true
+
+          echo "=== manifest ==="
+          cat public/archive-manifest.json || true
+
+          echo "=== grep generatedAt ==="
+          grep generatedAt public/archive-manifest.json || true
+
+          echo "=== grep post6 ==="
+          grep post6 public/archive-manifest.json || echo "NO POST6"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
