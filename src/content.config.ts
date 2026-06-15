@@ -11,6 +11,7 @@ const records = defineCollection({
     type: z.enum(['standard', 'mediaRail']).default('standard'),
     visibility: z.enum(['public', 'private']).default('public'),
     semanticScore: z.number().min(0).max(1).optional(),
+    galleryFolder: z.string().optional(),
     tags: z.array(z.string()).optional().default([]),
     source: z.string().optional(),
   }),

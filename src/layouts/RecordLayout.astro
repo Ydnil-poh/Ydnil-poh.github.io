@@ -6,9 +6,10 @@ interface Props {
   tags: string[];
   type: 'standard' | 'mediaRail';
   slug: string;
+  galleryImageUrls?: string[];
 }
 
-const { title, date, location, tags, type, slug } = Astro.props;
+const { title, date, location, tags, type, slug, galleryImageUrls = [] } = Astro.props;
 const formattedDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'long' }).format(date);
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL ?? '';
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
@@ -47,6 +48,8 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
       .tag { border: 1px solid var(--line); padding: 2px 7px; }
       article :global(p) { font-size: 17px; margin: 0 0 22px; }
       article :global(img) { background: var(--field); border: 1px solid var(--line); display: block; height: auto; margin: 28px 0 34px; max-width: 100%; }
+      .gallery { display: grid; gap: 14px; margin: 0 0 28px; }
+      .gallery img { aspect-ratio: 4 / 3; border-radius: 8px; margin: 0; object-fit: cover; overflow: hidden; width: 100%; }
       article :global(a) { color: var(--olive); text-decoration-thickness: 1px; text-underline-offset: 4px; }
       article :global(.youtube-embed) { width: 100%; margin: 32px 0; }
       article :global(.youtube-embed iframe) { width: 100%; aspect-ratio: 16 / 9; display: block; border: 0; }
@@ -86,6 +89,11 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
         </div>
       </header>
       <article class:list={["record-body", `record-body--${type}`]}>
+        {galleryImageUrls.length > 0 && (
+          <div class="gallery" aria-label="record gallery">
+            {galleryImageUrls.map((url) => <img src={url} alt="" loading="lazy" />)}
+          </div>
+        )}
         <slot />
       </article>
     </main>

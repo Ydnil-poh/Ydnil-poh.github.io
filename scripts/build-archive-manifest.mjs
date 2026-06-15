@@ -8,6 +8,7 @@ const recordsDir = path.join(root, 'src', 'content', 'records');
 const outputPath = path.join(root, 'public', 'archive-manifest.json');
 const supabaseUrl = process.env.SUPABASE_URL ?? process.env.PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseStorageBucket = process.env.SUPABASE_STORAGE_BUCKET ?? 'img';
 const embeddingDimensions = 64;
 const markdownExtensions = new Set(['.md', '.markdown', '.mdx']);
 
@@ -67,6 +68,57 @@ function extractImages(body) {
   const markdownImages = [...body.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)].map((match) => match[1]);
   const htmlImages = [...body.matchAll(/<img\b[^>]*src=['"]([^'"]+)['"][^>]*>/gi)].map((match) => match[1]);
   return [...markdownImages, ...htmlImages].filter(Boolean);
+}
+
+function normalizeStorageFolder(folder) {
+  return String(folder ?? '').trim().replace(/^\/+|\/+$/g, '');
+}
+
+function naturalCompare(a, b) {
+  return new Intl.Collator('en', { numeric: true, sensitivity: 'base' }).compare(a, b);
+}
+
+function publicStorageUrl(folder, name) {
+  const objectPath = [folder, name]
+    .filter(Boolean)
+    .join('/')
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+  return `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/public/${encodeURIComponent(supabaseStorageBucket)}/${objectPath}`;
+}
+
+async function listStorageImages(folder) {
+  const normalizedFolder = normalizeStorageFolder(folder);
+  if (!supabaseUrl || !supabaseServiceKey || !normalizedFolder) return [];
+
+  const endpoint = `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/list/${encodeURIComponent(supabaseStorageBucket)}`;
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      apikey: supabaseServiceKey,
+      Authorization: `Bearer ${supabaseServiceKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      prefix: normalizedFolder,
+      limit: 1000,
+      offset: 0,
+      sortBy: { column: 'name', order: 'asc' },
+    }),
+  });
+
+  if (!response.ok) {
+    console.warn(`storage list skipped for ${normalizedFolder}: ${response.status} ${await response.text()}`);
+    return [];
+  }
+
+  const objects = await response.json();
+  return objects
+    .filter((object) => object?.name && !object.name.endsWith('/'))
+    .map((object) => object.name)
+    .sort(naturalCompare)
+    .map((name) => publicStorageUrl(normalizedFolder, name));
 }
 
 function tokensFor(text) {
@@ -351,6 +403,8 @@ async function syncSupabase(records) {
       type: record.type,
       excerpt: record.excerpt,
       imageUrls: record.imageUrls,
+      galleryFolder: record.galleryFolder,
+      galleryImageUrls: record.galleryImageUrls,
       url: record.url,
       embeddingRef: record.embeddingRef,
       embeddingModel: record.embeddingModel,
@@ -386,6 +440,8 @@ const initial = await Promise.all(files.map(async (file) => {
   const { data, body } = parseFrontmatter(raw);
   const text = plainText(body);
   const images = extractImages(body);
+  const galleryFolder = normalizeStorageFolder(data.galleryFolder);
+  const galleryImageUrls = await listStorageImages(galleryFolder);
   const normalizedType = data.type === 'mediaRail' ? 'mediaRail' : 'standard';
   const searchableText = [data.title, data.excerpt, data.location, normalizedType, text].filter(Boolean).join('\n');
   const embedding = embeddingFor(searchableText);
@@ -402,6 +458,8 @@ const initial = await Promise.all(files.map(async (file) => {
     tags: data.tags ?? [],
     source: data.source ?? '',
     imageUrls: images,
+    galleryFolder,
+    galleryImageUrls,
     textLength: text.replace(/\s/g, '').length,
     rawBody: body,
     contentHash,
@@ -465,11 +523,13 @@ const records = semanticRecords.map((record) => ({
   },
   texture: {
     density: record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low',
-    imageCount: record.imageUrls.length,
+    imageCount: record.imageUrls.length + record.galleryImageUrls.length,
     textLength: record.textLength,
     ...generateTexture(record),
   },
   imageUrls: record.imageUrls,
+  galleryFolder: record.galleryFolder,
+  galleryImageUrls: record.galleryImageUrls,
   contentHash: record.contentHash,
   embeddingRef: record.embeddingRef,
   embeddingModel: record.embeddingModel,
@@ -480,7 +540,7 @@ const manifest = {
   schemaVersion: 4,
   generatedAt: new Date().toISOString(),
   source: 'src/content/records',
-  storage: { provider: 'supabase', bucket: process.env.SUPABASE_STORAGE_BUCKET ?? 'archive-images' },
+  storage: { provider: 'supabase', bucket: supabaseStorageBucket },
   semanticLayer: {
     provider: 'supabase-backed-nightly-precompute',
     embeddingModel: `local-feature-hash-ko-en-${embeddingDimensions}`,
@@ -507,7 +567,7 @@ const manifest = {
   },
   counts: {
     records: records.length,
-    images: records.reduce((sum, record) => sum + record.imageUrls.length, 0),
+    images: records.reduce((sum, record) => sum + record.imageUrls.length + record.galleryImageUrls.length, 0),
     clusters: new Set(records.map((record) => record.cluster)).size,
   },
   records,
