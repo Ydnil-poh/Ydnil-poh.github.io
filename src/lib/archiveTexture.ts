@@ -25,7 +25,7 @@ const profiles: Record<TextureRenderVariant, TextureProfile> = {
   },
   modal: {
     width: 32,
-    height: 32,
+    height: 24,
     minOpacity: 0.05,
     color: 'currentColor',
     className: 'archive-texture archive-texture--modal',
