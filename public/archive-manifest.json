@@ -1,10 +1,10 @@
 {
   "schemaVersion": 4,
-  "generatedAt": "2026-06-15T02:28:31.539Z",
+  "generatedAt": "2026-06-15T08:01:10.768Z",
   "source": "src/content/records",
   "storage": {
     "provider": "supabase",
-    "bucket": "archive-images"
+    "bucket": "img"
   },
   "semanticLayer": {
     "provider": "supabase-backed-nightly-precompute",
@@ -63,8 +63,8 @@
       "tags": [
         "뚝딱뚝딱"
       ],
-      "displayDensity": 0.3269,
-      "score": 0.3269,
+      "displayDensity": 0.3272,
+      "score": 0.3272,
       "scoreMeaning": "semantic density",
       "cluster": 3,
       "position": {
@@ -87,7 +87,7 @@
         },
         {
           "id": "post3",
-          "weight": 0.0185
+          "weight": 0.02
         }
       ],
       "attentionSnapshot": {
@@ -287,6 +287,8 @@
         ]
       },
       "imageUrls": [],
+      "galleryFolder": "",
+      "galleryImageUrls": [],
       "contentHash": "aad4fe6dda100fcdad684bc0c20cd5f4feab844fd1a48c7840a208c62ad37e87",
       "embeddingRef": {
         "provider": "supabase",
@@ -307,13 +309,13 @@
       "tags": [
         "뚝딱뚝딱"
       ],
-      "displayDensity": 0.1747,
-      "score": 0.1747,
+      "displayDensity": 0.1688,
+      "score": 0.1688,
       "scoreMeaning": "semantic density",
       "cluster": 5,
       "position": {
-        "x": 0.5657,
-        "y": 0.5529
+        "x": 0.565,
+        "y": 0.5454
       },
       "related": [
         "post4",
@@ -323,15 +325,15 @@
       "relationSummary": [
         {
           "id": "post4",
-          "weight": 0.2398
+          "weight": 0.2185
         },
         {
           "id": "post5",
-          "weight": 0.0807
+          "weight": 0.0759
         },
         {
           "id": "post1",
-          "weight": 0.0185
+          "weight": 0.02
         }
       ],
       "attentionSnapshot": {
@@ -351,7 +353,7 @@
       "texture": {
         "density": "low",
         "imageCount": 0,
-        "textLength": 511,
+        "textLength": 589,
         "width": 32,
         "height": 24,
         "encoding": "rle4",
@@ -523,7 +525,9 @@
         ]
       },
       "imageUrls": [],
-      "contentHash": "28eaced2e8b2a7275da1e2c30cb22f0d7a01959eb1f2f970d084c64b700d4e1b",
+      "galleryFolder": "",
+      "galleryImageUrls": [],
+      "contentHash": "625dd4a2099f04feee60e22340c17aff16e5971ef8c27fffb7d606669868cada",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -543,8 +547,8 @@
       "tags": [
         "뚜벅뚜벅"
       ],
-      "displayDensity": 0.1935,
-      "score": 0.1935,
+      "displayDensity": 0.1884,
+      "score": 0.1884,
       "scoreMeaning": "semantic density",
       "cluster": 6,
       "position": {
@@ -559,7 +563,7 @@
       "relationSummary": [
         {
           "id": "post3",
-          "weight": 0.2398
+          "weight": 0.2185
         },
         {
           "id": "post1",
@@ -799,6 +803,8 @@
         ]
       },
       "imageUrls": [],
+      "galleryFolder": "",
+      "galleryImageUrls": [],
       "contentHash": "b9b72472b507de9479f678353902996fa3cbdacdfe7261f707675661a551f2c6",
       "embeddingRef": {
         "provider": "supabase",
@@ -819,8 +825,8 @@
       "tags": [
         "흥얼흥얼"
       ],
-      "displayDensity": 0.3459,
-      "score": 0.3459,
+      "displayDensity": 0.3447,
+      "score": 0.3447,
       "scoreMeaning": "semantic density",
       "cluster": 7,
       "position": {
@@ -839,7 +845,7 @@
         },
         {
           "id": "post3",
-          "weight": 0.0807
+          "weight": 0.0759
         },
         {
           "id": "post4",
@@ -1131,6 +1137,8 @@
         ]
       },
       "imageUrls": [],
+      "galleryFolder": "",
+      "galleryImageUrls": [],
       "contentHash": "a322a339a6fdbc929cd4a42e6a9464e4575aa1e6e46afe9edad3cce5d7bd1a45",
       "embeddingRef": {
         "provider": "supabase",

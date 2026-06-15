@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import RecordLayout from '../../layouts/RecordLayout.astro';
+import manifest from '../../../public/archive-manifest.json';
 
 export async function getStaticPaths() {
   const records = await getCollection('records', ({ data }) => data.visibility !== 'private');
@@ -13,6 +14,8 @@ export async function getStaticPaths() {
 const { record } = Astro.props;
 const slug = record.id.replace(/\.(md|markdown|mdx)$/i, '').toLowerCase();
 const { Content } = await render(record);
+const manifestRecord = manifest.records.find((item) => item.slug === slug);
+const galleryImageUrls = manifestRecord?.galleryImageUrls ?? [];
 ---
 
 <RecordLayout
@@ -22,6 +25,7 @@ const { Content } = await render(record);
   tags={record.data.tags}
   type={record.data.type}
   slug={slug}
+  galleryImageUrls={galleryImageUrls}
 >
   <Content />
 </RecordLayout>
