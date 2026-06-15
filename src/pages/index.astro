@@ -292,7 +292,6 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
 
       .inspector-date { color: var(--ink); font-size: 15px; font-weight: 400; letter-spacing: 0.02em; margin: 0 0 28px; }
       .texture-preview { aspect-ratio: 4 / 3; background: rgba(247, 243, 235, 0.6); border: 1px solid var(--line); display: grid; margin-bottom: 24px; overflow: hidden; place-items: center; position: relative; }
-      .texture-preview::after { background-image: linear-gradient(90deg, rgba(91, 95, 63, 0.12) 1px, transparent 1px), linear-gradient(rgba(197, 112, 67, 0.08) 1px, transparent 1px); background-size: 14px 18px; content: ""; inset: 0; mix-blend-mode: multiply; opacity: 0.72; position: absolute; }
       .texture-preview .texture-mount,
       .texture-preview .archive-texture { color: rgba(91,95,63,.85); display: block; height: 100%; width: 100%; }
       .texture-preview .archive-texture--modal { filter: saturate(0.78) contrast(0.92); }
