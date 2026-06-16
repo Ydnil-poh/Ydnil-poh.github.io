@@ -42,25 +42,6 @@ jobs:
         run: npm ci
       - name: Build archive field
         run: npm run build
-      - name: Debug manifest
-        run: |
-          echo "=== records ==="
-          ls -R src/content/records
-
-          echo "=== post6 check ==="
-          ls -al src/content/records | grep post6 || true
-
-          echo "=== dist ==="
-          ls -al dist || true
-
-          echo "=== generatedAt ==="
-          grep generatedAt dist/archive-manifest.json || true
-
-          echo "=== post6 ==="
-          grep -A40 '"id": "post6"' dist/archive-manifest.json || true
-
-          echo "=== glass ==="
-          grep -A20 '"galleryFolder": "glass"' dist/archive-manifest.json || true
 
   deploy:
     environment:
