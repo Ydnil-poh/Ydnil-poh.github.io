@@ -89,6 +89,12 @@ function publicStorageUrl(folder, name) {
 }
 
 async function listStorageImages(folder) {
+  console.log(
+    '[gallery]',
+    normalizedFolder,
+    JSON.stringify(objects, null, 2)
+  );
+  
   const normalizedFolder = normalizeStorageFolder(folder);
   if (!supabaseUrl || !supabaseServiceKey || !normalizedFolder) return [];
 
