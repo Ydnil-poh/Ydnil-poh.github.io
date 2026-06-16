@@ -88,6 +88,8 @@ function publicStorageUrl(folder, name) {
   return `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/public/${encodeURIComponent(supabaseStorageBucket)}/${objectPath}`;
 }
 
+
+
 async function listStorageImages(folder) {  
   const normalizedFolder = normalizeStorageFolder(folder);
   if (!supabaseUrl || !supabaseServiceKey || !normalizedFolder) return [];
@@ -120,6 +122,12 @@ async function listStorageImages(folder) {
     .sort(naturalCompare)
     .map((name) => publicStorageUrl(normalizedFolder, name));
 }
+
+  console.log(
+    '[gallery]',
+    normalizedFolder,
+    JSON.stringify(objects, null, 2)
+  );
 
 function tokensFor(text) {
   const latin = text.toLowerCase().match(/[a-z0-9]{3,}/g) ?? [];
