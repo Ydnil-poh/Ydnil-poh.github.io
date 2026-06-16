@@ -58,6 +58,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
       .record-body__content { grid-column: 2; min-width: 0; }
       .record-body__rail .gallery { display: grid; gap: 14px; }
       .record-body__rail .gallery img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; display: block;}
+      .record-body__content :global(p) { font-size: 17px; margin: 0 0 22px; }
       .record-body--mediaRail :global(.gallery img),
       .record-body--mediaRail :global([data-gallery] img) { aspect-ratio: 4 / 3; border-radius: 8px; margin: 0 0 14px; object-fit: cover; overflow: hidden; width: 100%; }
       .record-body--mediaRail :global(.youtube-embed) { grid-column: 2; }
