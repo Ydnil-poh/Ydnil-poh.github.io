@@ -53,11 +53,11 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
       article :global(a) { color: var(--olive); text-decoration-thickness: 1px; text-underline-offset: 4px; }
       article :global(.youtube-embed) { width: 100%; margin: 32px 0; }
       article :global(.youtube-embed iframe) { width: 100%; aspect-ratio: 16 / 9; display: block; border: 0; }
-      .record-body--mediaRail { align-items: start; display: grid; gap: 0 var(--rail-gap); grid-template-columns: var(--rail) minmax(0, 760px); }
-      .record-body--mediaRail::before { align-self: stretch; border-left: 1px solid var(--line); content: ""; grid-column: 1; grid-row: 1 / span 999; margin-left: -24px; min-height: 100%; }
-      .record-body--mediaRail :global(*) { grid-column: 2; }
-      .record-body--mediaRail :global(.gallery),
-      .record-body--mediaRail :global([data-gallery]) { grid-column: 1; margin: 0 0 14px; width: 100%; }
+      .record-body--mediaRail {display: grid; grid-template-columns: var(--rail) minmax(0, 760px); gap: 0 var(--rail-gap); align-items: start; }
+      .record-body__rail { grid-column: 1; }
+      .record-body__content { grid-column: 2; min-width: 0; }
+      .record-body__rail .gallery { display: grid; gap: 14px; }
+      .record-body__rail .gallery img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; display: block;}
       .record-body--mediaRail :global(.gallery img),
       .record-body--mediaRail :global([data-gallery] img) { aspect-ratio: 4 / 3; border-radius: 8px; margin: 0 0 14px; object-fit: cover; overflow: hidden; width: 100%; }
       .record-body--mediaRail :global(.youtube-embed) { grid-column: 2; }
