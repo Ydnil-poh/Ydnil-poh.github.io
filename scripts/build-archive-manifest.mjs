@@ -122,7 +122,8 @@ async function listStorageImages(folder) {
   );  
   
   return objects
-    .filter((object) => object?.name && !object.name.endsWith('/'))
+    .filter((object) => 
+      object?.metadata?.mimetype?.startsWith('image/')
     .map((object) => object.name)
     .sort(naturalCompare)
     .map((name) => publicStorageUrl(normalizedFolder, name));
