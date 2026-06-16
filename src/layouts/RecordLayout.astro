@@ -90,12 +90,25 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
         </div>
       </header>
       <article class:list={["record-body", `record-body--${type}`]}>
-        {galleryImageUrls.length > 0 && (
-          <div class="gallery" aria-label="record gallery">
-            {galleryImageUrls.map((url) => <img src={url} alt="" loading="lazy" />)}
-          </div>
+        {type === 'mediaRail' ? (
+          <>
+            <aside class="record-body__rail">
+              {galleryImageUrls.length > 0 && (
+                <div class="gallery" aria-label="record gallery">
+                  {galleryImageUrls.map((url) => (
+                    <img src={url} alt="" loading="lazy" />
+                  ))}
+                </div>
+              )}
+            </aside>
+      
+            <div class="record-body__content">
+              <slot />
+            </div>
+              </>
+        ) : (
+          <slot />
         )}
-        <slot />
       </article>
     </main>
     <script type="module" define:vars={{ slug, supabaseUrl, supabaseAnonKey }}>
