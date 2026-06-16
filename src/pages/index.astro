@@ -56,6 +56,8 @@ const fieldRecords = manifest.records.map((record) => {
   };
 });
 const occupiedSlots = new Set(fieldRecords.map((record) => record.slot));
+const latestRecordId = [...fieldRecords]
+  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.id;
 const emptyTiles = Array.from({ length: totalSlots }, (_, slot) => ({
   slot,
   col: slot % COLS,
@@ -216,7 +218,32 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
         text-decoration: none;
         z-index: 3;
       }
+      .record-node {
+        background: rgba(247, 243, 235, 0.55);
+        border: 1px solid rgba(92, 83, 67, 0.2);
+        color: var(--olive);
+        opacity: calc(0.58 + var(--score) * 0.36);
+        overflow: hidden;
+        text-decoration: none;
+        z-index: 3;
+      }
 
+      .record-node.is-latest::after {
+        content: "";
+        position: absolute;
+
+        top: 6px;
+        right: 6px;
+
+        width: 5px;
+        height: 5px;
+
+        border-radius: 999px;
+
+        background: #c96f4a;
+
+        box-shadow: 0 0 0 2px rgba(247,243,235,0.9);
+      }
       .record-node:focus,
       .record-node:hover,
       .record-node.is-selected { outline: 1px solid rgba(37, 35, 29, 0.45); outline-offset: 4px; }
@@ -329,7 +356,7 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
               const density = record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low';
               return (
                 <a
-                  class="record-node"
+                  class={`record-node ${record.id === latestRecordId ? 'is-latest' : ''}`}
                   data-record-id={record.id}
                   data-density={density}
                   href={record.url}
