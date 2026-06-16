@@ -88,13 +88,7 @@ function publicStorageUrl(folder, name) {
   return `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/public/${encodeURIComponent(supabaseStorageBucket)}/${objectPath}`;
 }
 
-async function listStorageImages(folder) {
-  console.log(
-    '[gallery]',
-    normalizedFolder,
-    JSON.stringify(objects, null, 2)
-  );
-  
+async function listStorageImages(folder) {  
   const normalizedFolder = normalizeStorageFolder(folder);
   if (!supabaseUrl || !supabaseServiceKey || !normalizedFolder) return [];
 
