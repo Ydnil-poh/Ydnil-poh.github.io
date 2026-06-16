@@ -53,18 +53,14 @@ jobs:
           echo "=== dist ==="
           ls -al dist || true
 
-          echo "=== manifest ==="
-          cat public/archive-manifest.json || true
+          echo "=== generatedAt ==="
+          grep generatedAt dist/archive-manifest.json || true
 
-          echo "=== grep generatedAt ==="
-          grep generatedAt public/archive-manifest.json || true
+          echo "=== post6 ==="
+          grep -A40 '"id": "post6"' dist/archive-manifest.json || true
 
-          echo "=== grep post6 ==="
-          grep post6 public/archive-manifest.json || echo "NO POST6"
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./dist
+          echo "=== glass ==="
+          grep -A20 '"galleryFolder": "glass"' dist/archive-manifest.json || true
 
   deploy:
     environment:
