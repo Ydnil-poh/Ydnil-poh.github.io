@@ -42,6 +42,10 @@ jobs:
         run: npm ci
       - name: Build archive field
         run: npm run build
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
 
   deploy:
     environment:
