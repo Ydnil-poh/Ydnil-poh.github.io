@@ -170,19 +170,106 @@ function semanticCluster(record) {
   return strongest % 8;
 }
 
-function positionFor(record, index, total, attentionDriftScale) {
-  const xAxis = record.embedding[0] + record.embedding[2] * 0.6 + record.embedding[4] * 0.35;
-  const yAxis = record.embedding[1] + record.embedding[3] * 0.6 + record.embedding[5] * 0.35;
-  const hash = createHash('sha1').update(record.id).digest();
+function projectEmbeddings(records) {
+  if (records.length === 0) return new Map();
+
+  const dimensions = records[0].embedding.length;
+
+  const variance = Array(dimensions).fill(0);
+  const mean = Array(dimensions).fill(0);
+
+  for (const record of records) {
+    for (let i = 0; i < dimensions; i++) {
+      mean[i] += record.embedding[i];
+    }
+  }
+
+  for (let i = 0; i < dimensions; i++) {
+    mean[i] /= records.length;
+  }
+
+  for (const record of records) {
+    for (let i = 0; i < dimensions; i++) {
+      const diff = record.embedding[i] - mean[i];
+      variance[i] += diff * diff;
+    }
+  }
+
+  const ranked = variance
+    .map((value, index) => ({ value, index }))
+    .sort((a, b) => b.value - a.value);
+
+  const xAxis = ranked[0]?.index ?? 0;
+  const yAxis = ranked[1]?.index ?? 1;
+
+  const xs = records.map((record) => record.embedding[xAxis]);
+  const ys = records.map((record) => record.embedding[yAxis]);
+
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+
+  const positions = new Map();
+
+  records.forEach((record) => {
+    const x =
+      maxX === minX
+        ? 0.5
+        : (record.embedding[xAxis] - minX) / (maxX - minX);
+
+    const y =
+      maxY === minY
+        ? 0.5
+        : (record.embedding[yAxis] - minY) / (maxY - minY);
+
+    positions.set(record.id, { x, y });
+  });
+
+  return positions;
+}
+
+function decoratePosition(
+  record,
+  basePosition,
+  attentionDriftScale,
+) {
+  const hash = createHash('sha1')
+    .update(record.id)
+    .digest();
+
   const jitterX = (hash[0] / 255 - 0.5) * 0.08;
   const jitterY = (hash[1] / 255 - 0.5) * 0.08;
-  const activity = attentionDriftScale <= 0 ? 0 : Math.log1p(record.attentionSnapshot.humanScore) / attentionDriftScale;
-  const driftX = (hash[2] / 255 - 0.5) * activity * 0.035;
-  const driftY = (hash[3] / 255 - 0.5) * activity * 0.035;
-  const fallbackAngle = ((index + 1) / Math.max(total, 1)) * Math.PI * 2;
-  const fallbackRadius = 0.12 + ((index % 5) * 0.035);
-  const x = 0.5 + (xAxis || Math.cos(fallbackAngle) * fallbackRadius) * 0.34 + jitterX + driftX;
-  const y = 0.5 + (yAxis || Math.sin(fallbackAngle) * fallbackRadius) * 0.3 + jitterY + driftY;
+
+  const activity =
+    attentionDriftScale <= 0
+      ? 0
+      : Math.log1p(record.attentionSnapshot.humanScore) /
+        attentionDriftScale;
+
+  const driftX =
+    (hash[2] / 255 - 0.5) *
+    activity *
+    0.035;
+
+  const driftY =
+    (hash[3] / 255 - 0.5) *
+    activity *
+    0.035;
+
+  const x =
+    0.1 +
+    basePosition.x * 0.8 +
+    jitterX +
+    driftX;
+
+  const y =
+    0.1 +
+    basePosition.y * 0.8 +
+    jitterY +
+    driftY;
+
   return {
     x: Number(Math.max(0.08, Math.min(0.92, x)).toFixed(4)),
     y: Number(Math.max(0.08, Math.min(0.92, y)).toFixed(4)),
@@ -496,9 +583,11 @@ const scored = recordsWithRelations.map((record, index) => ({
   cluster: semanticCluster(record),
 }));
 
-const semanticRecords = scored.map((record, index) => ({
+const projectedPositions = projectEmbeddings(scored);
+
+const semanticRecords = scored.map((record) => ({
   ...record,
-  position: positionFor(record, index, scored.length, attentionDriftScale),
+  position: decoratePosition( record, projectedPositions.get(record.id), attentionDriftScale ),
   embeddingRef: {
     provider: 'supabase',
     table: 'archive_embeddings',
