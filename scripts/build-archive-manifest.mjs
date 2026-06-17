@@ -691,7 +691,7 @@ const manifest = {
 };
 
 await mkdir(path.dirname(outputPath), { recursive: true });
-const manifestJson = `${JSON.stringify(manifest, null, 2)}\n`;
+const manifestJson = JSON.stringify(manifest) + "\n";
 await writeFile(outputPath, manifestJson);
 
 const legacyTextureBytes = Buffer.byteLength(JSON.stringify(records.map((record) => ({
