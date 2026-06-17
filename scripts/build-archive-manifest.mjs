@@ -280,12 +280,31 @@ function relationRows(records, source) {
   return records
     .filter((candidate) => candidate.id !== source.id)
     .map((candidate) => {
-      const similarity = cosineSimilarity(source.embedding, candidate.embedding);
-      const cosineDistance = Number(Math.max(0, Math.min(2, 1 - similarity)).toFixed(4));
-      const relationWeight = Number(Math.max(0, similarity).toFixed(4));
-      return { id: candidate.id, cosineDistance, relationWeight };
+      const similarity = Math.max(
+        0,
+        cosineSimilarity(source.embedding, candidate.embedding)
+      );
+
+      const cosineDistance = Number(
+        Math.max(0, Math.min(2, 1 - similarity)).toFixed(4)
+      );
+
+      const sharedTags = candidate.tags.filter(
+        (tag) => source.tags.includes(tag)
+      ).length;
+
+      const relationWeight = Number(
+        (sharedTags + similarity * 0.2).toFixed(4)
+      );
+
+      return {
+        id: candidate.id,
+        cosineDistance,
+        relationWeight,
+      };
     })
-    .sort((a, b) => a.cosineDistance - b.cosineDistance)
+    .filter((relation) => relation.relationWeight > 0)
+    .sort((a, b) => b.relationWeight - a.relationWeight)
     .slice(0, 8);
 }
 
