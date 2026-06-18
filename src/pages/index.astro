@@ -1,39 +1,17 @@
 ---
 import manifest from '../../public/archive-manifest.json';
-import { renderTextureSet } from '../lib/archiveTexture';
+import { createArchiveIndexView } from '../lib/archive/pageViewModel.mjs';
 
-const fieldView = manifest.archiveView.field;
-const COLS = fieldView.cols;
-const ROWS = fieldView.rows;
-const totalSlots = COLS * ROWS;
+const {
+  cols: COLS,
+  rows: ROWS,
+  fieldRecords,
+  emptyTiles,
+  clientRecords,
+  recordById,
+  selected,
+} = createArchiveIndexView(manifest);
 
-const recordByIdFromManifest = new Map(manifest.records.map((record) => [record.id, record]));
-const fieldRecords = fieldView.records.map((fieldRecord) => {
-  const record = recordByIdFromManifest.get(fieldRecord.id);
-  if (!record) return null;
-
-  return {
-    ...record,
-    field: fieldRecord,
-    textureSvg: renderTextureSet(record.texture?.renders),
-  };
-}).filter((record) => record !== null);
-const occupiedSlots = new Set(fieldView.records.map((record) => record.slot));
-const emptyTiles = Array.from({ length: totalSlots }, (_, slot) => ({
-  slot,
-  col: slot % COLS,
-  row: Math.floor(slot / COLS),
-  tone: (slot * 13 + Math.floor(slot / COLS) * 7) % 9,
-})).filter((tile) => !occupiedSlots.has(tile.slot));
-const clientRecords = fieldRecords.map(({ textureSvg, texture, ...record }) => ({
-  ...record,
-  textureSvg: {
-    modal: textureSvg.modal,
-  },
-}));
-
-const recordById = new Map(fieldRecords.map((record) => [record.id, record]));
-const selected = fieldRecords[0];
 const backendConfig = {
   url: import.meta.env.PUBLIC_SUPABASE_URL ?? '',
   key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '',
@@ -487,7 +465,8 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         date.textContent = String(record.date).slice(0, 10);
         open.href = record.url;
         texture.setAttribute('aria-label', `${record.title} texture`);
-        texture.innerHTML = textureMarkup(record);
+        texture.replaceChildren();
+        texture.insertAdjacentHTML('afterbegin', textureMarkup(record));
         relatedCount.textContent = String((record.related || []).length);
         related.innerHTML = relatedMarkup(record);
         openPanel();

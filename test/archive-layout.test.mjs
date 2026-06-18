@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
+
+import archiveManifest from '../public/archive-manifest.json' with { type: 'json' };
 
 import { generateFieldViewModel } from '../src/lib/archive/fieldViewModel.mjs';
 import { renderTextureSet } from '../src/lib/archiveTexture.ts';
+import { createArchiveIndexView } from '../src/lib/archive/pageViewModel.mjs';
 import {
   extractSemanticBlocks,
   generateTextureLayoutGraph,
@@ -73,4 +77,38 @@ test('UI texture set renderer only accepts rle render payloads', () => {
   assert.match(textureSvg.field, /archive-texture--field/);
   assert.match(textureSvg.modal, /archive-texture--modal/);
   assert.equal('cells' in renders.field, false);
+});
+
+test('archive manifest stores texture as rle render payloads, not svg strings or legacy cells', () => {
+  for (const record of archiveManifest.records) {
+    assert.equal(record.texture.schemaVersion, 2);
+    assert.equal(typeof record.texture, 'object');
+    assert.equal(typeof record.texture.renders.field, 'object');
+    assert.equal(record.texture.renders.field.encoding, 'rle4');
+    assert.equal(record.texture.renders.modal.encoding, 'rle4');
+    assert.equal('cells' in record.texture.renders.field, false);
+    assert.equal('svg' in record.texture.renders.field, false);
+  }
+});
+
+test('archive page view model pre-renders modal svg and strips raw texture from client records', () => {
+  const view = createArchiveIndexView(archiveManifest);
+
+  assert.equal(view.fieldRecords.length, archiveManifest.archiveView.field.records.length);
+  assert.match(view.fieldRecords[0].textureSvg.field, /archive-texture--field/);
+  assert.match(view.fieldRecords[0].textureSvg.modal, /archive-texture--modal/);
+
+  for (const clientRecord of view.clientRecords) {
+    assert.equal('texture' in clientRecord, false);
+    assert.equal('renders' in clientRecord, false);
+    assert.match(clientRecord.textureSvg.modal, /archive-texture--modal/);
+  }
+});
+
+test('modal click path clears previous DOM before inserting selected record texture markup', () => {
+  const pageSource = readFileSync(new URL('../src/pages/index.astro', import.meta.url), 'utf8');
+
+  assert.match(pageSource, /function selectRecord\(record\)/);
+  assert.match(pageSource, /texture\.replaceChildren\(\);/);
+  assert.match(pageSource, /texture\.insertAdjacentHTML\('afterbegin', textureMarkup\(record\)\);/);
 });
