@@ -329,11 +329,41 @@ function semanticDensityFor(record) {
   return Number((relationDensity * 0.72 + recurrence * 0.28).toFixed(6));
 }
 
-function isYoutubeDirective(block) {
-  return /^!youtube\s+https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\//i.test(block.trim());
+function youtubeDirectiveUrl(block) {
+  const match = block.trim().match(/^!youtube\s+(https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/\S+)/i);
+  return match?.[1] ?? null;
 }
 
 const textureOpacityByValue = [0.05, 0.24, 0.72, 0.85];
+const textureLayoutProfile = {
+  width: 32,
+  height: 24,
+  margin: 4,
+  paragraphGap: 1,
+  youtubeBlockHeight: 4,
+};
+const textureRenderProfiles = {
+  field: {
+    role: 'field',
+    width: 8,
+    height: 8,
+    minOpacity: 0.12,
+    color: 'currentColor',
+    className: 'archive-texture archive-texture--field',
+  },
+  modal: {
+    role: 'modal',
+    width: 32,
+    height: 24,
+    minOpacity: 0.05,
+    color: 'currentColor',
+    className: 'archive-texture archive-texture--modal',
+  },
+};
+const fieldLayoutProfile = {
+  cols: 28,
+  rows: 18,
+};
 
 function quantizeTextureOpacity(opacity) {
   let closestValue = 0;
@@ -365,90 +395,273 @@ function encodeRle4(values) {
   return rle;
 }
 
-function generateTexture(record) {
-  const width = 32;
-  const height = 24;
-
-  const margin = 4;
-  const textWidth = width - margin * 2;
-  const charsPerLine = textWidth;
-  const youtubeBlockHeight = 4;
-
-  const rows = [];
-
-  for (const block of record.rawBody.split(/\n\s*\n/)) {
-    if (isYoutubeDirective(block)) {
-      for (let index = 0; index < youtubeBlockHeight; index += 1) {
-        rows.push({ type: 'youtube', edge: index === 0 || index === youtubeBlockHeight - 1 });
+function extractSemanticBlocks(rawBody) {
+  return rawBody
+    .split(/\n\s*\n/)
+    .map((block, index) => {
+      const youtubeUrl = youtubeDirectiveUrl(block);
+      if (youtubeUrl) {
+        return {
+          id: `block-${index}`,
+          kind: 'youtube',
+          url: youtubeUrl,
+        };
       }
-      rows.push({ type: 'space' });
+
+      const text = plainText(block);
+      if (!text) return null;
+
+      return {
+        id: `block-${index}`,
+        kind: 'paragraph',
+        text,
+      };
+    })
+    .filter(Boolean);
+}
+
+function generateTextureLayoutGraph(blocks, profile = textureLayoutProfile) {
+  const textWidth = profile.width - profile.margin * 2;
+  let cursorY = 0;
+  const nodes = [];
+
+  for (const block of blocks) {
+    if (cursorY >= profile.height) break;
+
+    if (block.kind === 'youtube') {
+      const height = Math.min(profile.youtubeBlockHeight, profile.height - cursorY);
+      nodes.push({
+        id: `node-${nodes.length}`,
+        kind: 'mediaBlock',
+        mediaType: 'youtube',
+        sourceBlockId: block.id,
+        x: profile.margin,
+        y: cursorY,
+        width: textWidth,
+        height,
+        frame: true,
+        playMarker: true,
+      });
+      cursorY += height + profile.paragraphGap;
       continue;
     }
 
-    const paragraph = plainText(block);
-    if (!paragraph) continue;
+    if (block.kind === 'paragraph') {
+      const lines = [];
+      let remaining = block.text.length;
 
-    let remaining = paragraph.length;
-
-    while (remaining > 0) {
-      rows.push({
-        type: 'text',
-        fillWidth: Math.min(charsPerLine, remaining),
-      });
-
-      remaining -= charsPerLine;
-    }
-
-    // 문단 간 공백
-    rows.push({ type: 'space' });
-  }
-
-  if (rows.length > 0 && rows.at(-1).type === 'space') {
-    rows.pop();
-  }
-
-  const quantizedCells = [];
-
-  for (let y = 0; y < height; y++) {
-    const row = rows[y] ?? { type: 'space' };
-
-    for (let x = 0; x < width; x++) {
-      if (row.type === 'text') {
-        const insideText =
-          row.fillWidth > 0 &&
-          x >= margin &&
-          x < margin + row.fillWidth;
-
-        quantizedCells.push(quantizeTextureOpacity(insideText ? 0.85 : 0.05));
-        continue;
+      while (remaining > 0 && cursorY + lines.length < profile.height) {
+        lines.push({ fillWidth: Math.min(textWidth, remaining) });
+        remaining -= textWidth;
       }
 
-      if (row.type === 'youtube') {
-        const insideMedia = x >= margin && x < margin + textWidth;
-        const onVerticalEdge = x === margin || x === margin + textWidth - 1;
-        const playMarker = !row.edge && x >= margin + 11 && x <= margin + 13;
-
-        if (!insideMedia) {
-          quantizedCells.push(quantizeTextureOpacity(0.05));
-        } else if (row.edge || onVerticalEdge) {
-          quantizedCells.push(quantizeTextureOpacity(0.72));
-        } else if (playMarker) {
-          quantizedCells.push(quantizeTextureOpacity(0.85));
-        } else {
-          quantizedCells.push(quantizeTextureOpacity(0.24));
-        }
-        continue;
+      if (lines.length > 0) {
+        nodes.push({
+          id: `node-${nodes.length}`,
+          kind: 'textBlock',
+          sourceBlockId: block.id,
+          x: profile.margin,
+          y: cursorY,
+          width: textWidth,
+          height: lines.length,
+          lines,
+        });
+        cursorY += lines.length + profile.paragraphGap;
       }
-
-      quantizedCells.push(quantizeTextureOpacity(0.05));
     }
   }
 
   return {
-    width,
-    height,
+    schemaVersion: 1,
+    canvas: {
+      width: profile.width,
+      height: profile.height,
+      unit: 'cell',
+    },
+    nodes,
+  };
+}
+
+function createTextureCanvas(width, height) {
+  return Array.from({ length: width * height }, () => quantizeTextureOpacity(0.05));
+}
+
+function paintTextureCell(canvas, width, height, x, y, opacity) {
+  if (x < 0 || x >= width || y < 0 || y >= height) return;
+  canvas[y * width + x] = quantizeTextureOpacity(opacity);
+}
+
+function rasterizeTextBlock(canvas, graph, node) {
+  for (let lineIndex = 0; lineIndex < node.lines.length; lineIndex += 1) {
+    const line = node.lines[lineIndex];
+    const y = node.y + lineIndex;
+    for (let x = node.x; x < node.x + node.width; x += 1) {
+      const insideText = x < node.x + line.fillWidth;
+      paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, insideText ? 0.85 : 0.05);
+    }
+  }
+}
+
+function rasterizeMediaBlock(canvas, graph, node) {
+  for (let y = node.y; y < node.y + node.height; y += 1) {
+    const isHorizontalEdge = y === node.y || y === node.y + node.height - 1;
+
+    for (let x = node.x; x < node.x + node.width; x += 1) {
+      const isVerticalEdge = x === node.x || x === node.x + node.width - 1;
+      const isPlayMarker = node.playMarker && !isHorizontalEdge && x >= node.x + 11 && x <= node.x + 13;
+
+      if (isHorizontalEdge || isVerticalEdge) {
+        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 0.72);
+      } else if (isPlayMarker) {
+        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 0.85);
+      } else {
+        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 0.24);
+      }
+    }
+  }
+}
+
+const textureRasterizers = {
+  textBlock: rasterizeTextBlock,
+  mediaBlock: rasterizeMediaBlock,
+};
+
+function rasterizeTextureLayoutGraph(graph) {
+  const canvas = createTextureCanvas(graph.canvas.width, graph.canvas.height);
+
+  for (const node of graph.nodes) {
+    textureRasterizers[node.kind]?.(canvas, graph, node);
+  }
+
+  return canvas;
+}
+
+function cellOpacity(value) {
+  return textureOpacityByValue[value] ?? textureOpacityByValue[0];
+}
+
+function downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeight, targetWidth, targetHeight) {
+  const values = [];
+
+  for (let y = 0; y < targetHeight; y += 1) {
+    const startY = Math.floor((y * sourceHeight) / targetHeight);
+    const endY = Math.max(startY + 1, Math.ceil(((y + 1) * sourceHeight) / targetHeight));
+
+    for (let x = 0; x < targetWidth; x += 1) {
+      const startX = Math.floor((x * sourceWidth) / targetWidth);
+      const endX = Math.max(startX + 1, Math.ceil(((x + 1) * sourceWidth) / targetWidth));
+      let total = 0;
+      let count = 0;
+
+      for (let sourceY = startY; sourceY < endY; sourceY += 1) {
+        for (let sourceX = startX; sourceX < endX; sourceX += 1) {
+          total += cellOpacity(sourceValues[sourceY * sourceWidth + sourceX]);
+          count += 1;
+        }
+      }
+
+      values.push(quantizeTextureOpacity(count > 0 ? total / count : 0.05));
+    }
+  }
+
+  return values;
+}
+
+function generateTextureRenderPayload(sourceValues, sourceWidth, sourceHeight, profile) {
+  const values = sourceWidth === profile.width && sourceHeight === profile.height
+    ? sourceValues
+    : downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeight, profile.width, profile.height);
+
+  return {
+    schemaVersion: 1,
+    role: profile.role,
+    width: profile.width,
+    height: profile.height,
+    minOpacity: profile.minOpacity,
+    color: profile.color,
+    className: profile.className,
     encoding: 'rle4',
-    rle: encodeRle4(quantizedCells),
+    rle: encodeRle4(values),
+  };
+}
+
+function generateTextureViewModel(record) {
+  const semanticBlocks = extractSemanticBlocks(record.rawBody);
+  const layoutGraph = generateTextureLayoutGraph(semanticBlocks);
+  const rasterValues = rasterizeTextureLayoutGraph(layoutGraph);
+
+  return {
+    schemaVersion: 2,
+    density: record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low',
+    imageCount: record.imageUrls.length + record.galleryImageUrls.length,
+    textLength: record.textLength,
+    layout: {
+      schemaVersion: layoutGraph.schemaVersion,
+      nodeCount: layoutGraph.nodes.length,
+      canvas: layoutGraph.canvas,
+    },
+    renders: Object.fromEntries(
+      Object.entries(textureRenderProfiles).map(([key, profile]) => [
+        key,
+        generateTextureRenderPayload(rasterValues, layoutGraph.canvas.width, layoutGraph.canvas.height, profile),
+      ])
+    ),
+  };
+}
+
+function nearestOpenSlot(preferred, occupied, profile = fieldLayoutProfile) {
+  if (!occupied.has(preferred)) return preferred;
+  const totalSlots = profile.cols * profile.rows;
+  const preferredCol = preferred % profile.cols;
+  const preferredRow = Math.floor(preferred / profile.cols);
+  let best = -1;
+  let bestDistance = Infinity;
+
+  for (let index = 0; index < totalSlots; index += 1) {
+    if (occupied.has(index)) continue;
+    const col = index % profile.cols;
+    const row = Math.floor(index / profile.cols);
+    const distance = Math.abs(col - preferredCol) + Math.abs(row - preferredRow);
+    if (distance < bestDistance) {
+      best = index;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
+function generateFieldViewModel(records, profile = fieldLayoutProfile) {
+  const totalSlots = profile.cols * profile.rows;
+  const occupied = new Set();
+  const latestRecordId = [...records]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.id;
+  const fieldRecords = records.map((record) => {
+    const preferredCol = Math.max(0, Math.min(profile.cols - 1, Math.floor(record.position.x * profile.cols)));
+    const preferredRow = Math.max(0, Math.min(profile.rows - 1, Math.floor(record.position.y * profile.rows)));
+    const slot = nearestOpenSlot(preferredRow * profile.cols + preferredCol, occupied, profile);
+    occupied.add(slot);
+
+    return {
+      id: record.id,
+      slot,
+      col: slot % profile.cols,
+      row: Math.floor(slot / profile.cols),
+      isLatest: record.id === latestRecordId,
+    };
+  });
+  const emptyTiles = Array.from({ length: totalSlots }, (_, slot) => ({
+    slot,
+    col: slot % profile.cols,
+    row: Math.floor(slot / profile.cols),
+    tone: (slot * 13 + Math.floor(slot / profile.cols) * 7) % 9,
+  })).filter((tile) => !occupied.has(tile.slot));
+
+  return {
+    schemaVersion: 1,
+    cols: profile.cols,
+    rows: profile.rows,
+    records: fieldRecords,
+    emptyTiles,
   };
 }
 
@@ -631,12 +844,7 @@ const records = semanticRecords.map((record) => ({
     ...record.attentionSnapshot,
     semantics: 'nightly snapshot only; source of truth remains Supabase archive_events/archive_records',
   },
-  texture: {
-    density: record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low',
-    imageCount: record.imageUrls.length + record.galleryImageUrls.length,
-    textLength: record.textLength,
-    ...generateTexture(record),
-  },
+  texture: generateTextureViewModel(record),
   imageUrls: record.imageUrls,
   galleryFolder: record.galleryFolder,
   galleryImageUrls: record.galleryImageUrls,
@@ -646,8 +854,12 @@ const records = semanticRecords.map((record) => ({
   url: record.url,
 }));
 
+const archiveView = {
+  field: generateFieldViewModel(records),
+};
+
 const manifest = {
-  schemaVersion: 5,
+  schemaVersion: 6,
   generatedAt: new Date().toISOString(),
   source: 'src/content/records',
   storage: { provider: 'supabase', bucket: supabaseStorageBucket },
@@ -679,6 +891,7 @@ const manifest = {
     records: records.length,
     images: records.reduce((sum, record) => sum + record.imageUrls.length + record.galleryImageUrls.length, 0),
   },
+  archiveView,
   records,
 };
 
@@ -691,17 +904,17 @@ function formatManifestJson(value) {
 const manifestJson = formatManifestJson(manifest);
 await writeFile(outputPath, manifestJson);
 
-const legacyTextureBytes = Buffer.byteLength(JSON.stringify(records.map((record) => ({
-  width: record.texture.width,
-  height: record.texture.height,
-  cells: record.texture.rle.flatMap(([value, count]) => Array.from({ length: count }, () => textureOpacityByValue[value] ?? 0.05)),
-}))));
-const rleTextureBytes = Buffer.byteLength(JSON.stringify(records.map((record) => ({
-  width: record.texture.width,
-  height: record.texture.height,
-  encoding: record.texture.encoding,
-  rle: record.texture.rle,
-}))));
+const legacyTextureBytes = Buffer.byteLength(JSON.stringify(records.flatMap((record) => Object.values(record.texture.renders).map((render) => ({
+  width: render.width,
+  height: render.height,
+  cells: render.rle.flatMap(([value, count]) => Array.from({ length: count }, () => textureOpacityByValue[value] ?? 0.05)),
+})))));
+const rleTextureBytes = Buffer.byteLength(JSON.stringify(records.flatMap((record) => Object.values(record.texture.renders).map((render) => ({
+  width: render.width,
+  height: render.height,
+  encoding: render.encoding,
+  rle: render.rle,
+})))));
 const textureReduction = legacyTextureBytes > 0
   ? ((1 - rleTextureBytes / legacyTextureBytes) * 100).toFixed(1)
   : '0.0';
