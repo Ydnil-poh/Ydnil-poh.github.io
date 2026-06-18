@@ -165,10 +165,6 @@ function normalizeScore(value, min, max) {
   return Number(((value - min) / (max - min)).toFixed(4));
 }
 
-function semanticCluster(record) {
-  const strongest = record.embedding.reduce((best, value, index) => Math.abs(value) > Math.abs(record.embedding[best]) ? index : best, 0);
-  return strongest % 8;
-}
 
 function projectEmbeddings(records) {
   if (records.length === 0) return new Map();
@@ -525,7 +521,6 @@ async function syncSupabase(records) {
       embeddingModel: record.embeddingModel,
     },
     score: record.score,
-    cluster: record.cluster,
     position: record.position,
     updated_at: new Date().toISOString(),
   }));
@@ -599,7 +594,6 @@ const densityMax = Math.max(...densityValues, 1);
 const scored = recordsWithRelations.map((record, index) => ({
   ...record,
   score: Number.isFinite(record.manualSemanticScore) ? Number(record.manualSemanticScore.toFixed(4)) : normalizeScore(densityValues[index], densityMin, densityMax),
-  cluster: semanticCluster(record),
 }));
 
 const projectedPositions = projectEmbeddings(scored);
@@ -627,7 +621,6 @@ const records = semanticRecords.map((record) => ({
   displayDensity: record.score,
   score: record.score,
   scoreMeaning: 'semantic density',
-  cluster: record.cluster,
   position: record.position,
   related: record.relations.map((relation) => relation.id),
   relationSummary: record.relations.slice(0, 4).map((relation) => ({
@@ -654,7 +647,7 @@ const records = semanticRecords.map((record) => ({
 }));
 
 const manifest = {
-  schemaVersion: 4,
+  schemaVersion: 5,
   generatedAt: new Date().toISOString(),
   source: 'src/content/records',
   storage: { provider: 'supabase', bucket: supabaseStorageBucket },
@@ -685,13 +678,17 @@ const manifest = {
   counts: {
     records: records.length,
     images: records.reduce((sum, record) => sum + record.imageUrls.length + record.galleryImageUrls.length, 0),
-    clusters: new Set(records.map((record) => record.cluster)).size,
   },
   records,
 };
 
 await mkdir(path.dirname(outputPath), { recursive: true });
-const manifestJson = JSON.stringify(manifest) + "\n";
+function formatManifestJson(value) {
+  return JSON.stringify(value, null, 2)
+    .replace(/\[\n(\s+)(-?\d+(?:\.\d+)?),\n\1(-?\d+(?:\.\d+)?)\n\s+\]/g, '[$2, $3]') + "\n";
+}
+
+const manifestJson = formatManifestJson(manifest);
 await writeFile(outputPath, manifestJson);
 
 const legacyTextureBytes = Buffer.byteLength(JSON.stringify(records.map((record) => ({

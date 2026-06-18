@@ -211,7 +211,7 @@ post1 ↔ post3
 weight 0.64
 ```
 
-필드는 이 관계를 이용해 클러스터를 구성한다.
+필드는 이 관계를 이용해 주변 기록과 의미적 밀도를 구성한다.
 
 ---
 
@@ -225,7 +225,6 @@ weight 0.64
 slug
 title
 score
-cluster
 position
 human_score
 machine_score

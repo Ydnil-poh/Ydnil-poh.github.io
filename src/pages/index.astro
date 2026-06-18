@@ -72,7 +72,6 @@ const backendConfig = {
   key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '',
 };
 const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(new Date(manifest.generatedAt));
-const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
 ---
 
 <html lang="ko">
@@ -403,7 +402,6 @@ const clusterCount = new Set(fieldRecords.map((record) => record.cluster)).size;
 
       <section class="status" aria-label="archive state">
         <div class="status-row"><span>records</span><span>{fieldRecords.length}</span></div>
-        <div class="status-row"><span>clusters</span><span>{clusterCount}</span></div>
         <div class="status-row"><span>view</span><span>field</span></div>
         <div class="status-row"><span>sleep</span><span>nightly</span></div>
       </section>
