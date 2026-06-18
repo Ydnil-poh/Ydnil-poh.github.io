@@ -57,7 +57,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
       .record-body__rail { grid-column: 1; }
       .record-body__content { grid-column: 2; min-width: 0; }
       .record-body__rail .gallery { display: grid; gap: 14px; }
-      .record-body__rail .gallery img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; display: block;}
+      .record-body__rail .gallery img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; display: block; cursor: zoom-in;}
       .record-body__content :global(p) { font-size: 17px; margin: 0 0 22px; }
       .record-body--mediaRail :global(.gallery img),
       .record-body--mediaRail :global([data-gallery] img) { aspect-ratio: 4 / 3; border-radius: 8px; margin: 0 0 14px; object-fit: cover; overflow: hidden; width: 100%; }
@@ -76,6 +76,26 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
         .record-body--mediaRail :global(.gallery),
         .record-body--mediaRail :global([data-gallery]),
         .record-body--mediaRail :global(.youtube-embed) { margin: 28px 0 34px; }
+      }
+      #lightbox {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.88);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        cursor: zoom-out;
+      }
+
+      #lightbox[hidden] {
+        display: none;
+      }
+      
+      #lightbox-image {
+        max-width: 90vw;
+        max-height: 90vh;
+        object-fit: contain;
       }
     </style>
   </head>
@@ -111,6 +131,11 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
         )}
       </article>
     </main>
+
+    <div id="lightbox" hidden>
+      <img id="lightbox-image" alt="" />
+    </div>
+
     <script type="module" define:vars={{ slug, supabaseUrl, supabaseAnonKey }}>
       const backend = {
         url: supabaseUrl,
@@ -146,6 +171,28 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
       }
 
       recordPageView().catch(() => {});
+
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImage = document.getElementById('lightbox-image');
+      
+      document
+        .querySelectorAll('.record-body__rail .gallery img')
+        .forEach((img) => {
+          img.addEventListener('click', () => {
+            lightboxImage.src = img.currentSrc || img.src;
+            lightbox.hidden = false;
+          });
+        });
+      
+      lightbox?.addEventListener('click', () => {
+        lightbox.hidden = true;
+      });
+      
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          lightbox.hidden = true;
+        }
+      });
     </script>
   </body>
 </html>
