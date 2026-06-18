@@ -5,20 +5,27 @@ import {
 } from './archive/textureRenderContract.mjs';
 import type { TextureRenderPayload } from './archive/textureRenderContract.mjs';
 
+type TextureRenderRole = 'field' | 'modal';
+type TextureRenderSet = Partial<Record<TextureRenderRole, TextureRenderPayload>>;
+
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
+function texturePlaceholder() {
+  return '<span class="texture-placeholder">no texture</span>';
+}
+
 export function renderTextureSvg(payload: TextureRenderPayload | undefined) {
   if (!payload) {
-    return '<span class="texture-placeholder">no texture</span>';
+    return texturePlaceholder();
   }
 
   assertTextureRenderPayload(payload);
   const cells = decodeTextureRenderPayload(payload);
 
   if (!cells.length) {
-    return '<span class="texture-placeholder">no texture</span>';
+    return texturePlaceholder();
   }
 
   const width = Math.max(1, Math.floor(payload.width));
@@ -34,4 +41,11 @@ export function renderTextureSvg(payload: TextureRenderPayload | undefined) {
   }).join('');
 
   return `<svg class="${payload.className}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">${rects}</svg>`;
+}
+
+export function renderTextureSet(renders: TextureRenderSet | undefined) {
+  return {
+    field: renderTextureSvg(renders?.field),
+    modal: renderTextureSvg(renders?.modal),
+  };
 }
