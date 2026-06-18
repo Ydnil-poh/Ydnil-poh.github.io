@@ -1,6 +1,6 @@
 import {
   assertTextureRenderPayload,
-  decodeTextureRenderPayload,
+  textureOpacityByValue,
   normalizedCell,
 } from './archive/textureRenderContract.mjs';
 import type { TextureRenderPayload } from './archive/textureRenderContract.mjs';
@@ -22,9 +22,8 @@ export function renderTextureSvg(payload: TextureRenderPayload | undefined) {
   }
 
   assertTextureRenderPayload(payload);
-  const cells = decodeTextureRenderPayload(payload);
 
-  if (!cells.length) {
+  if (!payload.rle || !payload.rle.length) {
     return texturePlaceholder();
   }
 
@@ -32,15 +31,32 @@ export function renderTextureSvg(payload: TextureRenderPayload | undefined) {
   const height = Math.max(1, Math.floor(payload.height));
   const minOpacity = clamp(normalizedCell(payload.minOpacity), 0, 1);
 
-  const rects = cells.slice(0, width * height).map((value, index) => {
-    const x = index % width;
-    const y = Math.floor(index / width);
-    const opacity = clamp(Math.max(minOpacity, normalizedCell(value)), minOpacity, 1);
+  const rects: string[] = [];
+  let index = 0;
 
-    return `<rect x="${x}" y="${y}" width="1" height="1" fill="${payload.color}" opacity="${opacity.toFixed(3)}" />`;
-  }).join('');
+  for (const run of payload.rle) {
+    const [value, count] = run;
+    const baseOpacity = textureOpacityByValue[value] ?? textureOpacityByValue[0];
+    const opacity = clamp(Math.max(minOpacity, normalizedCell(baseOpacity)), minOpacity, 1);
+    
+    let remaining = Math.max(0, Math.floor(Number(count) || 0));
 
-  return `<svg class="${payload.className}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">${rects}</svg>`;
+    while (remaining > 0 && index < width * height) {
+      const x = index % width;
+      const y = Math.floor(index / width);
+      const rowRemaining = width - x;
+      const chunk = Math.min(remaining, rowRemaining);
+
+      rects.push(`<rect x="${x}" y="${y}" width="${chunk}" height="1" fill="${payload.color}" opacity="${opacity.toFixed(3)}" />`);
+
+      index += chunk;
+      remaining -= chunk;
+    }
+    
+    if (index >= width * height) break;
+  }
+
+  return `<svg class="${payload.className}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">${rects.join('')}</svg>`;
 }
 
 export function renderTextureSet(renders: TextureRenderSet | undefined) {
