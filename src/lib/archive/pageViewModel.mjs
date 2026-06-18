@@ -10,11 +10,6 @@ export function createArchiveIndexView(manifest) {
   const fieldRecords = fieldView.records.map((fieldRecord) => {
     const record = recordByIdFromManifest.get(fieldRecord.id);
     if (!record) return null;
-
-    console.log('[renders raw]', record.texture?.renders);
-    console.log('[field payload]', record.texture?.renders?.field);
-    console.log('[modal payload]', record.texture?.renders?.modal);
-
     
     return {
       ...record,
