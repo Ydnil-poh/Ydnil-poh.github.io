@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "generatedAt": "2026-06-18T03:17:45.408Z",
+  "generatedAt": "2026-06-18T07:25:57.607Z",
   "source": "src/content/records",
   "storage": {
     "provider": "supabase",
@@ -158,7 +158,8 @@
             "width": 32,
             "height": 24,
             "unit": "cell"
-          }
+          },
+          "documentType": "standard"
         },
         "renders": {
           "field": {
@@ -253,7 +254,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "aad4fe6dda100fcdad684bc0c20cd5f4feab844fd1a48c7840a208c62ad37e87",
+      "contentHash": "352c05f50f135997a0cddbfed7b5d993d4b24daab546f284c7b342fc9569f76a",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -325,7 +326,8 @@
             "width": 32,
             "height": 24,
             "unit": "cell"
-          }
+          },
+          "documentType": "standard"
         },
         "renders": {
           "field": {
@@ -420,7 +422,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "625dd4a2099f04feee60e22340c17aff16e5971ef8c27fffb7d606669868cada",
+      "contentHash": "69834df6c0ccf06d038a65b00b0b281ea633883145053a166575716c6ba2001d",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -492,7 +494,8 @@
             "width": 32,
             "height": 24,
             "unit": "cell"
-          }
+          },
+          "documentType": "standard"
         },
         "renders": {
           "field": {
@@ -598,7 +601,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "b9b72472b507de9479f678353902996fa3cbdacdfe7261f707675661a551f2c6",
+      "contentHash": "83fd060ee241b78d27617bd3e448c5d43af31005918dc120bd13b09120f84300",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -665,7 +668,8 @@
             "width": 32,
             "height": 24,
             "unit": "cell"
-          }
+          },
+          "documentType": "standard"
         },
         "renders": {
           "field": {
@@ -788,7 +792,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "a322a339a6fdbc929cd4a42e6a9464e4575aa1e6e46afe9edad3cce5d7bd1a45",
+      "contentHash": "c3c168cbc7807c00196f1d311c0995524f133c8a4080301bd9a64ffd3c140cf0",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -850,7 +854,8 @@
             "width": 32,
             "height": 24,
             "unit": "cell"
-          }
+          },
+          "documentType": "mediaRail"
         },
         "renders": {
           "field": {
@@ -923,7 +928,7 @@
       "imageUrls": [],
       "galleryFolder": "glass",
       "galleryImageUrls": [],
-      "contentHash": "1c2420a091073de48f3e572c3e1a6d52e36b2fc8d4abebea63fb47f3bb8041d1",
+      "contentHash": "c7a21ca8b17553774e61a0da6d5ab7360da3983dc1bb7e3e4da522e6366edbaa",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",

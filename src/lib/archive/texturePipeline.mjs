@@ -87,10 +87,38 @@ export function extractSemanticBlocks(rawBody, plainText) {
     .filter(Boolean);
 }
 
-export function generateTextureLayoutGraph(blocks, profile = textureLayoutProfile) {
-  const textWidth = profile.width - profile.margin * 2;
+export function generateTextureLayoutGraph(blocks, options = {}) {
+  const profile = options.profile ?? textureLayoutProfile;
+  const recordType = options.type ?? 'standard';
+  const galleryCount = options.galleryImageCount ?? 0;
+
+  const isMediaRail = recordType === 'mediaRail' && galleryCount > 0;
+  const railWidth = isMediaRail ? 6 : 0;
+  const railGap = isMediaRail ? 2 : 0;
+  const textX = profile.margin + railWidth + railGap;
+  const textWidth = profile.width - profile.margin - textX;
+
   let cursorY = 0;
   const nodes = [];
+
+  if (isMediaRail) {
+    const imageHeight = 4;
+    const imageGap = 1;
+    let railCursorY = 0;
+
+    for (let i = 0; i < galleryCount && railCursorY + imageHeight <= profile.height; i += 1) {
+      nodes.push({
+        id: `node-${nodes.length}`,
+        kind: 'imageBlock',
+        sourceBlockId: `gallery-${i}`,
+        x: profile.margin,
+        y: railCursorY,
+        width: railWidth,
+        height: imageHeight,
+      });
+      railCursorY += imageHeight + imageGap;
+    }
+  }
 
   for (const block of blocks) {
     if (cursorY >= profile.height) break;
@@ -102,7 +130,7 @@ export function generateTextureLayoutGraph(blocks, profile = textureLayoutProfil
         kind: 'mediaBlock',
         mediaType: 'youtube',
         sourceBlockId: block.id,
-        x: profile.margin,
+        x: textX,
         y: cursorY,
         width: textWidth,
         height,
@@ -127,7 +155,7 @@ export function generateTextureLayoutGraph(blocks, profile = textureLayoutProfil
           id: `node-${nodes.length}`,
           kind: 'textBlock',
           sourceBlockId: block.id,
-          x: profile.margin,
+          x: textX,
           y: cursorY,
           width: textWidth,
           height: lines.length,
@@ -188,9 +216,26 @@ function rasterizeMediaBlock(canvas, graph, node) {
   }
 }
 
+function rasterizeImageBlock(canvas, graph, node) {
+  for (let y = node.y; y < node.y + node.height; y += 1) {
+    const isHorizontalEdge = y === node.y || y === node.y + node.height - 1;
+
+    for (let x = node.x; x < node.x + node.width; x += 1) {
+      const isVerticalEdge = x === node.x || x === node.x + node.width - 1;
+
+      if (isHorizontalEdge || isVerticalEdge) {
+        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 0.72);
+      } else {
+        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 0.24);
+      }
+    }
+  }
+}
+
 const textureRasterizers = {
   textBlock: rasterizeTextBlock,
   mediaBlock: rasterizeMediaBlock,
+  imageBlock: rasterizeImageBlock,
 };
 
 export function rasterizeTextureLayoutGraph(graph) {
@@ -254,7 +299,10 @@ export function generateTextureRenderPayload(sourceValues, sourceWidth, sourceHe
 
 export function generateTextureViewModel(record, plainText) {
   const semanticBlocks = extractSemanticBlocks(record.rawBody, plainText);
-  const layoutGraph = generateTextureLayoutGraph(semanticBlocks);
+  const layoutGraph = generateTextureLayoutGraph(semanticBlocks, {
+    type: record.type,
+    galleryImageCount: record.galleryImageUrls?.length ?? 0,
+  });
   const rasterValues = rasterizeTextureLayoutGraph(layoutGraph);
 
   return {
@@ -267,6 +315,7 @@ export function generateTextureViewModel(record, plainText) {
         schemaVersion: layoutGraph.schemaVersion,
         nodeCount: layoutGraph.nodes.length,
         canvas: layoutGraph.canvas,
+        documentType: record.type,
       },
       renders: Object.fromEntries(
         Object.entries(textureRenderProfiles).map(([key, profile]) => [
