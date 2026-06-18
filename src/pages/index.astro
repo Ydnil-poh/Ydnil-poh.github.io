@@ -5,6 +5,7 @@ import { renderTextureSvg } from '../lib/archiveTexture';
 const fieldView = manifest.archiveView.field;
 const COLS = fieldView.cols;
 const ROWS = fieldView.rows;
+const totalSlots = COLS * ROWS;
 
 const recordByIdFromManifest = new Map(manifest.records.map((record) => [record.id, record]));
 const fieldRecords = fieldView.records.map((fieldRecord) => {
@@ -20,7 +21,19 @@ const fieldRecords = fieldView.records.map((fieldRecord) => {
     },
   };
 }).filter((record) => record !== null);
-const emptyTiles = fieldView.emptyTiles;
+const occupiedSlots = new Set(fieldView.records.map((record) => record.slot));
+const emptyTiles = Array.from({ length: totalSlots }, (_, slot) => ({
+  slot,
+  col: slot % COLS,
+  row: Math.floor(slot / COLS),
+  tone: (slot * 13 + Math.floor(slot / COLS) * 7) % 9,
+})).filter((tile) => !occupiedSlots.has(tile.slot));
+const clientRecords = fieldRecords.map(({ textureSvg, texture, ...record }) => ({
+  ...record,
+  textureSvg: {
+    modal: textureSvg.modal,
+  },
+}));
 
 const recordById = new Map(fieldRecords.map((record) => [record.id, record]));
 const selected = fieldRecords[0];
@@ -367,7 +380,7 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
     <script 
       type="application/json" 
       id="archive-records"
-      set:html={JSON.stringify(fieldRecords)}
+      set:html={JSON.stringify(clientRecords)}
     ></script>
     <script
       type="application/json"

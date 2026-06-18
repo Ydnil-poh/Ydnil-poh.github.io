@@ -1,0 +1,734 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-06-18T03:17:45.408Z",
+  "source": "src/content/records",
+  "records": [
+    {
+      "id": "post1",
+      "semanticBlocks": [
+        {
+          "id": "block-0",
+          "kind": "paragraph",
+          "text": "블로그 서비스를 떠나보려고 한다. 시작점이 어딘지를 되짚어본다. 네이버에서, 2007년이다. 사진을 올려두려 싸이월드 꾸리던 시절까지 더하면 몇 년쯤 더 거슬러 오른다."
+        },
+        {
+          "id": "block-1",
+          "kind": "paragraph",
+          "text": "2011년에는 티스토리로 옮겨갔고, 2024년에는 다시 네이버로 돌아왔다. 이것저것 설정하는 일이 이제는 즐겁지 않고, 많이 읽히지도 않는 글이라면 더 편하게 써보자는 마음이었다. 사진도 덤프로 막 올려두면서. 그런데 사람 습관이란 게, 아무 글이나 아무 사진이나 올려두는 식으로는 되지 않더라. 하긴, 트위터 페이스북도 그렇게는 못썼다."
+        },
+        {
+          "id": "block-2",
+          "kind": "paragraph",
+          "text": "그래도 어떤 부분에서 힘이 좀 빠지긴 했다. 글쓰기는 사람의 일이라는 고집 같은것. 처음엔 AI에게 교정이나 윤문 정도를 부탁했다. 어쩌다 툭 던진 이야기들이 길게 오가는 경우가 생겨났다. 그렇게 길어진 내용들을 정리해 글감으로 삼게 된다."
+        },
+        {
+          "id": "block-3",
+          "kind": "paragraph",
+          "text": "함께 굴러나가는 감각을 받아들여야겠다는 생각이 든다. 그외 몇가지 이유가 더 있어 토이프로젝트를 구축해 놓은 게 있다. 어찌어찌 웹사이트까지는 굴려볼만 하겠다는 마음이 생긴다. 여기는 그렇게 만들어진 공간이다."
+        },
+        {
+          "id": "block-4",
+          "kind": "paragraph",
+          "text": "내가 쌓아둔 텍스트나 이미지에 AI 에이전트가 쉽게 접근할 수 있느냐가 중요하다. 블로그 서비스에 갇힌 기록들을 참조하기는 곤란한 모양이라."
+        },
+        {
+          "id": "block-5",
+          "kind": "paragraph",
+          "text": "마크다운 형식으로 글을 쓰고, 업로드 한다는 방식이 좀 번거롭게 여겨진다. 이러다 다시 블로그로 돌아갈 가능성이 높지. 일단 시작은 해본다."
+        }
+      ],
+      "layoutGraph": {
+        "schemaVersion": 1,
+        "canvas": {
+          "width": 32,
+          "height": 24,
+          "unit": "cell"
+        },
+        "nodes": [
+          {
+            "id": "node-0",
+            "kind": "textBlock",
+            "sourceBlockId": "block-0",
+            "x": 4,
+            "y": 0,
+            "width": 24,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 22
+              }
+            ]
+          },
+          {
+            "id": "node-1",
+            "kind": "textBlock",
+            "sourceBlockId": "block-1",
+            "x": 4,
+            "y": 5,
+            "width": 24,
+            "height": 8,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 21
+              }
+            ]
+          },
+          {
+            "id": "node-2",
+            "kind": "textBlock",
+            "sourceBlockId": "block-2",
+            "x": 4,
+            "y": 14,
+            "width": 24,
+            "height": 6,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 14
+              }
+            ]
+          },
+          {
+            "id": "node-3",
+            "kind": "textBlock",
+            "sourceBlockId": "block-3",
+            "x": 4,
+            "y": 21,
+            "width": 24,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "post3",
+      "semanticBlocks": [
+        {
+          "id": "block-0",
+          "kind": "paragraph",
+          "text": "처음에는 설치형 블로그 만드는 것처럼 생각했다. 레이아웃을 정하고, 어떻게 보일지를 고민했다. 곧 시각적인 요소들을 정의하고 구현되는 것에 정신이 팔리게 된다."
+        },
+        {
+          "id": "block-1",
+          "kind": "paragraph",
+          "text": "AI 에이전트들은 요즘 정말 유능하다. 아이디어 수준으로 몇 마디만 툭 던져두어도, 뚝딱뚝딱 결과물을 곧잘 만들낸다. 그래서 동적이고 화려한 무언가에 아차하면 휩쓸린다."
+        },
+        {
+          "id": "block-2",
+          "kind": "paragraph",
+          "text": "AI 에이전트들은 유능하지만 아주 똘똘하진 않아서, 동적이고 화려한 무언가에 휩쓸려있으면 계속 찐빠를 낸다. 그러면 그걸 해결해보겠다며 토큰을 녹이게 된다."
+        },
+        {
+          "id": "block-3",
+          "kind": "paragraph",
+          "text": "어찌어찌 만들어진 결과물이 그런데 썩 흡족하지도 않다. 어디선가 본 것 같았다. 사실 알고 있었다. 나는 개성있는 창작자가 아니고, 누군가 잘 만들어둔 스킨과 레이아웃을 골라쓰는 정도가 최선이라는 걸. 블로그를 옮기고 개편하고 해보면서 다 겪었던 일이다."
+        },
+        {
+          "id": "block-4",
+          "kind": "paragraph",
+          "text": "그래서 시각적인 정의보다는 공간의 성격과 사용 시나리오를 정의해본다."
+        },
+        {
+          "id": "block-5",
+          "kind": "paragraph",
+          "text": "PROJECT VISION.md https://github.com/Ydnil poh/Ydnil poh.github.io/blob/main/docs/PROJECT VISION.md 는 그렇게 작성되었다."
+        },
+        {
+          "id": "block-6",
+          "kind": "paragraph",
+          "text": "이 문서를 작성해준 에이전트는 프로젝트 철학과 구조 전달하는 편이 기술 명세보다 중요할 것이라고 이야기했다. 그렇게 했을 때 결과가 훨씬 안정될 것이라고 한다."
+        },
+        {
+          "id": "block-7",
+          "kind": "paragraph",
+          "text": "이쯤에서 나는 정말로, AI 에이전트와 함께 일하는 감각을 쌓아나가야겠다는 생각을 한다. 사람과 일하는 방식과 본질적으로 다르지 않게 되었으므로."
+        }
+      ],
+      "layoutGraph": {
+        "schemaVersion": 1,
+        "canvas": {
+          "width": 32,
+          "height": 24,
+          "unit": "cell"
+        },
+        "nodes": [
+          {
+            "id": "node-0",
+            "kind": "textBlock",
+            "sourceBlockId": "block-0",
+            "x": 4,
+            "y": 0,
+            "width": 24,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 17
+              }
+            ]
+          },
+          {
+            "id": "node-1",
+            "kind": "textBlock",
+            "sourceBlockId": "block-1",
+            "x": 4,
+            "y": 5,
+            "width": 24,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 22
+              }
+            ]
+          },
+          {
+            "id": "node-2",
+            "kind": "textBlock",
+            "sourceBlockId": "block-2",
+            "x": 4,
+            "y": 10,
+            "width": 24,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 15
+              }
+            ]
+          },
+          {
+            "id": "node-3",
+            "kind": "textBlock",
+            "sourceBlockId": "block-3",
+            "x": 4,
+            "y": 15,
+            "width": 24,
+            "height": 6,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 22
+              }
+            ]
+          },
+          {
+            "id": "node-4",
+            "kind": "textBlock",
+            "sourceBlockId": "block-4",
+            "x": 4,
+            "y": 22,
+            "width": 24,
+            "height": 2,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 14
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "post4",
+      "semanticBlocks": [
+        {
+          "id": "block-0",
+          "kind": "youtube",
+          "url": "https://youtu.be/P1IBy_7QhLg?si=hgP5hzdx28myOJDA"
+        },
+        {
+          "id": "block-1",
+          "kind": "paragraph",
+          "text": "로마 인, 바르셀로나 아웃 일정의 9박 10일. 지난해 12월에 신혼여행을 다녀왔다. 피렌체와 니스를 포함해 네 개 도시에서 머물렀다. 두번째 방문자인 내가 여행 일정을 정하면서, 13년 전 배낭여행자로서 좋았던 기억들에 많이 기댔다고 생각한다."
+        },
+        {
+          "id": "block-2",
+          "kind": "paragraph",
+          "text": "처음 며칠, 그 기억은 우리에게 도움이 되기보다 짐이 되었다. 기동력에 대한 과신, 그 때 내게 좋았던 장소들이 여전할 것이라는 기대, 다른 날씨, 어떤 경험이 좋을지에 대한 취사선택. 그런 것들이 유럽이 처음이던 짝꿍에게는 플러스 요인일 수 없던 것이다. 페루쟈에 들렀다 오자는 계획을 물리고, 피렌체에서 하루 더 머물기로 했던 건, 그러한 내 실수를 인정했기 때문이다."
+        },
+        {
+          "id": "block-3",
+          "kind": "paragraph",
+          "text": "로마에서 피렌체로 이동 할 때, 고속철도 대신 버스투어를 택했다. 조금은 더 느린 속도로 이동하며, 창밖의 풍경을 오래 바라볼 수 있었기 때문에 좋은 선택이었다. 로마의 우산소나무와 언덕들, 산 위에 자리잡은 도시들, 도시 어귀마다의 사이프러스 나무 길. 발도르차 평원의 올리브나무와 포도 나무. 13년 전 페루쟈의 특별함으로 다가왔던 장면들이, 사실은 이탈리아 내륙도시의 풍경이었다는 사실을 깨닫는다."
+        },
+        {
+          "id": "block-4",
+          "kind": "paragraph",
+          "text": "식당에서 좋은 음식을 찾아 먹는 일은 분명 즐겁지만, 우리 여행의 모든 것일 수는 없다. 호텔에서 조식을 먹으면서, 여기는 이탈리아라 커피가 맛있고, 여기는 니스라 빵이 맛있고, 여기는 스페인이라 저녁 뭐 먹을지 고민하는 게 더 낫고, 그런 차이를 얘기하는 것이 더 즐겁다. 짝꿍은 유럽에서 마시는 환타는 다른 맛이라며 재미있어 했고, 나는 피렌체에서 마신 네그로니의 맛을 잊지 못하겠다. 그런 사소한 먹거리들이 오히려 오래 기억에 머문다."
+        },
+        {
+          "id": "block-5",
+          "kind": "paragraph",
+          "text": "크리스마스 시즌의 유럽은 전반적으로 조용했다. 관광객들로 붐비지 않았고, 광장의 트리와 마켓의 오너먼트들이 연말의 분위기를 만들고 있었다. 기온은 10도 안팍, 하늘은 흐리고 비가 잦았다. 기후는 대만의 겨울과도 비슷하다. 그런 날씨였므로, 니스에서 마주친 우연한 이벤트에 별 고민 없이 참여할 수 있었다. 산타모자를 쓰고, 니스 바다에 뛰어들었다."
+        },
+        {
+          "id": "block-6",
+          "kind": "paragraph",
+          "text": "겪어보기 전에는 다 알 수가 없다. 그래서 약간의 모험이 필요하다. 과거의 기억에 기댄 일정은 그래서, 사실은 별 의미가 없는 것이다. 여행은 결국, 이미 알고 있는 것을 확인하러 가는 게 아닌, 아직 모르는 것을 마주치러 가는 일이 아닌가."
+        }
+      ],
+      "layoutGraph": {
+        "schemaVersion": 1,
+        "canvas": {
+          "width": 32,
+          "height": 24,
+          "unit": "cell"
+        },
+        "nodes": [
+          {
+            "id": "node-0",
+            "kind": "mediaBlock",
+            "mediaType": "youtube",
+            "sourceBlockId": "block-0",
+            "x": 4,
+            "y": 0,
+            "width": 24,
+            "height": 4,
+            "frame": true,
+            "playMarker": true
+          },
+          {
+            "id": "node-1",
+            "kind": "textBlock",
+            "sourceBlockId": "block-1",
+            "x": 4,
+            "y": 5,
+            "width": 24,
+            "height": 6,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 17
+              }
+            ]
+          },
+          {
+            "id": "node-2",
+            "kind": "textBlock",
+            "sourceBlockId": "block-2",
+            "x": 4,
+            "y": 12,
+            "width": 24,
+            "height": 9,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 16
+              }
+            ]
+          },
+          {
+            "id": "node-3",
+            "kind": "textBlock",
+            "sourceBlockId": "block-3",
+            "x": 4,
+            "y": 22,
+            "width": 24,
+            "height": 2,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "post5",
+      "semanticBlocks": [
+        {
+          "id": "block-0",
+          "kind": "youtube",
+          "url": "https://youtu.be/a1vHjBy85TU?si=NoJCVx1I4W8TWS8b"
+        },
+        {
+          "id": "block-1",
+          "kind": "paragraph",
+          "text": "코르티스의 REDRED 퍼포먼스 필름을 봤을 때, 나는 배경에 먼저 시선을 보냈다. 일산같은데? 더 글로우 2026 관람을 위해 올 초 방문했기 때문에 더 빨리 눈치챘던 것 같다. 근데 아마도 배경이 일산이 아니었다 한들 1기 신도시적 풍경에 반응하지 않을 수는 없었을 것 같다."
+        },
+        {
+          "id": "block-2",
+          "kind": "youtube",
+          "url": "https://youtu.be/XgmdslsEJ1M?si=Z_HU13mjAI6XghZi"
+        },
+        {
+          "id": "block-3",
+          "kind": "youtube",
+          "url": "https://youtu.be/MoZbwLzg47w?si=dWsR_l_Zv09fYkvN"
+        },
+        {
+          "id": "block-4",
+          "kind": "paragraph",
+          "text": "그들의 다음 곡인 TNT의 퍼포먼스 필름도 역시 마음에 들었다. 이 비디오는 REDRED만큼 장소 특정적이지 않지만, 왠지 비슷한 감상을 갖게 한다. 사실 퍼포먼스 필름보다는 온더스팟의 영상이 더 마음에 들었는데, 역시 물류센터와 중공업단지의 풍경이 눈길을 끈다."
+        },
+        {
+          "id": "block-5",
+          "kind": "paragraph",
+          "text": "나는 처음에 이 그룹에 대한 호감이, 어떤 날것의 느낌. 최근 너무 매끈하게 깍여 나오는 케이팝 프로덕트 들 중에서 유독 거친면이 있기 때문에 느껴지는 접착면같은 방향으로 생각 했었다. 그런데 이들이 제공한 영상물 중에서 따로 눈길이 가는 유형이 따로 있다는 걸 눈치챘다."
+        },
+        {
+          "id": "block-7",
+          "kind": "paragraph",
+          "text": "나는 늘 비슷한 종류의 풍경에 이끌렸던 것 같다. 안양천과 1호선, 서부간선도로와 시흥대로가 나란히 뻗어 있고 도시순환고속도로가 그 위를 가로지른다. 이 큼직한 인프라들 사이로 중심부에 편입될 수 없는 물류와 산업기능들이 얼기설기 남아있다. 현재 내가 살고 있는 석수역 언저리의 풍경이 그렇다."
+        },
+        {
+          "id": "block-8",
+          "kind": "paragraph",
+          "text": "돌이켜보면 나는 경계의 풍경에 익숙했다. 여러 기능이 그곳으로 밀려나 우연히 맞닿으면서 생기는 어떤 무질서함 혹은 어수선함이 편안하게 느껴진다."
+        },
+        {
+          "id": "block-9",
+          "kind": "paragraph",
+          "text": "그러니까 내가 그들의 작업물에서 이끌렸던 건, 덜 다듬어진 것 같은 느낌이 아니라, 기능하는 거대공간, 그런데 사람이 잘 보이지 않는 풍경이었던 것 같다. 근대 건축물 리모델링 프로젝트들에 늘 흥미를 느꼈던 것도 비슷한 정서가 아니었을까 싶다. 나는 그런 공간들이 점거되는 순간을 좋아하는 게 아니었을까."
+        },
+        {
+          "id": "block-10",
+          "kind": "paragraph",
+          "text": "점거된다는 건 기존에 없던 사건이 발생했다는 의미다. 산업시설을 배경으로 새로운 집단이 등장하고 물류를 위해 지어진 공간에서 퍼포먼스가 벌어진다. 원래의 기능과는 다른 리듬이 개입하는 순간이다."
+        },
+        {
+          "id": "block-11",
+          "kind": "paragraph",
+          "text": "기능하는 거대공간은 주로 멀찌감치 보여진다. 그 안에서야 무수한 일들이 벌어지고 있겠지만, 외부에서 볼 때는 반복적이고 단조로운 움직임으로 읽힌다. 물류센터의 트럭, 철도의 운행, 산업단지의 생산 활동 같은 것들이다."
+        },
+        {
+          "id": "block-12",
+          "kind": "paragraph",
+          "text": "그런 공간에 예상하지 못한 사건이 끼어들면 풍경에는 단차가 생긴다. 정박 사이에 엇박이 들어온다. 나는 그 순간이 좋다. 공간이 본래의 기능을 잠시 벗어나고, 전혀 다른 의미를 품을 수 있다는 사실이 드러나기 때문이다."
+        }
+      ],
+      "layoutGraph": {
+        "schemaVersion": 1,
+        "canvas": {
+          "width": 32,
+          "height": 24,
+          "unit": "cell"
+        },
+        "nodes": [
+          {
+            "id": "node-0",
+            "kind": "mediaBlock",
+            "mediaType": "youtube",
+            "sourceBlockId": "block-0",
+            "x": 4,
+            "y": 0,
+            "width": 24,
+            "height": 4,
+            "frame": true,
+            "playMarker": true
+          },
+          {
+            "id": "node-1",
+            "kind": "textBlock",
+            "sourceBlockId": "block-1",
+            "x": 4,
+            "y": 5,
+            "width": 24,
+            "height": 7,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 12
+              }
+            ]
+          },
+          {
+            "id": "node-2",
+            "kind": "mediaBlock",
+            "mediaType": "youtube",
+            "sourceBlockId": "block-2",
+            "x": 4,
+            "y": 13,
+            "width": 24,
+            "height": 4,
+            "frame": true,
+            "playMarker": true
+          },
+          {
+            "id": "node-3",
+            "kind": "mediaBlock",
+            "mediaType": "youtube",
+            "sourceBlockId": "block-3",
+            "x": 4,
+            "y": 18,
+            "width": 24,
+            "height": 4,
+            "frame": true,
+            "playMarker": true
+          },
+          {
+            "id": "node-4",
+            "kind": "textBlock",
+            "sourceBlockId": "block-4",
+            "x": 4,
+            "y": 23,
+            "width": 24,
+            "height": 1,
+            "lines": [
+              {
+                "fillWidth": 24
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "post6",
+      "semanticBlocks": [
+        {
+          "id": "block-0",
+          "kind": "paragraph",
+          "text": "한복이가 공방을 열었다. 유리공예 하는 친구인데, 함께 연습팀 하던 사람들 대상으로 오픈 스튜디오 한다기에 다녀왔다. 악세사리 원데이 클래스도 운영은 하지만, 본업은 오브제 작업이."
+        },
+        {
+          "id": "block-1",
+          "kind": "paragraph",
+          "text": "한쪽에 B급으로 분류해 둔 작품이 있어 두개를 구입했다. 짝꿍이 무척 마음에 들어했다. 덤으로 반지며 링이며 얹어주는데 손님대접이 지나치게 후하다."
+        },
+        {
+          "id": "block-2",
+          "kind": "paragraph",
+          "text": "유리공예품의 단점이라면 그 매력을 잘 전달하기 어렵다는 것이다. 사진이 실물에 못미친다는 말이다. 볕이 잘 드는 창가에 두고 보면 정말 이쁜데 말이다."
+        }
+      ],
+      "layoutGraph": {
+        "schemaVersion": 1,
+        "canvas": {
+          "width": 32,
+          "height": 24,
+          "unit": "cell"
+        },
+        "nodes": [
+          {
+            "id": "node-0",
+            "kind": "textBlock",
+            "sourceBlockId": "block-0",
+            "x": 4,
+            "y": 0,
+            "width": 24,
+            "height": 5,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 5
+              }
+            ]
+          },
+          {
+            "id": "node-1",
+            "kind": "textBlock",
+            "sourceBlockId": "block-1",
+            "x": 4,
+            "y": 6,
+            "width": 24,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 10
+              }
+            ]
+          },
+          {
+            "id": "node-2",
+            "kind": "textBlock",
+            "sourceBlockId": "block-2",
+            "x": 4,
+            "y": 11,
+            "width": 24,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 12
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

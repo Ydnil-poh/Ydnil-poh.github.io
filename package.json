@@ -12,7 +12,8 @@
     "preview": "astro preview",
     "manifest": "node scripts/build-archive-manifest.mjs",
     "upload:image": "node scripts/upload-archive-image.mjs",
-    "astro": "astro"
+    "astro": "astro",
+    "test": "node --test"
   },
   "dependencies": {
     "astro": "^6.3.5"
