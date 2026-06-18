@@ -1,6 +1,6 @@
 ---
 import manifest from '../../public/archive-manifest.json';
-import { renderTextureSvg } from '../lib/archiveTexture';
+import { renderTextureSet } from '../lib/archiveTexture';
 
 const fieldView = manifest.archiveView.field;
 const COLS = fieldView.cols;
@@ -15,10 +15,7 @@ const fieldRecords = fieldView.records.map((fieldRecord) => {
   return {
     ...record,
     field: fieldRecord,
-    textureSvg: {
-      field: renderTextureSvg(record.texture.renders.field),
-      modal: renderTextureSvg(record.texture.renders.modal),
-    },
+    textureSvg: renderTextureSet(record.texture?.renders),
   };
 }).filter((record) => record !== null);
 const occupiedSlots = new Set(fieldView.records.map((record) => record.slot));
