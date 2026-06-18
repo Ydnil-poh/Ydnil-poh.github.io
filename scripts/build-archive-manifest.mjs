@@ -2,10 +2,14 @@ import { createHash } from 'node:crypto';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { generateFieldViewModel } from '../src/lib/archive/fieldViewModel.mjs';
+import { generateTextureViewModel } from '../src/lib/archive/texturePipeline.mjs';
+import { textureOpacityByValue } from '../src/lib/archive/textureRenderContract.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const recordsDir = path.join(root, 'src', 'content', 'records');
 const outputPath = path.join(root, 'public', 'archive-manifest.json');
+const debugLayoutPath = path.join(root, 'public', 'archive-layout-debug.json');
 const supabaseUrl = process.env.SUPABASE_URL ?? process.env.PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabaseStorageBucket = process.env.SUPABASE_STORAGE_BUCKET ?? 'img';
@@ -329,129 +333,6 @@ function semanticDensityFor(record) {
   return Number((relationDensity * 0.72 + recurrence * 0.28).toFixed(6));
 }
 
-function isYoutubeDirective(block) {
-  return /^!youtube\s+https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\//i.test(block.trim());
-}
-
-const textureOpacityByValue = [0.05, 0.24, 0.72, 0.85];
-
-function quantizeTextureOpacity(opacity) {
-  let closestValue = 0;
-  let closestDistance = Infinity;
-
-  for (let value = 0; value < textureOpacityByValue.length; value += 1) {
-    const distance = Math.abs(opacity - textureOpacityByValue[value]);
-    if (distance < closestDistance) {
-      closestValue = value;
-      closestDistance = distance;
-    }
-  }
-
-  return closestValue;
-}
-
-function encodeRle4(values) {
-  const rle = [];
-
-  for (const value of values) {
-    const previous = rle.at(-1);
-    if (previous && previous[0] === value) {
-      previous[1] += 1;
-    } else {
-      rle.push([value, 1]);
-    }
-  }
-
-  return rle;
-}
-
-function generateTexture(record) {
-  const width = 32;
-  const height = 24;
-
-  const margin = 4;
-  const textWidth = width - margin * 2;
-  const charsPerLine = textWidth;
-  const youtubeBlockHeight = 4;
-
-  const rows = [];
-
-  for (const block of record.rawBody.split(/\n\s*\n/)) {
-    if (isYoutubeDirective(block)) {
-      for (let index = 0; index < youtubeBlockHeight; index += 1) {
-        rows.push({ type: 'youtube', edge: index === 0 || index === youtubeBlockHeight - 1 });
-      }
-      rows.push({ type: 'space' });
-      continue;
-    }
-
-    const paragraph = plainText(block);
-    if (!paragraph) continue;
-
-    let remaining = paragraph.length;
-
-    while (remaining > 0) {
-      rows.push({
-        type: 'text',
-        fillWidth: Math.min(charsPerLine, remaining),
-      });
-
-      remaining -= charsPerLine;
-    }
-
-    // 문단 간 공백
-    rows.push({ type: 'space' });
-  }
-
-  if (rows.length > 0 && rows.at(-1).type === 'space') {
-    rows.pop();
-  }
-
-  const quantizedCells = [];
-
-  for (let y = 0; y < height; y++) {
-    const row = rows[y] ?? { type: 'space' };
-
-    for (let x = 0; x < width; x++) {
-      if (row.type === 'text') {
-        const insideText =
-          row.fillWidth > 0 &&
-          x >= margin &&
-          x < margin + row.fillWidth;
-
-        quantizedCells.push(quantizeTextureOpacity(insideText ? 0.85 : 0.05));
-        continue;
-      }
-
-      if (row.type === 'youtube') {
-        const insideMedia = x >= margin && x < margin + textWidth;
-        const onVerticalEdge = x === margin || x === margin + textWidth - 1;
-        const playMarker = !row.edge && x >= margin + 11 && x <= margin + 13;
-
-        if (!insideMedia) {
-          quantizedCells.push(quantizeTextureOpacity(0.05));
-        } else if (row.edge || onVerticalEdge) {
-          quantizedCells.push(quantizeTextureOpacity(0.72));
-        } else if (playMarker) {
-          quantizedCells.push(quantizeTextureOpacity(0.85));
-        } else {
-          quantizedCells.push(quantizeTextureOpacity(0.24));
-        }
-        continue;
-      }
-
-      quantizedCells.push(quantizeTextureOpacity(0.05));
-    }
-  }
-
-  return {
-    width,
-    height,
-    encoding: 'rle4',
-    rle: encodeRle4(quantizedCells),
-  };
-}
-
 async function supabaseUpsert(table, rows, onConflict) {
   if (!supabaseUrl || !supabaseServiceKey || rows.length === 0) return false;
   const endpoint = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/${table}?on_conflict=${encodeURIComponent(onConflict)}`;
@@ -609,7 +490,21 @@ const semanticRecords = scored.map((record) => ({
   url: `/records/${record.id}/`,
 }));
 
-const records = semanticRecords.map((record) => ({
+const recordsWithTexture = semanticRecords.map((record) => {
+  const textureViewModel = generateTextureViewModel(record, plainText);
+  return {
+    ...record,
+    textureViewModel,
+  };
+});
+
+const textureDebugRecords = recordsWithTexture.map((record) => ({
+  id: record.id,
+  semanticBlocks: record.textureViewModel.debug.semanticBlocks,
+  layoutGraph: record.textureViewModel.debug.layoutGraph,
+}));
+
+const records = recordsWithTexture.map((record) => ({
   id: record.id,
   slug: record.id,
   title: record.title,
@@ -631,12 +526,7 @@ const records = semanticRecords.map((record) => ({
     ...record.attentionSnapshot,
     semantics: 'nightly snapshot only; source of truth remains Supabase archive_events/archive_records',
   },
-  texture: {
-    density: record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low',
-    imageCount: record.imageUrls.length + record.galleryImageUrls.length,
-    textLength: record.textLength,
-    ...generateTexture(record),
-  },
+  texture: record.textureViewModel.texture,
   imageUrls: record.imageUrls,
   galleryFolder: record.galleryFolder,
   galleryImageUrls: record.galleryImageUrls,
@@ -646,8 +536,12 @@ const records = semanticRecords.map((record) => ({
   url: record.url,
 }));
 
+const archiveView = {
+  field: generateFieldViewModel(records),
+};
+
 const manifest = {
-  schemaVersion: 5,
+  schemaVersion: 6,
   generatedAt: new Date().toISOString(),
   source: 'src/content/records',
   storage: { provider: 'supabase', bucket: supabaseStorageBucket },
@@ -679,6 +573,7 @@ const manifest = {
     records: records.length,
     images: records.reduce((sum, record) => sum + record.imageUrls.length + record.galleryImageUrls.length, 0),
   },
+  archiveView,
   records,
 };
 
@@ -690,22 +585,29 @@ function formatManifestJson(value) {
 
 const manifestJson = formatManifestJson(manifest);
 await writeFile(outputPath, manifestJson);
+await writeFile(debugLayoutPath, formatManifestJson({
+  schemaVersion: 1,
+  generatedAt: manifest.generatedAt,
+  source: 'src/content/records',
+  records: textureDebugRecords,
+}));
 
-const legacyTextureBytes = Buffer.byteLength(JSON.stringify(records.map((record) => ({
-  width: record.texture.width,
-  height: record.texture.height,
-  cells: record.texture.rle.flatMap(([value, count]) => Array.from({ length: count }, () => textureOpacityByValue[value] ?? 0.05)),
-}))));
-const rleTextureBytes = Buffer.byteLength(JSON.stringify(records.map((record) => ({
-  width: record.texture.width,
-  height: record.texture.height,
-  encoding: record.texture.encoding,
-  rle: record.texture.rle,
-}))));
+const legacyTextureBytes = Buffer.byteLength(JSON.stringify(records.flatMap((record) => Object.values(record.texture.renders).map((render) => ({
+  width: render.width,
+  height: render.height,
+  cells: render.rle.flatMap(([value, count]) => Array.from({ length: count }, () => textureOpacityByValue[value] ?? 0.05)),
+})))));
+const rleTextureBytes = Buffer.byteLength(JSON.stringify(records.flatMap((record) => Object.values(record.texture.renders).map((render) => ({
+  width: render.width,
+  height: render.height,
+  encoding: render.encoding,
+  rle: render.rle,
+})))));
 const textureReduction = legacyTextureBytes > 0
   ? ((1 - rleTextureBytes / legacyTextureBytes) * 100).toFixed(1)
   : '0.0';
 
 console.log(`archive manifest written: ${path.relative(root, outputPath)} (${records.length} records, ${Buffer.byteLength(manifestJson)} bytes)`);
+console.log(`archive layout debug written: ${path.relative(root, debugLayoutPath)} (${textureDebugRecords.length} records)`);
 console.log(`texture encoding rle4: ${legacyTextureBytes} bytes legacy cells -> ${rleTextureBytes} bytes rle4 (${textureReduction}% smaller)`);
 await syncSupabase(semanticRecords);
