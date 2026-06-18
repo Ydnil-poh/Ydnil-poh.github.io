@@ -2,68 +2,25 @@
 import manifest from '../../public/archive-manifest.json';
 import { renderTextureSvg } from '../lib/archiveTexture';
 
-const COLS = 28;
-const ROWS = 18;
-const totalSlots = COLS * ROWS;
+const fieldView = manifest.archiveView.field;
+const COLS = fieldView.cols;
+const ROWS = fieldView.rows;
 
-type ManifestRecord = (typeof manifest.records)[number];
+const recordByIdFromManifest = new Map(manifest.records.map((record) => [record.id, record]));
+const fieldRecords = fieldView.records.map((fieldRecord) => {
+  const record = recordByIdFromManifest.get(fieldRecord.id);
+  if (!record) return null;
 
-function nearestOpenSlot(preferred: number, occupied: Set<number>) {
-  if (!occupied.has(preferred)) return preferred;
-  const preferredCol = preferred % COLS;
-  const preferredRow = Math.floor(preferred / COLS);
-  let best = -1;
-  let bestDistance = Infinity;
-
-  for (let index = 0; index < totalSlots; index += 1) {
-    if (occupied.has(index)) continue;
-    const col = index % COLS;
-    const row = Math.floor(index / COLS);
-    const distance = Math.abs(col - preferredCol) + Math.abs(row - preferredRow);
-    if (distance < bestDistance) {
-      best = index;
-      bestDistance = distance;
-    }
-  }
-  return best;
-}
-
-function slotFromPosition(record: ManifestRecord, occupied: Set<number>) {
-  const preferredCol = Math.max(0, Math.min(COLS - 1, Math.floor(record.position.x * COLS)));
-  const preferredRow = Math.max(0, Math.min(ROWS - 1, Math.floor(record.position.y * ROWS)));
-  const slot = nearestOpenSlot(preferredRow * COLS + preferredCol, occupied);
-  occupied.add(slot);
   return {
     ...record,
-    slot,
-    position: {
-      ...record.position,
-      col: slot % COLS,
-      row: Math.floor(slot / COLS),
-    },
-  };
-}
-
-const occupied = new Set<number>();
-const fieldRecords = manifest.records.map((record) => {
-  const positioned = slotFromPosition(record, occupied);
-  return {
-    ...positioned,
+    field: fieldRecord,
     textureSvg: {
-      field: renderTextureSvg(positioned.texture, 'field'),
-      modal: renderTextureSvg(positioned.texture, 'modal'),
+      field: renderTextureSvg(record.texture.renders.field),
+      modal: renderTextureSvg(record.texture.renders.modal),
     },
   };
-});
-const occupiedSlots = new Set(fieldRecords.map((record) => record.slot));
-const latestRecordId = [...fieldRecords]
-  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.id;
-const emptyTiles = Array.from({ length: totalSlots }, (_, slot) => ({
-  slot,
-  col: slot % COLS,
-  row: Math.floor(slot / COLS),
-  tone: (slot * 13 + Math.floor(slot / COLS) * 7) % 9,
-})).filter((tile) => !occupiedSlots.has(tile.slot));
+}).filter((record) => record !== null);
+const emptyTiles = fieldView.emptyTiles;
 
 const recordById = new Map(fieldRecords.map((record) => [record.id, record]));
 const selected = fieldRecords[0];
@@ -355,11 +312,11 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
               const density = record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low';
               return (
                 <a
-                  class={`record-node ${record.id === latestRecordId ? 'is-latest' : ''}`}
+                  class={`record-node ${record.field.isLatest ? 'is-latest' : ''}`}
                   data-record-id={record.id}
                   data-density={density}
                   href={record.url}
-                  style={`--col:${record.position.col};--row:${record.position.row};--score:${record.score};`}
+                  style={`--col:${record.field.col};--row:${record.field.row};--score:${record.score};`}
                   aria-label={record.title}
                 >
                   <span class="texture-mount" set:html={record.textureSvg.field}></span>
