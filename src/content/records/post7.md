@@ -3,10 +3,9 @@ title: 속초에서 가족모임
 date: 2026-06-19
 location: 서울
 excerpt: 언젠가 가보자고 미뤄두었던 여행 후보지가 생각보다 빨리 차례를 맞았다.
-tags:
-  - 뚜벅뚜벅
+tags: [뚜벅뚜벅]
 type: standard
-visibility: private
+visibility: public
 gallery:
 ---
 !youtube https://youtu.be/bQisEiNWAbY
