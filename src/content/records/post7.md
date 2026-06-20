@@ -9,7 +9,7 @@ type: standard
 visibility: private
 gallery:
 ---
-!youtube
+!youtube https://youtu.be/bQisEiNWAbY
 
 언젠가 짝꿍이 동해안에 있는 국제규격 50M 수영장을 얘기해준 적이 있다. 찾아보니 망상해수욕장 인근의 보양온천이었다. 동해안 방향으로 휴가 잡을 때 더 알아봐야겠다 하고 말았는데, 이처럼 가까운 시일 내 다녀오게 될 줄은 몰랐다. 속초로 가족 여행이 잡혔기 때문이다. 
 
