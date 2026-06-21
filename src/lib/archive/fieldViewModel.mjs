@@ -1,5 +1,5 @@
 export const fieldLayoutProfile = {
-  cols: 28,
+  cols: 40,
   rows: 18,
 };
 
