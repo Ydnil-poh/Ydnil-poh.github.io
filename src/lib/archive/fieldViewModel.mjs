@@ -1,6 +1,6 @@
 export const fieldLayoutProfile = {
-  cols: 40,
-  rows: 18,
+  cols: 56,
+  rows: 32,
 };
 
 export function nearestOpenSlot(preferred, occupied, profile = fieldLayoutProfile) {
