@@ -6,7 +6,6 @@ excerpt: 언젠가 가보자고 미뤄두었던 여행 후보지가 생각보다
 tags: [뚜벅뚜벅]
 type: standard
 visibility: public
-gallery:
 ---
 !youtube https://youtu.be/bQisEiNWAbY
 
