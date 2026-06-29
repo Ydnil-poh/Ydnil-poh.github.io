@@ -3,8 +3,7 @@ title: 상추 커뮤니티
 date: 2026-06-29
 location: 서울
 excerpt: 상추를 나누는 이웃과 자투리땅을 채운 채소들은 오래된 주거지의 공간을 조금 다르게 바라보게 만든다.
-tags:
-  - 뚜벅뚜벅
+tags: [뚜벅뚜벅]
 type: standard
 visibility: public
 galleryFolder:
