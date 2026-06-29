@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "generatedAt": "2026-06-18T07:25:57.607Z",
+  "generatedAt": "2026-06-29T08:30:57.268Z",
   "source": "src/content/records",
   "storage": {
     "provider": "supabase",
@@ -47,48 +47,69 @@
     "rebuildUse": "nightly attention metrics may weakly drift spatial placement but do not change semantic density directly"
   },
   "counts": {
-    "records": 5,
+    "records": 8,
     "images": 0
   },
   "archiveView": {
     "field": {
       "schemaVersion": 1,
-      "cols": 28,
-      "rows": 18,
+      "cols": 40,
+      "rows": 25,
       "records": [
         {
           "id": "post1",
           "slot": 81,
-          "col": 25,
+          "col": 1,
           "row": 2,
           "isLatest": false
         },
         {
           "id": "post3",
           "slot": 236,
-          "col": 12,
-          "row": 8,
+          "col": 36,
+          "row": 5,
           "isLatest": false
         },
         {
           "id": "post4",
           "slot": 201,
-          "col": 5,
-          "row": 7,
+          "col": 1,
+          "row": 5,
           "isLatest": false
         },
         {
           "id": "post5",
           "slot": 102,
-          "col": 18,
-          "row": 3,
+          "col": 22,
+          "row": 2,
           "isLatest": false
         },
         {
           "id": "post6",
           "slot": 422,
-          "col": 2,
-          "row": 15,
+          "col": 22,
+          "row": 10,
+          "isLatest": false
+        },
+        {
+          "id": "post7",
+          "slot": 217,
+          "col": 17,
+          "row": 5,
+          "isLatest": false
+        },
+        {
+          "id": "post8",
+          "slot": 216,
+          "col": 16,
+          "row": 5,
+          "isLatest": false
+        },
+        {
+          "id": "post9",
+          "slot": 213,
+          "col": 13,
+          "row": 5,
           "isLatest": true
         }
       ]
@@ -106,30 +127,37 @@
       "tags": [
         "뚝딱뚝딱"
       ],
-      "displayDensity": 0.5046,
-      "score": 0.5046,
+      "displayDensity": 0.4492,
+      "score": 0.4492,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.913,
-        "y": 0.1375
+        "x": 0.0375,
+        "y": 0.1
       },
+      "layoutSlot": 81,
       "related": [
         "post3",
         "post5",
-        "post4"
+        "post9",
+        "post4",
+        "post8"
       ],
       "relationSummary": [
         {
           "id": "post3",
-          "weight": 1.004
+          "weight": 1.003
         },
         {
           "id": "post5",
-          "weight": 0.0388
+          "weight": 0.0488
+        },
+        {
+          "id": "post9",
+          "weight": 0.0409
         },
         {
           "id": "post4",
-          "weight": 0.0225
+          "weight": 0.02
         }
       ],
       "attentionSnapshot": {
@@ -150,7 +178,7 @@
         "schemaVersion": 2,
         "density": "medium",
         "imageCount": 0,
-        "textLength": 538,
+        "textLength": 543,
         "layout": {
           "schemaVersion": 1,
           "nodeCount": 4,
@@ -254,7 +282,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "352c05f50f135997a0cddbfed7b5d993d4b24daab546f284c7b342fc9569f76a",
+      "contentHash": "671102b19d71e22479bc16843bbc8526c19ebba837f0f78fdb8aee45ebe10435",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -274,22 +302,29 @@
       "tags": [
         "뚝딱뚝딱"
       ],
-      "displayDensity": 0.3484,
-      "score": 0.3484,
+      "displayDensity": 0.2944,
+      "score": 0.2944,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.4542,
-        "y": 0.4465
+        "x": 0.9125,
+        "y": 0.22
       },
+      "layoutSlot": 236,
       "related": [
         "post1",
+        "post7",
         "post4",
-        "post5"
+        "post5",
+        "post8"
       ],
       "relationSummary": [
         {
           "id": "post1",
-          "weight": 1.004
+          "weight": 1.003
+        },
+        {
+          "id": "post7",
+          "weight": 0.0549
         },
         {
           "id": "post4",
@@ -422,7 +457,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "69834df6c0ccf06d038a65b00b0b281ea633883145053a166575716c6ba2001d",
+      "contentHash": "625dd4a2099f04feee60e22340c17aff16e5971ef8c27fffb7d606669868cada",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -442,19 +477,31 @@
       "tags": [
         "뚜벅뚜벅"
       ],
-      "displayDensity": 0.3648,
-      "score": 0.3648,
+      "displayDensity": 0.6743,
+      "score": 0.6743,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.1895,
-        "y": 0.4334
+        "x": 0.0375,
+        "y": 0.22
       },
+      "layoutSlot": 201,
       "related": [
+        "post7",
+        "post9",
         "post6",
         "post3",
-        "post1"
+        "post1",
+        "post8"
       ],
       "relationSummary": [
+        {
+          "id": "post7",
+          "weight": 1.0766
+        },
+        {
+          "id": "post9",
+          "weight": 1.0207
+        },
         {
           "id": "post6",
           "weight": 1
@@ -462,10 +509,6 @@
         {
           "id": "post3",
           "weight": 0.0437
-        },
-        {
-          "id": "post1",
-          "weight": 0.0225
         }
       ],
       "attentionSnapshot": {
@@ -484,7 +527,7 @@
       },
       "texture": {
         "schemaVersion": 2,
-        "density": "low",
+        "density": "medium",
         "imageCount": 0,
         "textLength": 927,
         "layout": {
@@ -601,7 +644,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "83fd060ee241b78d27617bd3e448c5d43af31005918dc120bd13b09120f84300",
+      "contentHash": "b9b72472b507de9479f678353902996fa3cbdacdfe7261f707675661a551f2c6",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -621,25 +664,36 @@
       "tags": [
         "흥얼흥얼"
       ],
-      "displayDensity": 0.2994,
-      "score": 0.2994,
+      "displayDensity": 0.2991,
+      "score": 0.2991,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.6651,
-        "y": 0.2052
+        "x": 0.5625,
+        "y": 0.1
       },
+      "layoutSlot": 102,
       "related": [
         "post1",
-        "post3"
+        "post9",
+        "post3",
+        "post7"
       ],
       "relationSummary": [
         {
           "id": "post1",
-          "weight": 0.0388
+          "weight": 0.0488
+        },
+        {
+          "id": "post9",
+          "weight": 0.03
         },
         {
           "id": "post3",
           "weight": 0.0152
+        },
+        {
+          "id": "post7",
+          "weight": 0.0122
         }
       ],
       "attentionSnapshot": {
@@ -792,7 +846,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "c3c168cbc7807c00196f1d311c0995524f133c8a4080301bd9a64ffd3c140cf0",
+      "contentHash": "a322a339a6fdbc929cd4a42e6a9464e4575aa1e6e46afe9edad3cce5d7bd1a45",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -816,15 +870,26 @@
       "score": 0.8756,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.08,
-        "y": 0.876
+        "x": 0.5625,
+        "y": 0.42
       },
+      "layoutSlot": 422,
       "related": [
-        "post4"
+        "post4",
+        "post7",
+        "post9"
       ],
       "relationSummary": [
         {
           "id": "post4",
+          "weight": 1
+        },
+        {
+          "id": "post7",
+          "weight": 1
+        },
+        {
+          "id": "post9",
           "weight": 1
         }
       ],
@@ -846,7 +911,7 @@
         "schemaVersion": 2,
         "density": "high",
         "imageCount": 0,
-        "textLength": 207,
+        "textLength": 206,
         "layout": {
           "schemaVersion": 1,
           "nodeCount": 3,
@@ -903,8 +968,8 @@
               [0, 8],
               [3, 24],
               [0, 8],
-              [3, 5],
-              [0, 59],
+              [3, 4],
+              [0, 60],
               [3, 24],
               [0, 8],
               [3, 24],
@@ -928,7 +993,7 @@
       "imageUrls": [],
       "galleryFolder": "glass",
       "galleryImageUrls": [],
-      "contentHash": "c7a21ca8b17553774e61a0da6d5ab7360da3983dc1bb7e3e4da522e6366edbaa",
+      "contentHash": "b74d072f50d62eda4e9692f47278a0a04cb16ac2c2736cd0c623d21cd9d738bc",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -936,6 +1001,545 @@
       },
       "embeddingModel": "local-feature-hash-ko-en-64",
       "url": "/records/post6/"
+    },
+    {
+      "id": "post7",
+      "slug": "post7",
+      "title": "속초에서 가족모임",
+      "date": "2026-06-19",
+      "location": "서울",
+      "type": "standard",
+      "excerpt": "언젠가 가보자고 미뤄두었던 여행 후보지가 생각보다 빨리 차례를 맞았다.",
+      "tags": [
+        "뚜벅뚜벅"
+      ],
+      "displayDensity": 0.7892,
+      "score": 0.7892,
+      "scoreMeaning": "semantic density",
+      "position": {
+        "x": 0.4375,
+        "y": 0.22
+      },
+      "layoutSlot": 217,
+      "related": [
+        "post4",
+        "post6",
+        "post9",
+        "post3",
+        "post5"
+      ],
+      "relationSummary": [
+        {
+          "id": "post4",
+          "weight": 1.0766
+        },
+        {
+          "id": "post6",
+          "weight": 1
+        },
+        {
+          "id": "post9",
+          "weight": 1
+        },
+        {
+          "id": "post3",
+          "weight": 0.0549
+        }
+      ],
+      "attentionSnapshot": {
+        "views": 0,
+        "tileClicks": 0,
+        "opens": 0,
+        "pageViews": 0,
+        "runtimeScore": 0,
+        "humanModalOpen": 0,
+        "humanFullOpen": 0,
+        "humanScore": 0,
+        "machineAccess": 0,
+        "machineScore": 0,
+        "lastEventAt": null,
+        "semantics": "nightly snapshot only; source of truth remains Supabase archive_events/archive_records"
+      },
+      "texture": {
+        "schemaVersion": 2,
+        "density": "high",
+        "imageCount": 0,
+        "textLength": 456,
+        "layout": {
+          "schemaVersion": 1,
+          "nodeCount": 4,
+          "canvas": {
+            "width": 32,
+            "height": 24,
+            "unit": "cell"
+          },
+          "documentType": "standard"
+        },
+        "renders": {
+          "field": {
+            "schemaVersion": 1,
+            "role": "field",
+            "width": 8,
+            "height": 8,
+            "minOpacity": 0.12,
+            "color": "currentColor",
+            "className": "archive-texture archive-texture--field",
+            "encoding": "rle4",
+            "rle": [
+              [0, 1],
+              [2, 1],
+              [1, 1],
+              [2, 2],
+              [1, 1],
+              [2, 1],
+              [0, 2],
+              [2, 6],
+              [0, 2],
+              [3, 6],
+              [0, 2],
+              [3, 1],
+              [2, 5],
+              [0, 2],
+              [2, 6],
+              [0, 2],
+              [3, 6],
+              [0, 2],
+              [2, 1],
+              [1, 5],
+              [0, 2],
+              [3, 6],
+              [0, 1]
+            ]
+          },
+          "modal": {
+            "schemaVersion": 1,
+            "role": "modal",
+            "width": 32,
+            "height": 24,
+            "minOpacity": 0.05,
+            "color": "currentColor",
+            "className": "archive-texture archive-texture--modal",
+            "encoding": "rle4",
+            "rle": [
+              [0, 4],
+              [2, 24],
+              [0, 8],
+              [2, 1],
+              [1, 10],
+              [3, 3],
+              [1, 9],
+              [2, 1],
+              [0, 8],
+              [2, 1],
+              [1, 10],
+              [3, 3],
+              [1, 9],
+              [2, 1],
+              [0, 8],
+              [2, 24],
+              [0, 40],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 6],
+              [0, 58],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 4],
+              [0, 60],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 4]
+            ]
+          }
+        }
+      },
+      "imageUrls": [],
+      "galleryFolder": "",
+      "galleryImageUrls": [],
+      "contentHash": "95888f409f9e535ebfa9e456fd8101423a46b2ec1cc5d9ed8d46688cb4852be6",
+      "embeddingRef": {
+        "provider": "supabase",
+        "table": "archive_embeddings",
+        "key": "post7"
+      },
+      "embeddingModel": "local-feature-hash-ko-en-64",
+      "url": "/records/post7/"
+    },
+    {
+      "id": "post8",
+      "slug": "post8",
+      "title": "지금 안사면 가격은 계속 오르지 않을까",
+      "date": "2026-06-26",
+      "location": "서울",
+      "type": "mediaRail",
+      "excerpt": "핸드폰을 바꾼다. 아마도 지금이 가장 쌀 때니까. AI와 메모리 수요가 바꾸는 전자기기 시장을 생각해본다.",
+      "tags": [
+        "인벤토리"
+      ],
+      "displayDensity": 0.2888,
+      "score": 0.2888,
+      "scoreMeaning": "semantic density",
+      "position": {
+        "x": 0.4125,
+        "y": 0.22
+      },
+      "layoutSlot": 216,
+      "related": [
+        "post1",
+        "post3",
+        "post4"
+      ],
+      "relationSummary": [
+        {
+          "id": "post1",
+          "weight": 0.0185
+        },
+        {
+          "id": "post3",
+          "weight": 0.0138
+        },
+        {
+          "id": "post4",
+          "weight": 0.0044
+        }
+      ],
+      "attentionSnapshot": {
+        "views": 0,
+        "tileClicks": 0,
+        "opens": 0,
+        "pageViews": 0,
+        "runtimeScore": 0,
+        "humanModalOpen": 0,
+        "humanFullOpen": 0,
+        "humanScore": 0,
+        "machineAccess": 0,
+        "machineScore": 0,
+        "lastEventAt": null,
+        "semantics": "nightly snapshot only; source of truth remains Supabase archive_events/archive_records"
+      },
+      "texture": {
+        "schemaVersion": 2,
+        "density": "low",
+        "imageCount": 0,
+        "textLength": 477,
+        "layout": {
+          "schemaVersion": 1,
+          "nodeCount": 4,
+          "canvas": {
+            "width": 32,
+            "height": 24,
+            "unit": "cell"
+          },
+          "documentType": "mediaRail"
+        },
+        "renders": {
+          "field": {
+            "schemaVersion": 1,
+            "role": "field",
+            "width": 8,
+            "height": 8,
+            "minOpacity": 0.12,
+            "color": "currentColor",
+            "className": "archive-texture archive-texture--field",
+            "encoding": "rle4",
+            "rle": [
+              [0, 1],
+              [3, 6],
+              [0, 2],
+              [3, 6],
+              [0, 2],
+              [2, 6],
+              [0, 2],
+              [3, 6],
+              [0, 2],
+              [3, 4],
+              [2, 2],
+              [0, 2],
+              [2, 6],
+              [0, 2],
+              [2, 5],
+              [1, 1],
+              [0, 2],
+              [3, 6],
+              [0, 1]
+            ]
+          },
+          "modal": {
+            "schemaVersion": 1,
+            "role": "modal",
+            "width": 32,
+            "height": 24,
+            "minOpacity": 0.05,
+            "color": "currentColor",
+            "className": "archive-texture archive-texture--modal",
+            "encoding": "rle4",
+            "rle": [
+              [0, 4],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 23],
+              [0, 41],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 18],
+              [0, 46],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 21],
+              [0, 43],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 4]
+            ]
+          }
+        }
+      },
+      "imageUrls": [],
+      "galleryFolder": "gear",
+      "galleryImageUrls": [],
+      "contentHash": "e7323ead9e2a5766af078c9512685e70c7ea74f1cc14939f993163c325a2f72a",
+      "embeddingRef": {
+        "provider": "supabase",
+        "table": "archive_embeddings",
+        "key": "post8"
+      },
+      "embeddingModel": "local-feature-hash-ko-en-64",
+      "url": "/records/post8/"
+    },
+    {
+      "id": "post9",
+      "slug": "post9",
+      "title": "상추 커뮤니티",
+      "date": "2026-06-29",
+      "location": "서울",
+      "type": "standard",
+      "excerpt": "상추를 나누는 이웃과 자투리땅을 채운 채소들은 오래된 주거지의 공간을 조금 다르게 바라보게 만든다.",
+      "tags": [
+        "뚜벅뚜벅"
+      ],
+      "displayDensity": 0.8311,
+      "score": 0.8311,
+      "scoreMeaning": "semantic density",
+      "position": {
+        "x": 0.3375,
+        "y": 0.22
+      },
+      "layoutSlot": 213,
+      "related": [
+        "post4",
+        "post6",
+        "post7",
+        "post1",
+        "post5"
+      ],
+      "relationSummary": [
+        {
+          "id": "post4",
+          "weight": 1.0207
+        },
+        {
+          "id": "post6",
+          "weight": 1
+        },
+        {
+          "id": "post7",
+          "weight": 1
+        },
+        {
+          "id": "post1",
+          "weight": 0.0409
+        }
+      ],
+      "attentionSnapshot": {
+        "views": 0,
+        "tileClicks": 0,
+        "opens": 0,
+        "pageViews": 0,
+        "runtimeScore": 0,
+        "humanModalOpen": 0,
+        "humanFullOpen": 0,
+        "humanScore": 0,
+        "machineAccess": 0,
+        "machineScore": 0,
+        "lastEventAt": null,
+        "semantics": "nightly snapshot only; source of truth remains Supabase archive_events/archive_records"
+      },
+      "texture": {
+        "schemaVersion": 2,
+        "density": "high",
+        "imageCount": 0,
+        "textLength": 379,
+        "layout": {
+          "schemaVersion": 1,
+          "nodeCount": 5,
+          "canvas": {
+            "width": 32,
+            "height": 24,
+            "unit": "cell"
+          },
+          "documentType": "standard"
+        },
+        "renders": {
+          "field": {
+            "schemaVersion": 1,
+            "role": "field",
+            "width": 8,
+            "height": 8,
+            "minOpacity": 0.12,
+            "color": "currentColor",
+            "className": "archive-texture archive-texture--field",
+            "encoding": "rle4",
+            "rle": [
+              [0, 1],
+              [2, 1],
+              [1, 1],
+              [2, 2],
+              [1, 1],
+              [2, 1],
+              [0, 2],
+              [2, 6],
+              [0, 2],
+              [2, 2],
+              [1, 4],
+              [0, 2],
+              [3, 5],
+              [2, 1],
+              [0, 2],
+              [2, 6],
+              [0, 2],
+              [3, 6],
+              [0, 2],
+              [2, 1],
+              [1, 5],
+              [0, 2],
+              [3, 6],
+              [0, 1]
+            ]
+          },
+          "modal": {
+            "schemaVersion": 1,
+            "role": "modal",
+            "width": 32,
+            "height": 24,
+            "minOpacity": 0.05,
+            "color": "currentColor",
+            "className": "archive-texture archive-texture--modal",
+            "encoding": "rle4",
+            "rle": [
+              [0, 4],
+              [2, 24],
+              [0, 8],
+              [2, 1],
+              [1, 10],
+              [3, 3],
+              [1, 9],
+              [2, 1],
+              [0, 8],
+              [2, 1],
+              [1, 10],
+              [3, 3],
+              [1, 9],
+              [2, 1],
+              [0, 8],
+              [2, 24],
+              [0, 40],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 8],
+              [0, 56],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 20],
+              [0, 44],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 5],
+              [0, 59],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 4]
+            ]
+          }
+        }
+      },
+      "imageUrls": [],
+      "galleryFolder": "",
+      "galleryImageUrls": [],
+      "contentHash": "748c7a19e5ba81a1af201329a3bdcea631a5360d781df8b6ae624aeaf4f3cb5c",
+      "embeddingRef": {
+        "provider": "supabase",
+        "table": "archive_embeddings",
+        "key": "post9"
+      },
+      "embeddingModel": "local-feature-hash-ko-en-64",
+      "url": "/records/post9/"
     }
   ]
 }
