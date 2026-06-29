@@ -7,6 +7,9 @@ tags: [뚜벅뚜벅]
 type: standard
 visibility: public
 ---
+
+!youtube https://youtu.be/eRK5Nc5Va0A?si=2-zvJnV54MbU_uqa
+
 1층 집에서 상추 나눔을 해주셨다. 올해로 두번째다. 그리고 이 동네 이사 온지 8년 만에 처음이다. 
 
 처음 상추를 건네 받았을 때는 롤케익 한상자를 사서 답례로 드렸다. 그 다음에는 상추뿐 아니라 가지와 고추까지 담아주신다. 
