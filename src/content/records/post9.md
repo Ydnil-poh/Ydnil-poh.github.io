@@ -6,7 +6,6 @@ excerpt: 상추를 나누는 이웃과 자투리땅을 채운 채소들은 오�
 tags: [뚜벅뚜벅]
 type: standard
 visibility: public
-galleryFolder:
 ---
 1층 집에서 상추 나눔을 해주셨다. 올해로 두번째다. 그리고 이 동네 이사 온지 8년 만에 처음이다. 
 
