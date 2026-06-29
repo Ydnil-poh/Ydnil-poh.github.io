@@ -29,9 +29,11 @@ export function generateFieldViewModel(records, profile = fieldLayoutProfile) {
   const latestRecordId = [...records]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.id;
   const fieldRecords = records.map((record) => {
+    const hasPinnedSlot = Number.isInteger(record.layoutSlot);
     const preferredCol = Math.max(0, Math.min(profile.cols - 1, Math.floor(record.position.x * profile.cols)));
     const preferredRow = Math.max(0, Math.min(profile.rows - 1, Math.floor(record.position.y * profile.rows)));
-    const slot = nearestOpenSlot(preferredRow * profile.cols + preferredCol, occupied, profile);
+    const preferredSlot = hasPinnedSlot ? record.layoutSlot : preferredRow * profile.cols + preferredCol;
+    const slot = nearestOpenSlot(preferredSlot, occupied, profile);
     occupied.add(slot);
 
     return {

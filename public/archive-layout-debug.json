@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-18T07:25:57.607Z",
+  "generatedAt": "2026-06-29T08:30:57.268Z",
   "source": "src/content/records",
   "records": [
     {
@@ -24,7 +24,7 @@
         {
           "id": "block-3",
           "kind": "paragraph",
-          "text": "함께 굴러나가는 감각을 받아들여야겠다는 생각이 든다. 그외 몇가지 이유가 더 있어 토이프로젝트를 구축해 놓은 게 있다. 어찌어찌 웹사이트까지는 굴려볼만 하겠다는 마음이 생긴다. 여기는 그렇게 만들어진 공간이다."
+          "text": "함께 굴려나가는 감각을 받아들여야겠다는 생각이 든다. 그외 몇가지 이유가 더 있어 토이프로젝트를 구축해 놓은 게 있다. 하나 만들어보고 나니 웹사이트까지는 어찌저찌 되겠다는 마음이 생겼다. 여기는 그렇게 만들어진 공간이다."
         },
         {
           "id": "block-4",
@@ -634,7 +634,7 @@
         {
           "id": "block-0",
           "kind": "paragraph",
-          "text": "한복이가 공방을 열었다. 유리공예 하는 친구인데, 함께 연습팀 하던 사람들 대상으로 오픈 스튜디오 한다기에 다녀왔다. 악세사리 원데이 클래스도 운영은 하지만, 본업은 오브제 작업이."
+          "text": "한복이가 공방을 열었다. 유리공예 하는 친구인데, 함께 연습팀 하던 사람들 불러 오픈 스튜디오 한다기에 다녀왔다. 악세사리 원데이 클래스도 운영은 하지만, 본업은 오브제 작업이다."
         },
         {
           "id": "block-1",
@@ -677,7 +677,7 @@
                 "fillWidth": 24
               },
               {
-                "fillWidth": 5
+                "fillWidth": 4
               }
             ]
           },
@@ -724,6 +724,428 @@
               },
               {
                 "fillWidth": 12
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "post7",
+      "semanticBlocks": [
+        {
+          "id": "block-0",
+          "kind": "youtube",
+          "url": "https://youtu.be/bQisEiNWAbY"
+        },
+        {
+          "id": "block-1",
+          "kind": "paragraph",
+          "text": "언젠가 짝꿍이 동해안에 있는 국제규격 50M 수영장을 얘기해준 적이 있다. 찾아보니 망상해수욕장 인근의 보양온천이었다. 동해안 방향으로 휴가 잡을 때 더 알아봐야겠다 하고 말았는데, 이처럼 가까운 시일 내 다녀오게 될 줄은 몰랐다. 속초로 가족 여행이 잡혔기 때문이다."
+        },
+        {
+          "id": "block-2",
+          "kind": "paragraph",
+          "text": "작년에도 푸꾸옥을 다녀왔는데, 일년만에 또 가족여행이라니 짝꿍에게 좀 미안한 마음이다. 대신이라긴 뭐해도 하루 먼저 우리끼리 출발해 시간을 보내기로 했다. 속초 주변에 가볼만한 곳을 찾다보니 보양온천이 떠올랐다. 그렇게 미뤄둔 여행 후보지는 당장의 목적지가 되었다."
+        },
+        {
+          "id": "block-3",
+          "kind": "paragraph",
+          "text": "가족과 합류해서는 양양에 유채꽃밭도 다녀올거고, 속초 중앙시장에도 다녀올거고, 밤에는 시장에서 사온 먹거리 푸지게 먹어야 할거고, 여러모로 피곤할거라, 우리끼리 일정은 좀 느슨하게 잡았다. 숙소는 청초호 주변으로 구했는데, 아침에 호숫가 산책을 할 수 있어서 좋았다."
+        },
+        {
+          "id": "block-4",
+          "kind": "paragraph",
+          "text": "속초도 참 많이 변했다. 양양에서 소대장 근무하던 시절 생각나서 여기는 이렇게 변했고 저기는 저렇게 변했고 떠들게 된다. 옆에서 듣고 있던 짝꿍이 꼭 택시기사님 같다 한다."
+        }
+      ],
+      "layoutGraph": {
+        "schemaVersion": 1,
+        "canvas": {
+          "width": 32,
+          "height": 24,
+          "unit": "cell"
+        },
+        "nodes": [
+          {
+            "id": "node-0",
+            "kind": "mediaBlock",
+            "mediaType": "youtube",
+            "sourceBlockId": "block-0",
+            "x": 4,
+            "y": 0,
+            "width": 24,
+            "height": 4,
+            "frame": true,
+            "playMarker": true
+          },
+          {
+            "id": "node-1",
+            "kind": "textBlock",
+            "sourceBlockId": "block-1",
+            "x": 4,
+            "y": 5,
+            "width": 24,
+            "height": 7,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 6
+              }
+            ]
+          },
+          {
+            "id": "node-2",
+            "kind": "textBlock",
+            "sourceBlockId": "block-2",
+            "x": 4,
+            "y": 13,
+            "width": 24,
+            "height": 7,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 4
+              }
+            ]
+          },
+          {
+            "id": "node-3",
+            "kind": "textBlock",
+            "sourceBlockId": "block-3",
+            "x": 4,
+            "y": 21,
+            "width": 24,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "post8",
+      "semanticBlocks": [
+        {
+          "id": "block-0",
+          "kind": "paragraph",
+          "text": "핸드폰을 바꿨다. 당근에서 S23 울트라 구해다 쓴 게 작년 7월이니, 교체 주기가 좀 빨랐다. 프로모션 조건이 괜찮기도 했지만, 당분간 전자기기 가격이 오름세일 것이라는 전망 탓이기도 하다. 메모리 품귀 때문에 지금이 가장 쌀 때라는 말을 흘려 듣지 못하겠다. 글을 써나가던 중 애플과 MS가 각각 제품 가격 인상을 발표했다. 내가 옳았어!"
+        },
+        {
+          "id": "block-1",
+          "kind": "paragraph",
+          "text": "FOMO가 있었던 걸 인정한다. 원래는 중고기기를 들이거나 한두세대 지난 모델을 할인가로 사는 편이다. 몇달 전 구입한 오즈모 액션4도 그랬다. 이미 6세대가 출시한 시점이라 가격이 꽤 내려와 있었다. 지금 쓰는 카메라, S5M2도 중고 구매였다."
+        },
+        {
+          "id": "block-2",
+          "kind": "paragraph",
+          "text": "기계적인 고장만 아니라면, 신제품을 굳이 사야 할 이유가 없다. 컨슈머 레벨에서의 성능은 어느 정도, 오래전에 완성되었던 것 같다. 어디까지나 지금의 소비자 입장이다."
+        },
+        {
+          "id": "block-3",
+          "kind": "paragraph",
+          "text": "메모리와 반도체 같은 핵심 부품의 수요가 AI와 데이터센터 같은 B2B 시장으로 쏠리면서, 컨슈머 시장은 예전처럼 기술 발전의 직접 수혜를 받기 어려워질 것 같다. 제품 공급의 우선순위가 바뀌는 것이다. 컴퓨팅 성능은 더이상 개인의 소비 경험을 높이는 데만 쓰일 수 없다. 기업의 생산성을 높이는 자원으로 먼저 투입 될 것이다. 컴퓨팅이 다시 생산도구로 돌아가는 셈이다."
+        }
+      ],
+      "layoutGraph": {
+        "schemaVersion": 1,
+        "canvas": {
+          "width": 32,
+          "height": 24,
+          "unit": "cell"
+        },
+        "nodes": [
+          {
+            "id": "node-0",
+            "kind": "textBlock",
+            "sourceBlockId": "block-0",
+            "x": 4,
+            "y": 0,
+            "width": 24,
+            "height": 8,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 23
+              }
+            ]
+          },
+          {
+            "id": "node-1",
+            "kind": "textBlock",
+            "sourceBlockId": "block-1",
+            "x": 4,
+            "y": 9,
+            "width": 24,
+            "height": 6,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 18
+              }
+            ]
+          },
+          {
+            "id": "node-2",
+            "kind": "textBlock",
+            "sourceBlockId": "block-2",
+            "x": 4,
+            "y": 16,
+            "width": 24,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 21
+              }
+            ]
+          },
+          {
+            "id": "node-3",
+            "kind": "textBlock",
+            "sourceBlockId": "block-3",
+            "x": 4,
+            "y": 21,
+            "width": 24,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "post9",
+      "semanticBlocks": [
+        {
+          "id": "block-0",
+          "kind": "youtube",
+          "url": "https://youtu.be/eRK5Nc5Va0A?si=2-zvJnV54MbU_uqa"
+        },
+        {
+          "id": "block-1",
+          "kind": "paragraph",
+          "text": "1층 집에서 상추 나눔을 해주셨다. 올해로 두번째다. 그리고 이 동네 이사 온지 8년 만에 처음이다."
+        },
+        {
+          "id": "block-2",
+          "kind": "paragraph",
+          "text": "처음 상추를 건네 받았을 때는 롤케익 한상자를 사서 답례로 드렸다. 그 다음에는 상추뿐 아니라 가지와 고추까지 담아주신다."
+        },
+        {
+          "id": "block-3",
+          "kind": "paragraph",
+          "text": "우리가 새벽수영 마치고 집에 돌아오는 시간이 1층 할머님 수영장으로 향하는 시간과 겹친다. 요즘 그렇게 종종 마주치며 인사를 하고, 간단한 소식을 나눴다. 그럼에도 지역 커뮤니티에 속해있다는 느낌 크게 없었는데, 그다지 거창하지 않은 이런 교류가 전부인지도 모르겠다."
+        },
+        {
+          "id": "block-4",
+          "kind": "paragraph",
+          "text": "집집마다 꾸린 텃밭들이 동네를 걸으면서 새삼 눈에 띈다. 자투리 땅이거나 화단 같은 자리가 아니어도 채소가 자란다. 화분이나 스티로폼 박스에 흙을 채워 작은 밭을 만들고 볕이 드는 빈 공간이라면 점유의 대상이 된다. 옥상뿐 아니라 담벼락 위나 창문틀에도 작은 공중 텃밭이 있다."
+        }
+      ],
+      "layoutGraph": {
+        "schemaVersion": 1,
+        "canvas": {
+          "width": 32,
+          "height": 24,
+          "unit": "cell"
+        },
+        "nodes": [
+          {
+            "id": "node-0",
+            "kind": "mediaBlock",
+            "mediaType": "youtube",
+            "sourceBlockId": "block-0",
+            "x": 4,
+            "y": 0,
+            "width": 24,
+            "height": 4,
+            "frame": true,
+            "playMarker": true
+          },
+          {
+            "id": "node-1",
+            "kind": "textBlock",
+            "sourceBlockId": "block-1",
+            "x": 4,
+            "y": 5,
+            "width": 24,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 8
+              }
+            ]
+          },
+          {
+            "id": "node-2",
+            "kind": "textBlock",
+            "sourceBlockId": "block-2",
+            "x": 4,
+            "y": 9,
+            "width": 24,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 20
+              }
+            ]
+          },
+          {
+            "id": "node-3",
+            "kind": "textBlock",
+            "sourceBlockId": "block-3",
+            "x": 4,
+            "y": 13,
+            "width": 24,
+            "height": 7,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 5
+              }
+            ]
+          },
+          {
+            "id": "node-4",
+            "kind": "textBlock",
+            "sourceBlockId": "block-4",
+            "x": 4,
+            "y": 21,
+            "width": 24,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
+              },
+              {
+                "fillWidth": 24
               }
             ]
           }
