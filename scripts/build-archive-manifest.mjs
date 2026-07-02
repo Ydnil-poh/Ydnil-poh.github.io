@@ -3,6 +3,7 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fieldLayoutProfile, generateFieldViewModel, nearestOpenSlot } from '../src/lib/archive/fieldViewModel.mjs';
+import { incrementalRegionLayout } from '../src/lib/archive/regionLayout.mjs';
 import { generateTextureViewModel } from '../src/lib/archive/texturePipeline.mjs';
 import { textureOpacityByValue } from '../src/lib/archive/textureRenderContract.mjs';
 
@@ -14,6 +15,8 @@ const supabaseUrl = process.env.SUPABASE_URL ?? process.env.PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabaseStorageBucket = process.env.SUPABASE_STORAGE_BUCKET ?? 'img';
 const embeddingDimensions = 64;
+const isSleepRebuild = process.argv.includes('--sleep-rebuild') || process.env.ARCHIVE_REBUILD_MODE === 'sleep';
+const isRegionReseed = process.argv.includes('--region-reseed') || process.env.ARCHIVE_REGION_RESEED === '1';
 const markdownExtensions = new Set(['.md', '.markdown', '.mdx']);
 
 async function listMarkdownFiles(dir) {
@@ -620,7 +623,12 @@ const scored = recordsWithRelations.map((record, index) => ({
 }));
 
 const previousManifest = await readPreviousManifest();
-const laidOutRecords = incrementalLayout(scored, previousManifest, attentionDriftScale);
+const regionLayout = incrementalRegionLayout(scored, previousManifest, projectEmbeddings, undefined, {
+  sleepRebuild: isSleepRebuild,
+  regionReseed: isRegionReseed,
+});
+const laidOutRecords = regionLayout.records;
+const regions = regionLayout.regions;
 
 const semanticRecords = laidOutRecords.map((record) => ({
   ...record,
@@ -660,6 +668,7 @@ const records = recordsWithTexture.map((record) => ({
   scoreMeaning: 'semantic density',
   position: record.position,
   layoutSlot: record.layoutSlot,
+  regionId: record.regionId,
   related: record.relations.map((relation) => relation.id),
   relationSummary: record.relations.slice(0, 4).map((relation) => ({
     id: relation.id,
@@ -680,11 +689,11 @@ const records = recordsWithTexture.map((record) => ({
 }));
 
 const archiveView = {
-  field: generateFieldViewModel(records),
+  field: generateFieldViewModel(records, undefined, regions),
 };
 
 const manifest = {
-  schemaVersion: 6,
+  schemaVersion: 7,
   generatedAt: new Date().toISOString(),
   source: 'src/content/records',
   storage: { provider: 'supabase', bucket: supabaseStorageBucket },
@@ -701,6 +710,8 @@ const manifest = {
     attentionSignal: 'human attention may cause weak nightly spatial drift but is not semantic gravity',
     excludes: ['raw embeddings', 'live views', 'engagement ranking', 'popularity'],
     persistence: 'nightly rebuilds should preserve spatial memory and allow only local drift',
+    regionMode: 'tag-scoped incremental layout with persisted Region seeds and footprints',
+    rebuildMode: isRegionReseed ? 'region-reseed' : (isSleepRebuild ? 'sleep' : 'general'),
   },
   analytics: {
     provider: 'supabase',

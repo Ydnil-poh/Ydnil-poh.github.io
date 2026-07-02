@@ -16,6 +16,16 @@ import {
 } from '../src/lib/archive/texturePipeline.mjs';
 import { decodeTextureRenderPayload, isTextureRenderPayload } from '../src/lib/archive/textureRenderContract.mjs';
 
+import {
+  calculateRegionStats,
+  createRectFootprintAroundSeed,
+  incrementalRegionLayout,
+  isSlotInFootprint,
+  nearestOpenSlotInFootprint,
+  regionIdForTag,
+  slotsInFootprint,
+} from '../src/lib/archive/regionLayout.mjs';
+
 const plainText = (body) => body
   .replace(/<[^>]+>/g, ' ')
   .replace(/!\[[^\]]*\]\([^)]+\)/g, ' ')
@@ -112,3 +122,162 @@ test('modal click path clears previous DOM before inserting selected record text
   assert.match(pageSource, /texture\.replaceChildren\(\);/);
   assert.match(pageSource, /texture\.insertAdjacentHTML\('afterbegin', textureMarkup\(record\)\);/);
 });
+
+test('Region footprint helpers keep rectangle details behind the footprint API', () => {
+  const profile = { cols: 4, rows: 4 };
+  const footprint = createRectFootprintAroundSeed(5, 4, profile);
+
+  assert.deepEqual(slotsInFootprint(footprint, profile).sort((a, b) => a - b), [0, 1, 4, 5]);
+  assert.equal(isSlotInFootprint(5, footprint, profile), true);
+  assert.equal(isSlotInFootprint(15, footprint, profile), false);
+  assert.equal(nearestOpenSlotInFootprint(5, new Set([5]), footprint, profile), 1);
+});
+
+test('Region incremental layout persists seeds and places new records inside their tag footprint', () => {
+  const profile = { cols: 6, rows: 4 };
+  const records = [
+    { id: 'old-a', tags: ['walk'], date: '2026-01-01', embedding: [1, 0] },
+    { id: 'new-a', tags: ['walk'], date: '2026-01-02', embedding: [0.9, 0.1] },
+    { id: 'old-b', tags: ['make'], date: '2026-01-01', embedding: [0, 1] },
+  ];
+  const previousManifest = {
+    archiveView: {
+      field: {
+        regions: [
+          {
+            id: regionIdForTag('walk'),
+            tag: 'walk',
+            seedSlot: 7,
+            footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 2, minRow: 0, maxRow: 2 } },
+          },
+          {
+            id: regionIdForTag('make'),
+            tag: 'make',
+            seedSlot: 22,
+            footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 4, maxCol: 5, minRow: 2, maxRow: 3 } },
+          },
+        ],
+        records: [
+          { id: 'old-a', slot: 7 },
+          { id: 'old-b', slot: 22 },
+        ],
+      },
+    },
+    records: [],
+  };
+
+  const layout = incrementalRegionLayout(records, previousManifest, () => new Map(), profile);
+  const oldA = layout.records.find((record) => record.id === 'old-a');
+  const newA = layout.records.find((record) => record.id === 'new-a');
+  const walkRegion = layout.regions.find((region) => region.id === regionIdForTag('walk'));
+
+  assert.equal(walkRegion.seedSlot, 7);
+  assert.equal(oldA.layoutSlot, 7);
+  assert.equal(newA.regionId, regionIdForTag('walk'));
+  assert.equal(isSlotInFootprint(newA.layoutSlot, walkRegion.footprint, profile), true);
+});
+
+
+test('Region reseed mode ignores previous record slots for one-time tag migration', () => {
+  const profile = { cols: 6, rows: 4 };
+  const records = [
+    { id: 'old-a', tags: ['walk'], date: '2026-01-01', embedding: [1, 0] },
+    { id: 'old-b', tags: ['walk'], date: '2026-01-02', embedding: [0.9, 0.1] },
+  ];
+  const previousManifest = {
+    archiveView: {
+      field: {
+        regions: [
+          {
+            id: regionIdForTag('walk'),
+            tag: 'walk',
+            seedSlot: 23,
+            footprint: { schemaVersion: 1, kind: 'cells', cells: [0, 23] },
+          },
+        ],
+        records: [
+          { id: 'old-a', slot: 0 },
+          { id: 'old-b', slot: 23 },
+        ],
+      },
+    },
+    records: [],
+  };
+  const projected = new Map([[regionIdForTag('walk'), { x: 0.5, y: 0.5 }]]);
+
+  const layout = incrementalRegionLayout(records, previousManifest, () => projected, profile, { regionReseed: true });
+  const slots = layout.records.map((record) => record.layoutSlot);
+
+  assert.deepEqual(slots, [15, 9]);
+  assert.notDeepEqual(slots, [0, 23]);
+});
+
+test('Region stats calculate density from footprint slots', () => {
+  const profile = { cols: 4, rows: 4 };
+  const region = {
+    id: regionIdForTag('walk'),
+    footprint: { schemaVersion: 1, kind: 'cells', cells: [0, 1, 4, 5] },
+  };
+  const stats = calculateRegionStats(region, [
+    { id: 'a', regionId: region.id, layoutSlot: 0 },
+    { id: 'b', regionId: region.id, layoutSlot: 5 },
+    { id: 'c', regionId: 'tag:other', layoutSlot: 1 },
+  ], profile);
+
+  assert.deepEqual(stats, {
+    occupiedSlots: 2,
+    availableSlots: 2,
+    density: 0.5,
+    targetDensity: 0.72,
+  });
+});
+
+
+test('Sleep Rebuild can shrink sparse Region footprints without moving the seed', () => {
+  const profile = { cols: 6, rows: 6 };
+  const records = [
+    { id: 'old-a', tags: ['walk'], date: '2026-01-01', embedding: [1, 0] },
+  ];
+  const previousManifest = {
+    archiveView: {
+      field: {
+        regions: [
+          {
+            id: regionIdForTag('walk'),
+            tag: 'walk',
+            seedSlot: 7,
+            footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 5, minRow: 0, maxRow: 5 } },
+          },
+        ],
+        records: [{ id: 'old-a', slot: 7 }],
+      },
+    },
+    records: [],
+  };
+
+  const layout = incrementalRegionLayout(records, previousManifest, () => new Map(), profile, { sleepRebuild: true });
+  const region = layout.regions[0];
+
+  assert.equal(region.seedSlot, 7);
+  assert.deepEqual(region.footprint.rect, { minCol: 0, maxCol: 2, minRow: 0, maxRow: 2 });
+});
+
+test('archive manifest persists Region footprints and record region ids', () => {
+  assert.equal(archiveManifest.schemaVersion, 7);
+  assert.equal(archiveManifest.archiveView.field.schemaVersion, 2);
+  assert.ok(Array.isArray(archiveManifest.archiveView.field.regions));
+  assert.ok(archiveManifest.archiveView.field.regions.length > 0);
+
+  for (const region of archiveManifest.archiveView.field.regions) {
+    assert.equal(typeof region.id, 'string');
+    assert.equal(typeof region.tag, 'string');
+    assert.equal(Number.isInteger(region.seedSlot), true);
+    assert.equal(typeof region.footprint.kind, 'string');
+    assert.equal(typeof region.stats.density, 'number');
+  }
+
+  for (const record of archiveManifest.records) {
+    assert.equal(typeof record.regionId, 'string');
+  }
+}
+);
