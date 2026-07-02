@@ -3,7 +3,7 @@ title: 한복이의 오픈 스튜디오
 date: 2026-06-15
 location: 서울
 excerpt: 오픈 스튜디오 다녀왔다 집어온 물건들
-tags: [뚜벅뚜벅]
+tags: [인벤토리]
 type: mediaRail
 visibility: public
 galleryFolder: glass
