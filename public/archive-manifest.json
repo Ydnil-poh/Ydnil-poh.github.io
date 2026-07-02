@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "generatedAt": "2026-07-01T10:00:51.361Z",
+  "generatedAt": "2026-07-02T01:25:32.444Z",
   "source": "src/content/records",
   "storage": {
     "provider": "supabase",
@@ -68,13 +68,13 @@
           },
           "footprint": {
             "schemaVersion": 1,
-            "kind": "cells",
-            "cells": [
-              81,
-              236,
-              937,
-              977
-            ]
+            "kind": "rect",
+            "rect": {
+              "minCol": 16,
+              "maxCol": 17,
+              "minRow": 23,
+              "maxRow": 24
+            }
           },
           "stats": {
             "occupiedSlots": 2,
@@ -95,15 +95,13 @@
           },
           "footprint": {
             "schemaVersion": 1,
-            "kind": "cells",
-            "cells": [
-              10,
-              11,
-              201,
-              213,
-              217,
-              422
-            ]
+            "kind": "rect",
+            "rect": {
+              "minCol": 10,
+              "maxCol": 12,
+              "minRow": 0,
+              "maxRow": 1
+            }
           },
           "stats": {
             "occupiedSlots": 4,
@@ -124,13 +122,13 @@
           },
           "footprint": {
             "schemaVersion": 1,
-            "kind": "cells",
-            "cells": [
-              102,
-              760,
-              800,
-              801
-            ]
+            "kind": "rect",
+            "rect": {
+              "minCol": 0,
+              "maxCol": 1,
+              "minRow": 19,
+              "maxRow": 20
+            }
           },
           "stats": {
             "occupiedSlots": 1,
@@ -151,13 +149,13 @@
           },
           "footprint": {
             "schemaVersion": 1,
-            "kind": "cells",
-            "cells": [
-              216,
-              599,
-              638,
-              639
-            ]
+            "kind": "rect",
+            "rect": {
+              "minCol": 38,
+              "maxCol": 39,
+              "minRow": 14,
+              "maxRow": 15
+            }
           },
           "stats": {
             "occupiedSlots": 1,
@@ -172,65 +170,65 @@
       "records": [
         {
           "id": "post1",
-          "slot": 81,
-          "col": 1,
-          "row": 2,
+          "slot": 977,
+          "col": 17,
+          "row": 24,
           "regionId": "tag:뚝딱뚝딱",
           "isLatest": false
         },
         {
           "id": "post3",
-          "slot": 236,
-          "col": 36,
-          "row": 5,
+          "slot": 937,
+          "col": 17,
+          "row": 23,
           "regionId": "tag:뚝딱뚝딱",
           "isLatest": false
         },
         {
           "id": "post4",
-          "slot": 201,
-          "col": 1,
-          "row": 5,
+          "slot": 11,
+          "col": 11,
+          "row": 0,
           "regionId": "tag:뚜벅뚜벅",
           "isLatest": false
         },
         {
           "id": "post5",
-          "slot": 102,
-          "col": 22,
-          "row": 2,
+          "slot": 800,
+          "col": 0,
+          "row": 20,
           "regionId": "tag:흥얼흥얼",
           "isLatest": false
         },
         {
           "id": "post6",
-          "slot": 422,
-          "col": 22,
-          "row": 10,
+          "slot": 10,
+          "col": 10,
+          "row": 0,
           "regionId": "tag:뚜벅뚜벅",
           "isLatest": false
         },
         {
           "id": "post7",
-          "slot": 217,
-          "col": 17,
-          "row": 5,
+          "slot": 12,
+          "col": 12,
+          "row": 0,
           "regionId": "tag:뚜벅뚜벅",
           "isLatest": false
         },
         {
           "id": "post8",
-          "slot": 216,
-          "col": 16,
-          "row": 5,
+          "slot": 639,
+          "col": 39,
+          "row": 15,
           "regionId": "tag:인벤토리",
           "isLatest": false
         },
         {
           "id": "post9",
-          "slot": 213,
-          "col": 13,
-          "row": 5,
+          "slot": 51,
+          "col": 11,
+          "row": 1,
           "regionId": "tag:뚜벅뚜벅",
           "isLatest": true
         }
@@ -253,10 +251,10 @@
       "score": 0.4492,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.0375,
-        "y": 0.1
+        "x": 0.4375,
+        "y": 0.98
       },
-      "layoutSlot": 81,
+      "layoutSlot": 977,
       "regionId": "tag:뚝딱뚝딱",
       "related": [
         "post3",
@@ -429,10 +427,10 @@
       "score": 0.2944,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.9125,
-        "y": 0.22
+        "x": 0.4375,
+        "y": 0.94
       },
-      "layoutSlot": 236,
+      "layoutSlot": 937,
       "regionId": "tag:뚝딱뚝딱",
       "related": [
         "post1",
@@ -605,10 +603,10 @@
       "score": 0.6743,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.0375,
-        "y": 0.22
+        "x": 0.2875,
+        "y": 0.02
       },
-      "layoutSlot": 201,
+      "layoutSlot": 11,
       "regionId": "tag:뚜벅뚜벅",
       "related": [
         "post7",
@@ -793,10 +791,10 @@
       "score": 0.2991,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.5625,
-        "y": 0.1
+        "x": 0.0125,
+        "y": 0.82
       },
-      "layoutSlot": 102,
+      "layoutSlot": 800,
       "regionId": "tag:흥얼흥얼",
       "related": [
         "post1",
@@ -996,10 +994,10 @@
       "score": 0.8756,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.5625,
-        "y": 0.42
+        "x": 0.2625,
+        "y": 0.02
       },
-      "layoutSlot": 422,
+      "layoutSlot": 10,
       "regionId": "tag:뚜벅뚜벅",
       "related": [
         "post4",
@@ -1144,10 +1142,10 @@
       "score": 0.7892,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.4375,
-        "y": 0.22
+        "x": 0.3125,
+        "y": 0.02
       },
-      "layoutSlot": 217,
+      "layoutSlot": 12,
       "regionId": "tag:뚜벅뚜벅",
       "related": [
         "post4",
@@ -1331,10 +1329,10 @@
       "score": 0.2888,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.4125,
-        "y": 0.22
+        "x": 0.9875,
+        "y": 0.62
       },
-      "layoutSlot": 216,
+      "layoutSlot": 639,
       "regionId": "tag:인벤토리",
       "related": [
         "post1",
@@ -1500,10 +1498,10 @@
       "score": 0.8311,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.3375,
-        "y": 0.22
+        "x": 0.2875,
+        "y": 0.06
       },
-      "layoutSlot": 213,
+      "layoutSlot": 51,
       "regionId": "tag:뚜벅뚜벅",
       "related": [
         "post4",

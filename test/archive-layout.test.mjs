@@ -177,6 +177,41 @@ test('Region incremental layout persists seeds and places new records inside the
   assert.equal(isSlotInFootprint(newA.layoutSlot, walkRegion.footprint, profile), true);
 });
 
+
+test('Region reseed mode ignores previous record slots for one-time tag migration', () => {
+  const profile = { cols: 6, rows: 4 };
+  const records = [
+    { id: 'old-a', tags: ['walk'], date: '2026-01-01', embedding: [1, 0] },
+    { id: 'old-b', tags: ['walk'], date: '2026-01-02', embedding: [0.9, 0.1] },
+  ];
+  const previousManifest = {
+    archiveView: {
+      field: {
+        regions: [
+          {
+            id: regionIdForTag('walk'),
+            tag: 'walk',
+            seedSlot: 23,
+            footprint: { schemaVersion: 1, kind: 'cells', cells: [0, 23] },
+          },
+        ],
+        records: [
+          { id: 'old-a', slot: 0 },
+          { id: 'old-b', slot: 23 },
+        ],
+      },
+    },
+    records: [],
+  };
+  const projected = new Map([[regionIdForTag('walk'), { x: 0.5, y: 0.5 }]]);
+
+  const layout = incrementalRegionLayout(records, previousManifest, () => projected, profile, { regionReseed: true });
+  const slots = layout.records.map((record) => record.layoutSlot);
+
+  assert.deepEqual(slots, [15, 9]);
+  assert.notDeepEqual(slots, [0, 23]);
+});
+
 test('Region stats calculate density from footprint slots', () => {
   const profile = { cols: 4, rows: 4 };
   const region = {

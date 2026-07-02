@@ -16,6 +16,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabaseStorageBucket = process.env.SUPABASE_STORAGE_BUCKET ?? 'img';
 const embeddingDimensions = 64;
 const isSleepRebuild = process.argv.includes('--sleep-rebuild') || process.env.ARCHIVE_REBUILD_MODE === 'sleep';
+const isRegionReseed = process.argv.includes('--region-reseed') || process.env.ARCHIVE_REGION_RESEED === '1';
 const markdownExtensions = new Set(['.md', '.markdown', '.mdx']);
 
 async function listMarkdownFiles(dir) {
@@ -622,7 +623,10 @@ const scored = recordsWithRelations.map((record, index) => ({
 }));
 
 const previousManifest = await readPreviousManifest();
-const regionLayout = incrementalRegionLayout(scored, previousManifest, projectEmbeddings, undefined, { sleepRebuild: isSleepRebuild });
+const regionLayout = incrementalRegionLayout(scored, previousManifest, projectEmbeddings, undefined, {
+  sleepRebuild: isSleepRebuild,
+  regionReseed: isRegionReseed,
+});
 const laidOutRecords = regionLayout.records;
 const regions = regionLayout.regions;
 
@@ -707,7 +711,7 @@ const manifest = {
     excludes: ['raw embeddings', 'live views', 'engagement ranking', 'popularity'],
     persistence: 'nightly rebuilds should preserve spatial memory and allow only local drift',
     regionMode: 'tag-scoped incremental layout with persisted Region seeds and footprints',
-    rebuildMode: isSleepRebuild ? 'sleep' : 'general',
+    rebuildMode: isRegionReseed ? 'region-reseed' : (isSleepRebuild ? 'sleep' : 'general'),
   },
   analytics: {
     provider: 'supabase',

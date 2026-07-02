@@ -271,11 +271,24 @@ function buildRegionCentroids(groups) {
   return new Map([...groups.values()].map((group) => [group.id, centroidEmbedding(group.records)]));
 }
 
-export function buildRegions(records, previousManifest, projectEmbeddings, profile = fieldLayoutProfile) {
+function nearestOpenBootstrapFootprint(projectedSlot, area, occupiedSeeds, occupiedFootprints, profile) {
+  let preferred = projectedSlot;
+  for (let attempts = 0; attempts < profile.cols * profile.rows; attempts += 1) {
+    const seedSlot = nearestOpenSlot(preferred, occupiedSeeds, profile);
+    if (seedSlot === -1) break;
+    const footprint = createRectFootprintAroundSeed(seedSlot, area, profile);
+    if (!slotsInFootprint(footprint, profile).some((slot) => occupiedFootprints.has(slot))) return { seedSlot, footprint };
+    occupiedSeeds.add(seedSlot);
+    preferred = seedSlot;
+  }
+  throw new Error('unable to place bootstrap Region footprint');
+}
+
+export function buildRegions(records, previousManifest, projectEmbeddings, profile = fieldLayoutProfile, options = {}) {
   const groups = groupRecordsByRegion(records);
   const centroids = buildRegionCentroids(groups);
-  const previousRegions = (previousManifest?.archiveView?.field?.regions ?? []).map((region) => normalizeRegion(region, profile));
-  const previousRecordSlots = previousRecordSlotMaps(previousManifest, profile);
+  const previousRegions = options.regionReseed ? [] : (previousManifest?.archiveView?.field?.regions ?? []).map((region) => normalizeRegion(region, profile));
+  const previousRecordSlots = options.regionReseed ? { slotFor: () => null } : previousRecordSlotMaps(previousManifest, profile);
 
   if (previousRegions.length === 0) {
     const centroidRecords = [...groups.values()].map((group) => ({ id: group.id, embedding: centroids.get(group.id) }));
@@ -284,13 +297,19 @@ export function buildRegions(records, previousManifest, projectEmbeddings, profi
     const occupiedFootprints = new Set();
     return [...groups.values()].map((group) => {
       const projectedSlot = positionToSlot(projected.get(group.id), profile);
-      const seedSlot = nearestOpenSlot(projectedSlot, occupiedSeeds, profile);
-      occupiedSeeds.add(seedSlot);
       const requiredSlots = group.records.map((record) => previousRecordSlots.slotFor(record)).filter(Number.isInteger);
       const area = targetAreaForCount(group.records.length);
+      const placed = requiredSlots.length > 0
+        ? {
+          seedSlot: nearestOpenSlot(projectedSlot, occupiedSeeds, profile),
+          footprint: null,
+        }
+        : nearestOpenBootstrapFootprint(projectedSlot, area, occupiedSeeds, occupiedFootprints, profile);
+      const seedSlot = placed.seedSlot;
+      occupiedSeeds.add(seedSlot);
       const footprint = requiredSlots.length > 0
         ? createCellFootprint(seedSlot, area, profile, requiredSlots, occupiedFootprints)
-        : createRectFootprintAroundSeed(seedSlot, area, profile);
+        : placed.footprint;
       for (const slot of slotsInFootprint(footprint, profile)) occupiedFootprints.add(slot);
       return {
         id: group.id,
@@ -376,9 +395,9 @@ export function maintainRegionFootprint(region, records, profile = fieldLayoutPr
 }
 
 export function incrementalRegionLayout(records, previousManifest, projectEmbeddings, profile = fieldLayoutProfile, options = {}) {
-  const regions = buildRegions(records, previousManifest, projectEmbeddings, profile);
+  const regions = buildRegions(records, previousManifest, projectEmbeddings, profile, options);
   const regionById = new Map(regions.map((region) => [region.id, region]));
-  const previousRecordSlots = previousRecordSlotMaps(previousManifest, profile);
+  const previousRecordSlots = options.regionReseed ? { slotFor: () => null } : previousRecordSlotMaps(previousManifest, profile);
   const occupied = new Set();
   const placedRecords = [];
   const pendingRecords = [];
