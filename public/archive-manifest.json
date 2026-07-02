@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "generatedAt": "2026-06-29T08:30:57.268Z",
+  "schemaVersion": 7,
+  "generatedAt": "2026-07-01T10:00:51.361Z",
   "source": "src/content/records",
   "storage": {
     "provider": "supabase",
@@ -34,7 +34,9 @@
       "engagement ranking",
       "popularity"
     ],
-    "persistence": "nightly rebuilds should preserve spatial memory and allow only local drift"
+    "persistence": "nightly rebuilds should preserve spatial memory and allow only local drift",
+    "regionMode": "tag-scoped incremental layout with persisted Region seeds and footprints",
+    "rebuildMode": "general"
   },
   "analytics": {
     "provider": "supabase",
@@ -52,15 +54,128 @@
   },
   "archiveView": {
     "field": {
-      "schemaVersion": 1,
+      "schemaVersion": 2,
       "cols": 40,
       "rows": 25,
+      "regions": [
+        {
+          "id": "tag:뚝딱뚝딱",
+          "tag": "뚝딱뚝딱",
+          "seedSlot": 977,
+          "seedPosition": {
+            "x": 0.4375,
+            "y": 0.98
+          },
+          "footprint": {
+            "schemaVersion": 1,
+            "kind": "cells",
+            "cells": [
+              81,
+              236,
+              937,
+              977
+            ]
+          },
+          "stats": {
+            "occupiedSlots": 2,
+            "availableSlots": 2,
+            "density": 0.5,
+            "targetDensity": 0.72
+          },
+          "seedCol": 17,
+          "seedRow": 24
+        },
+        {
+          "id": "tag:뚜벅뚜벅",
+          "tag": "뚜벅뚜벅",
+          "seedSlot": 11,
+          "seedPosition": {
+            "x": 0.2875,
+            "y": 0.02
+          },
+          "footprint": {
+            "schemaVersion": 1,
+            "kind": "cells",
+            "cells": [
+              10,
+              11,
+              201,
+              213,
+              217,
+              422
+            ]
+          },
+          "stats": {
+            "occupiedSlots": 4,
+            "availableSlots": 2,
+            "density": 0.6667,
+            "targetDensity": 0.72
+          },
+          "seedCol": 11,
+          "seedRow": 0
+        },
+        {
+          "id": "tag:흥얼흥얼",
+          "tag": "흥얼흥얼",
+          "seedSlot": 800,
+          "seedPosition": {
+            "x": 0.0125,
+            "y": 0.82
+          },
+          "footprint": {
+            "schemaVersion": 1,
+            "kind": "cells",
+            "cells": [
+              102,
+              760,
+              800,
+              801
+            ]
+          },
+          "stats": {
+            "occupiedSlots": 1,
+            "availableSlots": 3,
+            "density": 0.25,
+            "targetDensity": 0.72
+          },
+          "seedCol": 0,
+          "seedRow": 20
+        },
+        {
+          "id": "tag:인벤토리",
+          "tag": "인벤토리",
+          "seedSlot": 639,
+          "seedPosition": {
+            "x": 0.9875,
+            "y": 0.62
+          },
+          "footprint": {
+            "schemaVersion": 1,
+            "kind": "cells",
+            "cells": [
+              216,
+              599,
+              638,
+              639
+            ]
+          },
+          "stats": {
+            "occupiedSlots": 1,
+            "availableSlots": 3,
+            "density": 0.25,
+            "targetDensity": 0.72
+          },
+          "seedCol": 39,
+          "seedRow": 15
+        }
+      ],
       "records": [
         {
           "id": "post1",
           "slot": 81,
           "col": 1,
           "row": 2,
+          "regionId": "tag:뚝딱뚝딱",
           "isLatest": false
         },
         {
@@ -68,6 +183,7 @@
           "slot": 236,
           "col": 36,
           "row": 5,
+          "regionId": "tag:뚝딱뚝딱",
           "isLatest": false
         },
         {
@@ -75,6 +191,7 @@
           "slot": 201,
           "col": 1,
           "row": 5,
+          "regionId": "tag:뚜벅뚜벅",
           "isLatest": false
         },
         {
@@ -82,6 +199,7 @@
           "slot": 102,
           "col": 22,
           "row": 2,
+          "regionId": "tag:흥얼흥얼",
           "isLatest": false
         },
         {
@@ -89,6 +207,7 @@
           "slot": 422,
           "col": 22,
           "row": 10,
+          "regionId": "tag:뚜벅뚜벅",
           "isLatest": false
         },
         {
@@ -96,6 +215,7 @@
           "slot": 217,
           "col": 17,
           "row": 5,
+          "regionId": "tag:뚜벅뚜벅",
           "isLatest": false
         },
         {
@@ -103,6 +223,7 @@
           "slot": 216,
           "col": 16,
           "row": 5,
+          "regionId": "tag:인벤토리",
           "isLatest": false
         },
         {
@@ -110,6 +231,7 @@
           "slot": 213,
           "col": 13,
           "row": 5,
+          "regionId": "tag:뚜벅뚜벅",
           "isLatest": true
         }
       ]
@@ -135,6 +257,7 @@
         "y": 0.1
       },
       "layoutSlot": 81,
+      "regionId": "tag:뚝딱뚝딱",
       "related": [
         "post3",
         "post5",
@@ -310,6 +433,7 @@
         "y": 0.22
       },
       "layoutSlot": 236,
+      "regionId": "tag:뚝딱뚝딱",
       "related": [
         "post1",
         "post7",
@@ -485,6 +609,7 @@
         "y": 0.22
       },
       "layoutSlot": 201,
+      "regionId": "tag:뚜벅뚜벅",
       "related": [
         "post7",
         "post9",
@@ -672,6 +797,7 @@
         "y": 0.1
       },
       "layoutSlot": 102,
+      "regionId": "tag:흥얼흥얼",
       "related": [
         "post1",
         "post9",
@@ -874,6 +1000,7 @@
         "y": 0.42
       },
       "layoutSlot": 422,
+      "regionId": "tag:뚜벅뚜벅",
       "related": [
         "post4",
         "post7",
@@ -1021,6 +1148,7 @@
         "y": 0.22
       },
       "layoutSlot": 217,
+      "regionId": "tag:뚜벅뚜벅",
       "related": [
         "post4",
         "post6",
@@ -1207,6 +1335,7 @@
         "y": 0.22
       },
       "layoutSlot": 216,
+      "regionId": "tag:인벤토리",
       "related": [
         "post1",
         "post3",
@@ -1375,6 +1504,7 @@
         "y": 0.22
       },
       "layoutSlot": 213,
+      "regionId": "tag:뚜벅뚜벅",
       "related": [
         "post4",
         "post6",
