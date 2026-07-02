@@ -24,7 +24,7 @@ export function nearestOpenSlot(preferred, occupied, profile = fieldLayoutProfil
   return best;
 }
 
-export function generateFieldViewModel(records, profile = fieldLayoutProfile) {
+export function generateFieldViewModel(records, profile = fieldLayoutProfile, regions = []) {
   const occupied = new Set();
   const latestRecordId = [...records]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.id;
@@ -41,14 +41,20 @@ export function generateFieldViewModel(records, profile = fieldLayoutProfile) {
       slot,
       col: slot % profile.cols,
       row: Math.floor(slot / profile.cols),
+      regionId: record.regionId,
       isLatest: record.id === latestRecordId,
     };
   });
 
   return {
-    schemaVersion: 1,
+    schemaVersion: regions.length > 0 ? 2 : 1,
     cols: profile.cols,
     rows: profile.rows,
+    regions: regions.map((region) => ({
+      ...region,
+      seedCol: region.seedSlot % profile.cols,
+      seedRow: Math.floor(region.seedSlot / profile.cols),
+    })),
     records: fieldRecords,
   };
 }
