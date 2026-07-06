@@ -56,9 +56,9 @@ test('render payload validates against the runtime schema contract', () => {
   const payload = generateTextureRenderPayload(raster, graph.canvas.width, graph.canvas.height, textureRenderProfiles.field);
 
   assert.equal(isTextureRenderPayload(payload), true);
-  assert.equal(payload.width, 8);
-  assert.equal(payload.height, 8);
-  assert.equal(decodeTextureRenderPayload(payload).length, 64);
+  assert.equal(payload.width, 16);
+  assert.equal(payload.height, 12);
+  assert.equal(decodeTextureRenderPayload(payload).length, 192);
 });
 
 test('field view model stores structural record slots only', () => {
