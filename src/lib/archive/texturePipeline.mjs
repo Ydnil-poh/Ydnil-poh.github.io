@@ -11,8 +11,8 @@ export const textureLayoutProfile = {
 export const textureRenderProfiles = {
   field: {
     role: 'field',
-    width: 8,
-    height: 8,
+    width: 16,
+    height: 12,
     minOpacity: 0.12,
     color: 'currentColor',
     className: 'archive-texture archive-texture--field',
