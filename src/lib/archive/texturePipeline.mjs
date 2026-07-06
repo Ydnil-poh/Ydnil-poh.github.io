@@ -1,11 +1,11 @@
 import { assertTextureRenderPayload, textureOpacityByValue } from './textureRenderContract.mjs';
 
 export const textureLayoutProfile = {
-  width: 64,
-  height: 48,
+  width: 32,
+  height: 24,
   margin: 4,
   paragraphGap: 1,
-  youtubeBlockHeight: 8,
+  youtubeBlockHeight: 4,
 };
 
 export const textureRenderProfiles = {
