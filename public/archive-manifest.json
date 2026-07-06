@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "generatedAt": "2026-07-02T01:25:32.444Z",
+  "generatedAt": "2026-07-06T05:28:32.928Z",
   "source": "src/content/records",
   "storage": {
     "provider": "supabase",
@@ -49,7 +49,7 @@
     "rebuildUse": "nightly attention metrics may weakly drift spatial placement but do not change semantic density directly"
   },
   "counts": {
-    "records": 8,
+    "records": 9,
     "images": 0
   },
   "archiveView": {
@@ -104,9 +104,9 @@
             }
           },
           "stats": {
-            "occupiedSlots": 4,
-            "availableSlots": 2,
-            "density": 0.6667,
+            "occupiedSlots": 3,
+            "availableSlots": 3,
+            "density": 0.5,
             "targetDensity": 0.72
           },
           "seedCol": 11,
@@ -158,13 +158,40 @@
             }
           },
           "stats": {
+            "occupiedSlots": 2,
+            "availableSlots": 2,
+            "density": 0.5,
+            "targetDensity": 0.72
+          },
+          "seedCol": 39,
+          "seedRow": 15
+        },
+        {
+          "id": "tag:데굴데굴",
+          "tag": "데굴데굴",
+          "seedSlot": 898,
+          "seedPosition": {
+            "x": 0.4625,
+            "y": 0.9
+          },
+          "footprint": {
+            "schemaVersion": 1,
+            "kind": "rect",
+            "rect": {
+              "minCol": 17,
+              "maxCol": 18,
+              "minRow": 21,
+              "maxRow": 22
+            }
+          },
+          "stats": {
             "occupiedSlots": 1,
             "availableSlots": 3,
             "density": 0.25,
             "targetDensity": 0.72
           },
-          "seedCol": 39,
-          "seedRow": 15
+          "seedCol": 18,
+          "seedRow": 22
         }
       ],
       "records": [
@@ -175,6 +202,14 @@
           "row": 24,
           "regionId": "tag:뚝딱뚝딱",
           "isLatest": false
+        },
+        {
+          "id": "post10",
+          "slot": 898,
+          "col": 18,
+          "row": 22,
+          "regionId": "tag:데굴데굴",
+          "isLatest": true
         },
         {
           "id": "post3",
@@ -202,10 +237,10 @@
         },
         {
           "id": "post6",
-          "slot": 10,
-          "col": 10,
-          "row": 0,
-          "regionId": "tag:뚜벅뚜벅",
+          "slot": 598,
+          "col": 38,
+          "row": 14,
+          "regionId": "tag:인벤토리",
           "isLatest": false
         },
         {
@@ -230,7 +265,7 @@
           "col": 11,
           "row": 1,
           "regionId": "tag:뚜벅뚜벅",
-          "isLatest": true
+          "isLatest": false
         }
       ]
     }
@@ -247,8 +282,8 @@
       "tags": [
         "뚝딱뚝딱"
       ],
-      "displayDensity": 0.4492,
-      "score": 0.4492,
+      "displayDensity": 0.4517,
+      "score": 0.4517,
       "scoreMeaning": "semantic density",
       "position": {
         "x": 0.4375,
@@ -260,6 +295,7 @@
         "post3",
         "post5",
         "post9",
+        "post10",
         "post4",
         "post8"
       ],
@@ -277,8 +313,8 @@
           "weight": 0.0409
         },
         {
-          "id": "post4",
-          "weight": 0.02
+          "id": "post10",
+          "weight": 0.0341
         }
       ],
       "attentionSnapshot": {
@@ -314,33 +350,40 @@
           "field": {
             "schemaVersion": 1,
             "role": "field",
-            "width": 8,
-            "height": 8,
+            "width": 16,
+            "height": 12,
             "minOpacity": 0.12,
             "color": "currentColor",
             "className": "archive-texture archive-texture--field",
             "encoding": "rle4",
             "rle": [
-              [0, 1],
-              [3, 6],
               [0, 2],
-              [2, 5],
+              [3, 12],
+              [0, 4],
+              [3, 11],
               [1, 1],
-              [0, 2],
-              [3, 6],
-              [0, 2],
-              [3, 6],
-              [0, 2],
-              [2, 5],
-              [1, 1],
-              [0, 2],
-              [3, 6],
-              [0, 2],
-              [2, 3],
-              [1, 3],
-              [0, 2],
-              [3, 6],
-              [0, 1]
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [1, 11],
+              [0, 5],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 7],
+              [1, 5],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 12],
+              [0, 2]
             ]
           },
           "modal": {
@@ -413,6 +456,188 @@
       "url": "/records/post1/"
     },
     {
+      "id": "post10",
+      "slug": "post10",
+      "title": "디지털 네이티브",
+      "date": "2026-07-06",
+      "location": "서울",
+      "type": "standard",
+      "excerpt": "인터넷은 더 이상 매체가 아니다. 사회가 형성되는 환경이다. 그렇다면 우리는 무엇을 보여줄 것인가보다, 어떤 사회를 설계하고 있는가를 먼저 물어야 한다.",
+      "tags": [
+        "데굴데굴"
+      ],
+      "displayDensity": 0.3086,
+      "score": 0.3086,
+      "scoreMeaning": "semantic density",
+      "position": {
+        "x": 0.4625,
+        "y": 0.9
+      },
+      "layoutSlot": 898,
+      "regionId": "tag:데굴데굴",
+      "related": [
+        "post8",
+        "post3",
+        "post1",
+        "post4",
+        "post6",
+        "post9"
+      ],
+      "relationSummary": [
+        {
+          "id": "post8",
+          "weight": 0.0566
+        },
+        {
+          "id": "post3",
+          "weight": 0.0462
+        },
+        {
+          "id": "post1",
+          "weight": 0.0341
+        },
+        {
+          "id": "post4",
+          "weight": 0.0219
+        }
+      ],
+      "attentionSnapshot": {
+        "views": 0,
+        "tileClicks": 0,
+        "opens": 0,
+        "pageViews": 0,
+        "runtimeScore": 0,
+        "humanModalOpen": 0,
+        "humanFullOpen": 0,
+        "humanScore": 0,
+        "machineAccess": 0,
+        "machineScore": 0,
+        "lastEventAt": null,
+        "semantics": "nightly snapshot only; source of truth remains Supabase archive_events/archive_records"
+      },
+      "texture": {
+        "schemaVersion": 2,
+        "density": "low",
+        "imageCount": 0,
+        "textLength": 1881,
+        "layout": {
+          "schemaVersion": 1,
+          "nodeCount": 5,
+          "canvas": {
+            "width": 32,
+            "height": 24,
+            "unit": "cell"
+          },
+          "documentType": "standard"
+        },
+        "renders": {
+          "field": {
+            "schemaVersion": 1,
+            "role": "field",
+            "width": 16,
+            "height": 12,
+            "minOpacity": 0.12,
+            "color": "currentColor",
+            "className": "archive-texture archive-texture--field",
+            "encoding": "rle4",
+            "rle": [
+              [0, 2],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 7],
+              [2, 1],
+              [1, 4],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [1, 7],
+              [0, 9],
+              [1, 9],
+              [0, 7],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 2]
+            ]
+          },
+          "modal": {
+            "schemaVersion": 1,
+            "role": "modal",
+            "width": 32,
+            "height": 24,
+            "minOpacity": 0.05,
+            "color": "currentColor",
+            "className": "archive-texture archive-texture--modal",
+            "encoding": "rle4",
+            "rle": [
+              [0, 4],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 23],
+              [0, 41],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 15],
+              [0, 49],
+              [3, 24],
+              [0, 8],
+              [3, 13],
+              [0, 51],
+              [3, 17],
+              [0, 47],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 8],
+              [3, 24],
+              [0, 4]
+            ]
+          }
+        }
+      },
+      "imageUrls": [],
+      "galleryFolder": "",
+      "galleryImageUrls": [],
+      "contentHash": "d22f661e9d62a5a0e2f201cf4f51854470fc5201afac684518e4631797712b67",
+      "embeddingRef": {
+        "provider": "supabase",
+        "table": "archive_embeddings",
+        "key": "post10"
+      },
+      "embeddingModel": "local-feature-hash-ko-en-64",
+      "url": "/records/post10/"
+    },
+    {
       "id": "post3",
       "slug": "post3",
       "title": "어떻게 만들 것인가",
@@ -423,8 +648,8 @@
       "tags": [
         "뚝딱뚝딱"
       ],
-      "displayDensity": 0.2944,
-      "score": 0.2944,
+      "displayDensity": 0.2999,
+      "score": 0.2999,
       "scoreMeaning": "semantic density",
       "position": {
         "x": 0.4375,
@@ -435,6 +660,7 @@
       "related": [
         "post1",
         "post7",
+        "post10",
         "post4",
         "post5",
         "post8"
@@ -449,12 +675,12 @@
           "weight": 0.0549
         },
         {
-          "id": "post4",
-          "weight": 0.0437
+          "id": "post10",
+          "weight": 0.0462
         },
         {
-          "id": "post5",
-          "weight": 0.0152
+          "id": "post4",
+          "weight": 0.0437
         }
       ],
       "attentionSnapshot": {
@@ -490,35 +716,43 @@
           "field": {
             "schemaVersion": 1,
             "role": "field",
-            "width": 8,
-            "height": 8,
+            "width": 16,
+            "height": 12,
             "minOpacity": 0.12,
             "color": "currentColor",
             "className": "archive-texture archive-texture--field",
             "encoding": "rle4",
             "rle": [
-              [0, 1],
-              [3, 6],
               [0, 2],
-              [2, 4],
-              [1, 2],
-              [0, 2],
-              [3, 5],
+              [3, 12],
+              [0, 4],
+              [3, 8],
               [2, 1],
-              [0, 2],
-              [2, 6],
-              [0, 2],
-              [2, 4],
-              [1, 2],
-              [0, 2],
-              [3, 6],
-              [0, 2],
-              [3, 5],
-              [2, 1],
-              [0, 2],
-              [2, 3],
               [1, 3],
-              [0, 1]
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [1, 11],
+              [0, 5],
+              [3, 12],
+              [0, 4],
+              [3, 7],
+              [2, 1],
+              [1, 4],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [1, 11],
+              [0, 5],
+              [3, 7],
+              [1, 5],
+              [0, 2]
             ]
           },
           "modal": {
@@ -599,8 +833,8 @@
       "tags": [
         "뚜벅뚜벅"
       ],
-      "displayDensity": 0.6743,
-      "score": 0.6743,
+      "displayDensity": 0.4982,
+      "score": 0.4982,
       "scoreMeaning": "semantic density",
       "position": {
         "x": 0.2875,
@@ -611,8 +845,8 @@
       "related": [
         "post7",
         "post9",
-        "post6",
         "post3",
+        "post10",
         "post1",
         "post8"
       ],
@@ -626,12 +860,12 @@
           "weight": 1.0207
         },
         {
-          "id": "post6",
-          "weight": 1
-        },
-        {
           "id": "post3",
           "weight": 0.0437
+        },
+        {
+          "id": "post10",
+          "weight": 0.0219
         }
       ],
       "attentionSnapshot": {
@@ -667,36 +901,47 @@
           "field": {
             "schemaVersion": 1,
             "role": "field",
-            "width": 8,
-            "height": 8,
+            "width": 16,
+            "height": 12,
             "minOpacity": 0.12,
             "color": "currentColor",
             "className": "archive-texture archive-texture--field",
             "encoding": "rle4",
             "rle": [
-              [0, 1],
+              [0, 2],
               [2, 1],
-              [1, 1],
-              [2, 2],
-              [1, 1],
+              [1, 4],
               [2, 1],
-              [0, 2],
-              [2, 6],
-              [0, 2],
-              [3, 6],
-              [0, 2],
-              [2, 4],
-              [1, 2],
-              [0, 2],
-              [3, 6],
-              [0, 2],
-              [3, 6],
-              [0, 2],
-              [3, 4],
+              [3, 1],
+              [1, 4],
+              [2, 1],
+              [0, 4],
+              [2, 1],
+              [1, 4],
               [2, 2],
-              [0, 2],
-              [2, 6],
-              [0, 1]
+              [1, 4],
+              [2, 1],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [1, 9],
+              [0, 7],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [1, 8],
+              [0, 8],
+              [3, 12],
+              [0, 2]
             ]
           },
           "modal": {
@@ -853,39 +1098,60 @@
           "field": {
             "schemaVersion": 1,
             "role": "field",
-            "width": 8,
-            "height": 8,
+            "width": 16,
+            "height": 12,
             "minOpacity": 0.12,
             "color": "currentColor",
             "className": "archive-texture archive-texture--field",
             "encoding": "rle4",
             "rle": [
-              [0, 1],
+              [0, 2],
               [2, 1],
-              [1, 1],
+              [1, 4],
+              [2, 1],
+              [3, 1],
+              [1, 4],
+              [2, 1],
+              [0, 4],
+              [2, 1],
+              [1, 4],
               [2, 2],
-              [1, 1],
+              [1, 4],
               [2, 1],
-              [0, 2],
-              [2, 6],
-              [0, 2],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
               [3, 6],
-              [0, 2],
-              [3, 3],
-              [2, 3],
-              [0, 2],
               [1, 6],
-              [0, 2],
-              [1, 6],
-              [0, 2],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [1, 5],
               [2, 1],
-              [1, 1],
+              [3, 1],
+              [1, 5],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [2, 1],
+              [1, 4],
+              [2, 1],
+              [3, 1],
+              [1, 4],
+              [2, 1],
+              [0, 4],
+              [2, 1],
+              [1, 4],
               [2, 2],
-              [1, 1],
+              [1, 4],
               [2, 1],
-              [0, 2],
-              [2, 6],
-              [0, 1]
+              [0, 4],
+              [1, 12],
+              [0, 2]
             ]
           },
           "modal": {
@@ -988,34 +1254,29 @@
       "type": "mediaRail",
       "excerpt": "오픈 스튜디오 다녀왔다 집어온 물건들",
       "tags": [
-        "뚜벅뚜벅"
+        "인벤토리"
       ],
-      "displayDensity": 0.8756,
-      "score": 0.8756,
+      "displayDensity": 0.5212,
+      "score": 0.5212,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.2625,
-        "y": 0.02
+        "x": 0.9625,
+        "y": 0.58
       },
-      "layoutSlot": 10,
-      "regionId": "tag:뚜벅뚜벅",
+      "layoutSlot": 598,
+      "regionId": "tag:인벤토리",
       "related": [
-        "post4",
-        "post7",
-        "post9"
+        "post8",
+        "post10"
       ],
       "relationSummary": [
         {
-          "id": "post4",
+          "id": "post8",
           "weight": 1
         },
         {
-          "id": "post7",
-          "weight": 1
-        },
-        {
-          "id": "post9",
-          "weight": 1
+          "id": "post10",
+          "weight": 0.0157
         }
       ],
       "attentionSnapshot": {
@@ -1034,7 +1295,7 @@
       },
       "texture": {
         "schemaVersion": 2,
-        "density": "high",
+        "density": "medium",
         "imageCount": 0,
         "textLength": 206,
         "layout": {
@@ -1051,27 +1312,31 @@
           "field": {
             "schemaVersion": 1,
             "role": "field",
-            "width": 8,
-            "height": 8,
+            "width": 16,
+            "height": 12,
             "minOpacity": 0.12,
             "color": "currentColor",
             "className": "archive-texture archive-texture--field",
             "encoding": "rle4",
             "rle": [
-              [0, 1],
-              [3, 6],
               [0, 2],
-              [2, 1],
-              [1, 5],
-              [0, 2],
-              [3, 6],
-              [0, 2],
-              [2, 2],
-              [1, 4],
-              [0, 2],
-              [3, 3],
-              [2, 3],
-              [0, 25]
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [1, 2],
+              [0, 14],
+              [3, 12],
+              [0, 4],
+              [3, 5],
+              [1, 7],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [1, 6],
+              [0, 72]
             ]
           },
           "modal": {
@@ -1118,7 +1383,7 @@
       "imageUrls": [],
       "galleryFolder": "glass",
       "galleryImageUrls": [],
-      "contentHash": "b74d072f50d62eda4e9692f47278a0a04cb16ac2c2736cd0c623d21cd9d738bc",
+      "contentHash": "ccf21ac9e297f67ba29b9eeec21757f8003e129603b2479cfe4a8544da2a9eeb",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -1138,8 +1403,8 @@
       "tags": [
         "뚜벅뚜벅"
       ],
-      "displayDensity": 0.7892,
-      "score": 0.7892,
+      "displayDensity": 0.6114,
+      "score": 0.6114,
       "scoreMeaning": "semantic density",
       "position": {
         "x": 0.3125,
@@ -1149,7 +1414,6 @@
       "regionId": "tag:뚜벅뚜벅",
       "related": [
         "post4",
-        "post6",
         "post9",
         "post3",
         "post5"
@@ -1160,16 +1424,16 @@
           "weight": 1.0766
         },
         {
-          "id": "post6",
-          "weight": 1
-        },
-        {
           "id": "post9",
           "weight": 1
         },
         {
           "id": "post3",
           "weight": 0.0549
+        },
+        {
+          "id": "post5",
+          "weight": 0.0122
         }
       ],
       "attentionSnapshot": {
@@ -1188,7 +1452,7 @@
       },
       "texture": {
         "schemaVersion": 2,
-        "density": "high",
+        "density": "medium",
         "imageCount": 0,
         "textLength": 456,
         "layout": {
@@ -1205,36 +1469,49 @@
           "field": {
             "schemaVersion": 1,
             "role": "field",
-            "width": 8,
-            "height": 8,
+            "width": 16,
+            "height": 12,
             "minOpacity": 0.12,
             "color": "currentColor",
             "className": "archive-texture archive-texture--field",
             "encoding": "rle4",
             "rle": [
-              [0, 1],
+              [0, 2],
               [2, 1],
-              [1, 1],
-              [2, 2],
-              [1, 1],
+              [1, 4],
               [2, 1],
-              [0, 2],
-              [2, 6],
-              [0, 2],
-              [3, 6],
-              [0, 2],
               [3, 1],
-              [2, 5],
-              [0, 2],
-              [2, 6],
-              [0, 2],
-              [3, 6],
-              [0, 2],
+              [1, 4],
               [2, 1],
-              [1, 5],
-              [0, 2],
-              [3, 6],
-              [0, 1]
+              [0, 4],
+              [2, 1],
+              [1, 4],
+              [2, 2],
+              [1, 4],
+              [2, 1],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 3],
+              [1, 9],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 2],
+              [1, 10],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 12],
+              [0, 2]
             ]
           },
           "modal": {
@@ -1325,8 +1602,8 @@
       "tags": [
         "인벤토리"
       ],
-      "displayDensity": 0.2888,
-      "score": 0.2888,
+      "displayDensity": 0.476,
+      "score": 0.476,
       "scoreMeaning": "semantic density",
       "position": {
         "x": 0.9875,
@@ -1335,11 +1612,21 @@
       "layoutSlot": 639,
       "regionId": "tag:인벤토리",
       "related": [
+        "post6",
+        "post10",
         "post1",
         "post3",
         "post4"
       ],
       "relationSummary": [
+        {
+          "id": "post6",
+          "weight": 1
+        },
+        {
+          "id": "post10",
+          "weight": 0.0566
+        },
         {
           "id": "post1",
           "weight": 0.0185
@@ -1347,10 +1634,6 @@
         {
           "id": "post3",
           "weight": 0.0138
-        },
-        {
-          "id": "post4",
-          "weight": 0.0044
         }
       ],
       "attentionSnapshot": {
@@ -1369,7 +1652,7 @@
       },
       "texture": {
         "schemaVersion": 2,
-        "density": "low",
+        "density": "medium",
         "imageCount": 0,
         "textLength": 477,
         "layout": {
@@ -1386,32 +1669,41 @@
           "field": {
             "schemaVersion": 1,
             "role": "field",
-            "width": 8,
-            "height": 8,
+            "width": 16,
+            "height": 12,
             "minOpacity": 0.12,
             "color": "currentColor",
             "className": "archive-texture archive-texture--field",
             "encoding": "rle4",
             "rle": [
-              [0, 1],
-              [3, 6],
               [0, 2],
-              [3, 6],
-              [0, 2],
-              [2, 6],
-              [0, 2],
-              [3, 6],
-              [0, 2],
-              [3, 4],
-              [2, 2],
-              [0, 2],
-              [2, 6],
-              [0, 2],
-              [2, 5],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 11],
+              [2, 1],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [1, 9],
+              [0, 7],
+              [3, 12],
+              [0, 4],
+              [3, 10],
+              [2, 1],
               [1, 1],
-              [0, 2],
-              [3, 6],
-              [0, 1]
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 12],
+              [0, 2]
             ]
           },
           "modal": {
@@ -1494,8 +1786,8 @@
       "tags": [
         "뚜벅뚜벅"
       ],
-      "displayDensity": 0.8311,
-      "score": 0.8311,
+      "displayDensity": 0.6565,
+      "score": 0.6565,
       "scoreMeaning": "semantic density",
       "position": {
         "x": 0.2875,
@@ -1505,19 +1797,15 @@
       "regionId": "tag:뚜벅뚜벅",
       "related": [
         "post4",
-        "post6",
         "post7",
         "post1",
-        "post5"
+        "post5",
+        "post10"
       ],
       "relationSummary": [
         {
           "id": "post4",
           "weight": 1.0207
-        },
-        {
-          "id": "post6",
-          "weight": 1
         },
         {
           "id": "post7",
@@ -1526,6 +1814,10 @@
         {
           "id": "post1",
           "weight": 0.0409
+        },
+        {
+          "id": "post5",
+          "weight": 0.03
         }
       ],
       "attentionSnapshot": {
@@ -1544,7 +1836,7 @@
       },
       "texture": {
         "schemaVersion": 2,
-        "density": "high",
+        "density": "medium",
         "imageCount": 0,
         "textLength": 379,
         "layout": {
@@ -1561,37 +1853,51 @@
           "field": {
             "schemaVersion": 1,
             "role": "field",
-            "width": 8,
-            "height": 8,
+            "width": 16,
+            "height": 12,
             "minOpacity": 0.12,
             "color": "currentColor",
             "className": "archive-texture archive-texture--field",
             "encoding": "rle4",
             "rle": [
-              [0, 1],
-              [2, 1],
-              [1, 1],
-              [2, 2],
-              [1, 1],
-              [2, 1],
               [0, 2],
-              [2, 6],
-              [0, 2],
+              [2, 1],
+              [1, 4],
+              [2, 1],
+              [3, 1],
+              [1, 4],
+              [2, 1],
+              [0, 4],
+              [2, 1],
+              [1, 4],
               [2, 2],
               [1, 4],
-              [0, 2],
-              [3, 5],
               [2, 1],
-              [0, 2],
-              [2, 6],
-              [0, 2],
-              [3, 6],
-              [0, 2],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 4],
+              [1, 8],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 10],
+              [1, 2],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 12],
+              [0, 4],
+              [3, 2],
               [2, 1],
-              [1, 5],
-              [0, 2],
-              [3, 6],
-              [0, 1]
+              [1, 9],
+              [0, 4],
+              [1, 12],
+              [0, 4],
+              [3, 12],
+              [0, 2]
             ]
           },
           "modal": {
