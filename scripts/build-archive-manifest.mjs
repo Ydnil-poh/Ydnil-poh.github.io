@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,7 +17,9 @@ const supabaseStorageBucket = process.env.SUPABASE_STORAGE_BUCKET ?? 'img';
 const embeddingDimensions = 64;
 const isSleepRebuild = process.argv.includes('--sleep-rebuild') || process.env.ARCHIVE_REBUILD_MODE === 'sleep';
 const isRegionReseed = process.argv.includes('--region-reseed') || process.env.ARCHIVE_REGION_RESEED === '1';
+const rebuildMode = isRegionReseed ? 'region-reseed' : (isSleepRebuild ? 'sleep' : 'general');
 const markdownExtensions = new Set(['.md', '.markdown', '.mdx']);
+const manifestSchemaVersion = 7;
 
 async function listMarkdownFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
@@ -525,7 +527,57 @@ async function fetchAttentionSnapshots(ids) {
   }]));
 }
 
-async function syncSupabase(records) {
+function recordSnapshotRows(records, rebuildId) {
+  return records.map((record) => {
+    const relationWeights = record.relations.map((relation) => Number(relation.relationWeight ?? 0));
+    const relationWeightSum = relationWeights.reduce((sum, value) => sum + value, 0);
+    const attention = record.attentionSnapshot ?? emptyAttentionSnapshot();
+
+    return {
+      rebuild_id: rebuildId,
+      record_slug: record.id,
+      region_id: record.regionId,
+      layout_slot: record.layoutSlot,
+      position: record.position,
+      score: record.score,
+      content_hash: record.contentHash,
+      relation_count: record.relations.length,
+      relation_weight_sum: Number(relationWeightSum.toFixed(4)),
+      runtime_score: Number(attention.runtimeScore ?? 0),
+      human_score: Number(attention.humanScore ?? 0),
+      machine_score: Number(attention.machineScore ?? 0),
+      metadata: {
+        relationIds: record.relations.map((relation) => relation.id),
+        topRelationWeights: record.relations.slice(0, 4).map((relation) => relation.relationWeight),
+        footprintRegionId: record.regionId,
+      },
+    };
+  });
+}
+
+function changedRecordCount(records, previousManifest) {
+  const previousHashes = new Map((previousManifest?.records ?? [])
+    .filter((record) => record?.id)
+    .map((record) => [record.id, record.contentHash ?? null]));
+  return records.filter((record) => previousHashes.get(record.id) !== record.contentHash).length;
+}
+
+function layoutEventRows(layoutEvents, rebuildId) {
+  return layoutEvents.map((event, index) => ({
+    rebuild_id: rebuildId,
+    event_index: index,
+    event_type: event.eventType,
+    record_slug: event.recordId,
+    region_id: event.regionId,
+    from_slot: event.fromSlot,
+    to_slot: event.toSlot,
+    anchor_slug: event.anchorId,
+    anchor_kind: event.anchorKind,
+    metadata: event.metadata ?? {},
+  }));
+}
+
+async function syncSupabase(records, history = {}) {
   if (!supabaseUrl || !supabaseServiceKey) {
     console.log('supabase sync skipped: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set');
     return;
@@ -567,10 +619,26 @@ async function syncSupabase(records) {
   await supabaseUpsert('archive_records', recordRows, 'slug');
   await supabaseUpsert('archive_embeddings', embeddingRows, 'record_slug');
   await supabaseUpsert('archive_relations', relationRowsForSync, 'source_slug,target_slug');
+
+  if (history.rebuildId && history.generatedAt) {
+    await supabaseUpsert('archive_rebuilds', [{
+      id: history.rebuildId,
+      generated_at: history.generatedAt,
+      rebuild_mode: history.rebuildMode,
+      manifest_schema_version: manifestSchemaVersion,
+      record_count: records.length,
+      changed_record_count: history.changedRecordCount ?? records.length,
+    }], 'id');
+    await supabaseUpsert('archive_record_snapshots', recordSnapshotRows(records, history.rebuildId), 'rebuild_id,record_slug');
+    await supabaseUpsert('archive_layout_events', layoutEventRows(history.layoutEvents ?? [], history.rebuildId), 'rebuild_id,event_index');
+  }
+
   console.log(`supabase sync complete: ${recordRows.length} records, ${embeddingRows.length} embeddings, ${relationRowsForSync.length} relations`);
 }
 
 const files = await listMarkdownFiles(recordsDir);
+const rebuildId = randomUUID();
+const generatedAt = new Date().toISOString();
 const initial = await Promise.all(files.map(async (file) => {
   const raw = await readFile(file, 'utf8');
   const { data, body } = parseFrontmatter(raw);
@@ -623,12 +691,14 @@ const scored = recordsWithRelations.map((record, index) => ({
 }));
 
 const previousManifest = await readPreviousManifest();
+const changedRecords = changedRecordCount(scored, previousManifest);
 const regionLayout = incrementalRegionLayout(scored, previousManifest, projectEmbeddings, undefined, {
   sleepRebuild: isSleepRebuild,
   regionReseed: isRegionReseed,
 });
 const laidOutRecords = regionLayout.records;
 const regions = regionLayout.regions;
+const layoutEvents = regionLayout.layoutEvents ?? [];
 
 const semanticRecords = laidOutRecords.map((record) => ({
   ...record,
@@ -693,8 +763,13 @@ const archiveView = {
 };
 
 const manifest = {
-  schemaVersion: 7,
-  generatedAt: new Date().toISOString(),
+  schemaVersion: manifestSchemaVersion,
+  generatedAt,
+  rebuild: {
+    id: rebuildId,
+    mode: rebuildMode,
+    changedRecordCount: changedRecords,
+  },
   source: 'src/content/records',
   storage: { provider: 'supabase', bucket: supabaseStorageBucket },
   semanticLayer: {
@@ -711,7 +786,7 @@ const manifest = {
     excludes: ['raw embeddings', 'live views', 'engagement ranking', 'popularity'],
     persistence: 'nightly rebuilds should preserve spatial memory and allow only local drift',
     regionMode: 'tag-scoped incremental layout with persisted Region seeds and footprints',
-    rebuildMode: isRegionReseed ? 'region-reseed' : (isSleepRebuild ? 'sleep' : 'general'),
+    rebuildMode,
   },
   analytics: {
     provider: 'supabase',
@@ -722,6 +797,14 @@ const manifest = {
     frontmatterPolicy: 'ignored',
     snapshotSemantics: 'attention metrics in this manifest are frozen at rebuild time; live source of truth remains Supabase',
     rebuildUse: 'nightly attention metrics may weakly drift spatial placement but do not change semantic density directly',
+    historyPolicy: 'store observations, not interpretations; rebuild snapshots and layout events are append-only audit facts',
+  },
+  historyLayer: {
+    principle: 'Store observations, not interpretations.',
+    rebuildTable: 'archive_rebuilds',
+    recordSnapshotTable: 'archive_record_snapshots',
+    layoutEventTable: 'archive_layout_events',
+    excludedInterpretations: ['growth_role', 'growth_color', 'bridge', 'centrality_algorithm'],
   },
   counts: {
     records: records.length,
@@ -743,6 +826,7 @@ await writeFile(debugLayoutPath, formatManifestJson({
   schemaVersion: 1,
   generatedAt: manifest.generatedAt,
   source: 'src/content/records',
+  layoutEvents,
   records: textureDebugRecords,
 }));
 
@@ -762,6 +846,12 @@ const textureReduction = legacyTextureBytes > 0
   : '0.0';
 
 console.log(`archive manifest written: ${path.relative(root, outputPath)} (${records.length} records, ${Buffer.byteLength(manifestJson)} bytes)`);
-console.log(`archive layout debug written: ${path.relative(root, debugLayoutPath)} (${textureDebugRecords.length} records)`);
+console.log(`archive layout debug written: ${path.relative(root, debugLayoutPath)} (${textureDebugRecords.length} records, ${layoutEvents.length} layout events)`);
 console.log(`texture encoding rle4: ${legacyTextureBytes} bytes legacy cells -> ${rleTextureBytes} bytes rle4 (${textureReduction}% smaller)`);
-await syncSupabase(semanticRecords);
+await syncSupabase(semanticRecords, {
+  rebuildId,
+  generatedAt,
+  rebuildMode,
+  changedRecordCount: changedRecords,
+  layoutEvents,
+});

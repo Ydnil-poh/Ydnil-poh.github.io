@@ -45,6 +45,57 @@ create table if not exists public.archive_events (
   created_at timestamptz not null default now()
 );
 
+-- History layer principle:
+-- Store observations, not interpretations.
+-- These append-only rebuild/layout tables preserve what happened during archive
+-- generation. Do not store growth roles, colors, bridge labels, or centrality
+-- interpretations here; derive those later from accumulated observations.
+-- Child observations inherit time from archive_rebuilds.generated_at rather than
+-- storing duplicate created_at timestamps.
+create table if not exists public.archive_rebuilds (
+  id uuid primary key,
+  generated_at timestamptz not null,
+  rebuild_mode text not null,
+  manifest_schema_version integer not null,
+  record_count integer not null default 0,
+  changed_record_count integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.archive_record_snapshots (
+  rebuild_id uuid references public.archive_rebuilds(id) on delete cascade,
+  record_slug text references public.archive_records(slug) on delete cascade,
+  region_id text,
+  layout_slot integer,
+  position jsonb not null default '{"x":0.5,"y":0.5}'::jsonb,
+  score double precision not null default 0,
+  content_hash text,
+  relation_count integer not null default 0,
+  relation_weight_sum double precision not null default 0,
+  runtime_score double precision not null default 0,
+  human_score double precision not null default 0,
+  machine_score double precision not null default 0,
+  metadata jsonb not null default '{}'::jsonb,
+  primary key (rebuild_id, record_slug)
+);
+
+create table if not exists public.archive_layout_events (
+  rebuild_id uuid references public.archive_rebuilds(id) on delete cascade,
+  event_index integer not null,
+  -- Event types are application-managed namespaces such as layout.slot_preserved
+  -- or record.first_seen. Avoid enum/check constraints so new observations do
+  -- not require schema migrations.
+  event_type text not null,
+  record_slug text references public.archive_records(slug) on delete set null,
+  region_id text,
+  from_slot integer,
+  to_slot integer,
+  anchor_slug text references public.archive_records(slug) on delete set null,
+  anchor_kind text,
+  metadata jsonb not null default '{}'::jsonb,
+  primary key (rebuild_id, event_index)
+);
+
 create table if not exists public.archive_embeddings (
   record_slug text primary key references public.archive_records(slug) on delete cascade,
   embedding vector(64),
@@ -70,10 +121,22 @@ on public.archive_embeddings
 using ivfflat (embedding vector_cosine_ops)
 with (lists = 100);
 
+create index if not exists archive_record_snapshots_record_idx
+on public.archive_record_snapshots (record_slug, rebuild_id);
+
+create index if not exists archive_layout_events_record_idx
+on public.archive_layout_events (record_slug, event_type, rebuild_id, event_index);
+
+create index if not exists archive_layout_events_anchor_idx
+on public.archive_layout_events (anchor_slug, event_type, rebuild_id, event_index);
+
 alter table public.archive_records enable row level security;
 alter table public.archive_embeddings enable row level security;
 alter table public.archive_relations enable row level security;
 alter table public.archive_events enable row level security;
+alter table public.archive_rebuilds enable row level security;
+alter table public.archive_record_snapshots enable row level security;
+alter table public.archive_layout_events enable row level security;
 
 drop policy if exists "public read archive records" on public.archive_records;
 drop policy if exists "public read archive relations" on public.archive_relations;

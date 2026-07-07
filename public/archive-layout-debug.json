@@ -1,7 +1,126 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-06T05:28:32.928Z",
+  "generatedAt": "2026-07-07T07:45:58.278Z",
   "source": "src/content/records",
+  "layoutEvents": [
+    {
+      "eventType": "layout.slot_preserved",
+      "recordId": "post1",
+      "regionId": "tag:뚝딱뚝딱",
+      "fromSlot": 977,
+      "toSlot": 977,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "previousSlot": 977,
+        "footprintKind": "rect"
+      }
+    },
+    {
+      "eventType": "layout.slot_preserved",
+      "recordId": "post10",
+      "regionId": "tag:데굴데굴",
+      "fromSlot": 898,
+      "toSlot": 898,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "previousSlot": 898,
+        "footprintKind": "rect"
+      }
+    },
+    {
+      "eventType": "layout.slot_preserved",
+      "recordId": "post3",
+      "regionId": "tag:뚝딱뚝딱",
+      "fromSlot": 937,
+      "toSlot": 937,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "previousSlot": 937,
+        "footprintKind": "rect"
+      }
+    },
+    {
+      "eventType": "layout.slot_preserved",
+      "recordId": "post4",
+      "regionId": "tag:뚜벅뚜벅",
+      "fromSlot": 11,
+      "toSlot": 11,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "previousSlot": 11,
+        "footprintKind": "rect"
+      }
+    },
+    {
+      "eventType": "layout.slot_preserved",
+      "recordId": "post5",
+      "regionId": "tag:흥얼흥얼",
+      "fromSlot": 800,
+      "toSlot": 800,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "previousSlot": 800,
+        "footprintKind": "rect"
+      }
+    },
+    {
+      "eventType": "layout.slot_preserved",
+      "recordId": "post6",
+      "regionId": "tag:인벤토리",
+      "fromSlot": 598,
+      "toSlot": 598,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "previousSlot": 598,
+        "footprintKind": "rect"
+      }
+    },
+    {
+      "eventType": "layout.slot_preserved",
+      "recordId": "post7",
+      "regionId": "tag:뚜벅뚜벅",
+      "fromSlot": 12,
+      "toSlot": 12,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "previousSlot": 12,
+        "footprintKind": "rect"
+      }
+    },
+    {
+      "eventType": "layout.slot_preserved",
+      "recordId": "post8",
+      "regionId": "tag:인벤토리",
+      "fromSlot": 639,
+      "toSlot": 639,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "previousSlot": 639,
+        "footprintKind": "rect"
+      }
+    },
+    {
+      "eventType": "layout.slot_preserved",
+      "recordId": "post9",
+      "regionId": "tag:뚜벅뚜벅",
+      "fromSlot": 51,
+      "toSlot": 51,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "previousSlot": 51,
+        "footprintKind": "rect"
+      }
+    }
+  ],
   "records": [
     {
       "id": "post1",
