@@ -175,6 +175,17 @@ test('Region incremental layout persists seeds and places new records inside the
   assert.equal(oldA.layoutSlot, 7);
   assert.equal(newA.regionId, regionIdForTag('walk'));
   assert.equal(isSlotInFootprint(newA.layoutSlot, walkRegion.footprint, profile), true);
+  assert.ok(layout.layoutEvents.some((event) =>
+    event.eventType === 'layout.slot_preserved' &&
+    event.recordId === 'old-a' &&
+    event.fromSlot === 7 &&
+    event.toSlot === 7
+  ));
+  assert.ok(layout.layoutEvents.some((event) =>
+    event.eventType === 'layout.anchor_record' &&
+    event.recordId === 'new-a' &&
+    event.anchorId === 'old-a'
+  ));
 });
 
 
@@ -281,3 +292,20 @@ test('archive manifest persists Region footprints and record region ids', () => 
   }
 }
 );
+
+test('history layer schema stores observations rather than growth interpretations', () => {
+  const schema = readFileSync(new URL('../supabase/archive-schema.sql', import.meta.url), 'utf8');
+
+  assert.match(schema, /Store observations, not interpretations/);
+  assert.match(schema, /create table if not exists public\.archive_rebuilds/);
+  assert.match(schema, /create table if not exists public\.archive_record_snapshots/);
+  assert.match(schema, /create table if not exists public\.archive_layout_events/);
+  assert.match(schema, /changed_record_count integer not null default 0/);
+  assert.match(schema, /content_hash text/);
+  assert.doesNotMatch(schema, /archive_layout_events \([\s\S]*event_type text not null check/);
+  assert.doesNotMatch(schema, /archive_record_snapshots \([\s\S]*created_at timestamptz/);
+  assert.doesNotMatch(schema, /archive_layout_events \([\s\S]*created_at timestamptz/);
+  assert.doesNotMatch(schema, /growth_role\s/);
+  assert.doesNotMatch(schema, /growth_color\s/);
+  assert.doesNotMatch(schema, /centrality_algorithm\s/);
+});

@@ -214,6 +214,13 @@ function slotToPosition(slot, profile = fieldLayoutProfile) {
   };
 }
 
+function slotDistance(a, b, profile = fieldLayoutProfile) {
+  if (!Number.isInteger(a) || !Number.isInteger(b)) return null;
+  const aCell = slotToCell(a, profile);
+  const bCell = slotToCell(b, profile);
+  return Math.abs(aCell.col - bCell.col) + Math.abs(aCell.row - bCell.row);
+}
+
 function cosineSimilarity(a, b) {
   return a.reduce((sum, value, index) => sum + value * b[index], 0);
 }
@@ -232,6 +239,12 @@ function previousRecordSlotMaps(previousManifest, profile = fieldLayoutProfile) 
     const previousPosition = previousPositions.get(record.id);
     return previousPosition ? positionToSlot(previousPosition, profile) : null;
   } };
+}
+
+function previousRecordIds(previousManifest) {
+  return new Set((previousManifest?.records ?? [])
+    .map((record) => record?.id)
+    .filter(Boolean));
 }
 
 function occupiedRegionFootprintSlots(regions, profile) {
@@ -398,9 +411,11 @@ export function incrementalRegionLayout(records, previousManifest, projectEmbedd
   const regions = buildRegions(records, previousManifest, projectEmbeddings, profile, options);
   const regionById = new Map(regions.map((region) => [region.id, region]));
   const previousRecordSlots = options.regionReseed ? { slotFor: () => null } : previousRecordSlotMaps(previousManifest, profile);
+  const knownRecordIds = options.regionReseed ? new Set() : previousRecordIds(previousManifest);
   const occupied = new Set();
   const placedRecords = [];
   const pendingRecords = [];
+  const layoutEvents = [];
 
   for (const record of records) {
     const tag = primaryTagFor(record);
@@ -416,6 +431,19 @@ export function incrementalRegionLayout(records, previousManifest, projectEmbedd
       if (occupied.has(slot)) throw new Error(`layoutSlot collision at ${slot} for record ${record.id}`);
       occupied.add(slot);
       placedRecords.push({ ...record, regionId, position: slotToPosition(slot, profile), layoutSlot: slot });
+      layoutEvents.push({
+        eventType: slot === previousSlot ? 'layout.slot_preserved' : 'layout.moved_within_region',
+        recordId: record.id,
+        regionId,
+        fromSlot: previousSlot,
+        toSlot: slot,
+        anchorId: null,
+        anchorKind: null,
+        metadata: {
+          previousSlot,
+          footprintKind: region.footprint?.kind ?? null,
+        },
+      });
     } else {
       pendingRecords.push({ ...record, regionId });
     }
@@ -424,11 +452,55 @@ export function incrementalRegionLayout(records, previousManifest, projectEmbedd
   for (const record of pendingRecords) {
     const region = regionById.get(record.regionId);
     const anchors = nearestEmbeddingAnchors(record, placedRecords.filter((candidate) => candidate.regionId === record.regionId));
-    const preferredSlot = anchors[0]?.candidate?.layoutSlot ?? region.seedSlot;
+    const anchor = anchors[0] ?? null;
+    const preferredSlot = anchor?.candidate?.layoutSlot ?? region.seedSlot;
     const slot = nearestOpenSlotInFootprint(preferredSlot, occupied, region.footprint, profile);
     if (slot === -1) throw new Error(`Region ${region.id} has no open slot for new record ${record.id}`);
     occupied.add(slot);
     placedRecords.push({ ...record, position: slotToPosition(slot, profile), layoutSlot: slot });
+    if (!knownRecordIds.has(record.id)) {
+      layoutEvents.push({
+        eventType: 'record.first_seen',
+        recordId: record.id,
+        regionId: record.regionId,
+        fromSlot: null,
+        toSlot: null,
+        anchorId: null,
+        anchorKind: null,
+        metadata: {},
+      });
+    }
+    layoutEvents.push({
+      eventType: 'layout.placed',
+      recordId: record.id,
+      regionId: record.regionId,
+      fromSlot: null,
+      toSlot: slot,
+      anchorId: null,
+      anchorKind: null,
+      metadata: {
+        preferredSlot,
+        seedSlot: region.seedSlot,
+        seedDistance: slotDistance(slot, region.seedSlot, profile),
+        footprintKind: region.footprint?.kind ?? null,
+      },
+    });
+    layoutEvents.push({
+      eventType: anchor ? 'layout.anchor_record' : 'layout.anchor_region',
+      recordId: record.id,
+      regionId: record.regionId,
+      fromSlot: null,
+      toSlot: slot,
+      anchorId: anchor?.candidate?.id ?? null,
+      anchorKind: anchor ? 'record' : 'region_seed',
+      metadata: {
+        preferredSlot,
+        anchorSlot: anchor?.candidate?.layoutSlot ?? region.seedSlot,
+        anchorDistance: slotDistance(slot, anchor?.candidate?.layoutSlot ?? region.seedSlot, profile),
+        anchorWeight: anchor ? Number(anchor.similarity.toFixed(6)) : null,
+        similarity: anchor ? Number(anchor.similarity.toFixed(6)) : null,
+      },
+    });
   }
 
   const byId = new Map(placedRecords.map((record) => [record.id, record]));
@@ -445,5 +517,5 @@ export function incrementalRegionLayout(records, previousManifest, projectEmbedd
     stats: calculateRegionStats(region, laidOutRecords, profile),
   }));
 
-  return { records: laidOutRecords, regions: regionsWithStats };
+  return { records: laidOutRecords, regions: regionsWithStats, layoutEvents };
 }

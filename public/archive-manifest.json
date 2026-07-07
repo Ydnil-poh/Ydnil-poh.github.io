@@ -1,6 +1,11 @@
 {
   "schemaVersion": 7,
-  "generatedAt": "2026-07-06T05:28:32.928Z",
+  "generatedAt": "2026-07-07T07:45:58.278Z",
+  "rebuild": {
+    "id": "a8c894ee-9083-4c2c-ab15-f025ecfbfa7f",
+    "mode": "general",
+    "changedRecordCount": 0
+  },
   "source": "src/content/records",
   "storage": {
     "provider": "supabase",
@@ -46,7 +51,20 @@
     "sourceOfTruth": "backend",
     "frontmatterPolicy": "ignored",
     "snapshotSemantics": "attention metrics in this manifest are frozen at rebuild time; live source of truth remains Supabase",
-    "rebuildUse": "nightly attention metrics may weakly drift spatial placement but do not change semantic density directly"
+    "rebuildUse": "nightly attention metrics may weakly drift spatial placement but do not change semantic density directly",
+    "historyPolicy": "store observations, not interpretations; rebuild snapshots and layout events are append-only audit facts"
+  },
+  "historyLayer": {
+    "principle": "Store observations, not interpretations.",
+    "rebuildTable": "archive_rebuilds",
+    "recordSnapshotTable": "archive_record_snapshots",
+    "layoutEventTable": "archive_layout_events",
+    "excludedInterpretations": [
+      "growth_role",
+      "growth_color",
+      "bridge",
+      "centrality_algorithm"
+    ]
   },
   "counts": {
     "records": 9,
