@@ -123,8 +123,15 @@ export function generateTextureLayoutGraph(blocks, options = {}) {
   for (const block of blocks) {
     if (cursorY >= profile.height) break;
 
-    if (block.kind === 'youtube') {
-      const height = Math.min(profile.youtubeBlockHeight, profile.height - cursorY);
+    const youtubeHeight = Math.max(
+      10,
+      Math.round(textWidth * 0.35)
+    );
+
+    const height = Math.min(
+      youtubeHeight,
+      profile.height - cursorY
+    );
       nodes.push({
         id: `node-${nodes.length}`,
         kind: 'mediaBlock',
