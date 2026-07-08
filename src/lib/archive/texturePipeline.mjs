@@ -1,26 +1,26 @@
 import { assertTextureRenderPayload, textureOpacityByValue } from './textureRenderContract.mjs';
 
 export const textureLayoutProfile = {
-  width: 32,
-  height: 24,
+  width: 64,
+  height: 48,
   margin: 4,
   paragraphGap: 1,
-  youtubeBlockHeight: 4,
+  youtubeBlockHeight: 8,
 };
 
 export const textureRenderProfiles = {
   field: {
     role: 'field',
-    width: 16,
-    height: 12,
+    width: 24,
+    height: 18,
     minOpacity: 0.12,
     color: 'currentColor',
     className: 'archive-texture archive-texture--field',
   },
   modal: {
     role: 'modal',
-    width: 32,
-    height: 24,
+    width: 64,
+    height: 48,
     minOpacity: 0.05,
     color: 'currentColor',
     className: 'archive-texture archive-texture--modal',
