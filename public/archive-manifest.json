@@ -358,8 +358,8 @@
           "schemaVersion": 1,
           "nodeCount": 4,
           "canvas": {
-            "width": 32,
-            "height": 24,
+            "width": 64,
+            "height": 48,
             "unit": "cell"
           },
           "documentType": "standard"
