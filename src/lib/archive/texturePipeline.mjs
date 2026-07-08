@@ -11,6 +11,7 @@ export const textureLayoutProfile = {
 export const textureRenderProfiles = {
   field: {
     role: 'field',
+    lod: 0,
     width: 24,
     height: 18,
     minOpacity: 0.12,
@@ -19,6 +20,7 @@ export const textureRenderProfiles = {
   },
   modal: {
     role: 'modal',
+    lod: 1,
     width: 64,
     height: 48,
     minOpacity: 0.05,
@@ -326,13 +328,14 @@ export function downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeig
 }
 
 export function generateTextureRenderPayload(sourceValues, sourceWidth, sourceHeight, profile) {
-  const values = sourceWidth === profile.width && sourceHeight === profile.height
+  const values = profile.lod === 1
     ? sourceValues
     : downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeight, profile.width, profile.height);
 
   return assertTextureRenderPayload({
     schemaVersion: 1,
     role: profile.role,
+    lod: profile.lod,
     width: profile.width,
     height: profile.height,
     minOpacity: profile.minOpacity,
