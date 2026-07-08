@@ -212,15 +212,52 @@ function rasterizeMediaBlock(canvas, graph, node) {
 
     for (let x = node.x; x < node.x + node.width; x += 1) {
       const isVerticalEdge = x === node.x || x === node.x + node.width - 1;
-      const isPlayMarker = node.playMarker && !isHorizontalEdge && x >= node.x + 11 && x <= node.x + 13;
+      const centerX = Math.floor(node.x + node.width / 2);  
+      const centerY = Math.floor(node.y + node.height / 2);
+      
+      const playMarker =
+        (x === centerX - 1 && y === centerY - 1) ||
+        (x === centerX - 1 && y === centerY) ||
+        (x === centerX - 1 && y === centerY + 1) ||
+        (x === centerX && y === centerY) ||
+        (x === centerX + 1 && y === centerY);
 
       if (isHorizontalEdge || isVerticalEdge) {
-        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 0.72);
-      } else if (isPlayMarker) {
-        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 0.85);
-      } else {
-        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 0.24);
-      }
+
+        paintTextureCell(
+          canvas,
+          graph.canvas.width,
+          graph.canvas.height,
+          x,
+          y,
+          0.72
+        );
+
+      } else if (playMarker) {
+
+        paintTextureCell(
+          canvas,
+          graph.canvas.width,
+          graph.canvas.height,
+          x,
+          y,
+          0.95
+        );
+
+} else {
+
+  const shade = (x + y) % 2 === 0 ? 0.22 : 0.30;
+
+  paintTextureCell(
+    canvas,
+    graph.canvas.width,
+    graph.canvas.height,
+    x,
+    y,
+    shade
+  );
+
+}
     }
   }
 }
