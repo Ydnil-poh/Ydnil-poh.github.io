@@ -5,6 +5,7 @@ export function isTextureRenderPayload(value) {
     value &&
     typeof value === 'object' &&
     value.schemaVersion === 1 &&
+    Number.isInteger(value.lod) &&
     Number.isFinite(Number(value.width)) &&
     Number.isFinite(Number(value.height)) &&
     Number.isFinite(Number(value.minOpacity)) &&
