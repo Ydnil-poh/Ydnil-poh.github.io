@@ -368,8 +368,8 @@
           "field": {
             "schemaVersion": 1,
             "role": "field",
-            "width": 16,
-            "height": 12,
+            "width": 24,
+            "height": 18,
             "minOpacity": 0.12,
             "color": "currentColor",
             "className": "archive-texture archive-texture--field",
