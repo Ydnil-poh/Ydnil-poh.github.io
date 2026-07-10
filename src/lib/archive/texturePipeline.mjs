@@ -35,18 +35,7 @@ export function youtubeDirectiveUrl(block) {
 }
 
 export function quantizeTextureOpacity(opacity) {
-  let closestValue = 0;
-  let closestDistance = Infinity;
-
-  for (let value = 0; value < textureOpacityByValue.length; value += 1) {
-    const distance = Math.abs(opacity - textureOpacityByValue[value]);
-    if (distance < closestDistance) {
-      closestValue = value;
-      closestDistance = distance;
-    }
-  }
-
-  return closestValue;
+  return opacity > 0 ? 1 : 0;
 }
 
 export function encodeRle4(values) {
@@ -189,12 +178,12 @@ export function generateTextureLayoutGraph(blocks, options = {}) {
 }
 
 function createTextureCanvas(width, height) {
-  return Array.from({ length: width * height }, () => quantizeTextureOpacity(0.05));
+  return Array.from({ length: width * height }, () => 0);
 }
 
-function paintTextureCell(canvas, width, height, x, y, opacity) {
+function paintTextureCell(canvas, width, height, x, y, value) {
   if (x < 0 || x >= width || y < 0 || y >= height) return;
-  canvas[y * width + x] = quantizeTextureOpacity(opacity);
+  canvas[y * width + x] = value ? 1 : 0;
 }
 
 function rasterizeTextBlock(canvas, graph, node) {
@@ -203,7 +192,7 @@ function rasterizeTextBlock(canvas, graph, node) {
     const y = node.y + lineIndex;
     for (let x = node.x; x < node.x + node.width; x += 1) {
       const insideText = x < node.x + line.fillWidth;
-      paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, insideText ? 0.85 : 0.05);
+      paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, insideText ? 1 : 0);
     }
   }
 }
@@ -232,7 +221,7 @@ function rasterizeMediaBlock(canvas, graph, node) {
           graph.canvas.height,
           x,
           y,
-          0.72
+          1
         );
 
       } else if (playMarker) {
@@ -243,7 +232,7 @@ function rasterizeMediaBlock(canvas, graph, node) {
           graph.canvas.height,
           x,
           y,
-          0.95
+          1
         );
 
 } else {
@@ -272,9 +261,9 @@ function rasterizeImageBlock(canvas, graph, node) {
       const isVerticalEdge = x === node.x || x === node.x + node.width - 1;
 
       if (isHorizontalEdge || isVerticalEdge) {
-        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 0.72);
+        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 1);
       } else {
-        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 0.24);
+        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 1);
       }
     }
   }
@@ -296,10 +285,6 @@ export function rasterizeTextureLayoutGraph(graph) {
   return canvas;
 }
 
-function cellOpacity(value) {
-  return textureOpacityByValue[value] ?? textureOpacityByValue[0];
-}
-
 export function downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeight, targetWidth, targetHeight) {
   const values = [];
 
@@ -315,12 +300,12 @@ export function downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeig
 
       for (let sourceY = startY; sourceY < endY; sourceY += 1) {
         for (let sourceX = startX; sourceX < endX; sourceX += 1) {
-          total += cellOpacity(sourceValues[sourceY * sourceWidth + sourceX]);
+          total += sourceValues[sourceY * sourceWidth + sourceX];
           count += 1;
         }
       }
 
-      values.push(quantizeTextureOpacity(count > 0 ? total / count : 0.05));
+      values.push(quantizeTextureOpacity(total > 0 ? 1 : 0));
     }
   }
 
@@ -338,7 +323,6 @@ export function generateTextureRenderPayload(sourceValues, sourceWidth, sourceHe
     lod: profile.lod,
     width: profile.width,
     height: profile.height,
-    minOpacity: profile.minOpacity,
     color: profile.color,
     className: profile.className,
     encoding: 'rle4',
