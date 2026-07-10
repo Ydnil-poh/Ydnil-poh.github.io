@@ -1,7 +1,6 @@
 import {
   assertTextureRenderPayload,
-  textureOpacityByValue,
-  normalizedCell,
+  decodeTextureRenderPayload,
 } from './archive/textureRenderContract.mjs';
 import type { TextureRenderPayload } from './archive/textureRenderContract.mjs';
 
@@ -29,28 +28,35 @@ export function renderTextureSvg(payload: TextureRenderPayload | undefined) {
 
   const width = Math.max(1, Math.floor(payload.width));
   const height = Math.max(1, Math.floor(payload.height));
-  const minOpacity = clamp(normalizedCell(payload.minOpacity), 0, 1);
 
+  const cells = decodeTextureRenderPayload(payload);
   const rects: string[] = [];
-  let index = 0;
 
-  for (const run of payload.rle) {
-    const [value, count] = run;
-    const baseOpacity = textureOpacityByValue[value] ?? textureOpacityByValue[0];
-    const opacity = clamp(Math.max(minOpacity, normalizedCell(baseOpacity)), minOpacity, 1);
-    
-    let remaining = Math.max(0, Math.floor(Number(count) || 0));
+  for (let index = 0; index < cells.length; index += 1) {
+    const cellValue = cells[index];
 
-    while (remaining > 0 && index < width * height) {
-      const x = index % width;
-      const y = Math.floor(index / width);
-      const rowRemaining = width - x;
-      const chunk = Math.min(remaining, rowRemaining);
+    if (cellValue === 0) {
+      continue;
+    }
 
-      rects.push(`<rect x="${x}" y="${y}" width="${chunk}" height="1" fill="${payload.color}" opacity="${opacity.toFixed(3)}" />`);
+    const x = index % width;
+    const y = Math.floor(index / width);
 
-      index += chunk;
-      remaining -= chunk;
+    const opacity =
+      payload.role === 'field'
+        ? 0.72
+        : 0.85;
+
+    rects.push(
+      `<rect
+        x="${x}"
+        y="${y}"
+        width="1"
+        height="1"
+        fill="${payload.color}"
+        opacity="${opacity.toFixed(3)}"
+      />`
+    );
     }
     
     if (index >= width * height) break;
