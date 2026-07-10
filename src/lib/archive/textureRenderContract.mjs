@@ -8,7 +8,6 @@ export function isTextureRenderPayload(value) {
     Number.isInteger(value.lod) &&
     Number.isFinite(Number(value.width)) &&
     Number.isFinite(Number(value.height)) &&
-    Number.isFinite(Number(value.minOpacity)) &&
     typeof value.color === 'string' &&
     typeof value.className === 'string' &&
     value.encoding === 'rle4' &&
