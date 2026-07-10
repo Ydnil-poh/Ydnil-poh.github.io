@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ydnil-poh.github.io/sitemap.xml
+Sitemap: https://ydnil-poh.github.io/sitemap-index.xml
