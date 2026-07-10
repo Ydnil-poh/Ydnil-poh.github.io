@@ -7,10 +7,6 @@ import type { TextureRenderPayload } from './archive/textureRenderContract.mjs';
 type TextureRenderRole = 'field' | 'modal';
 type TextureRenderSet = Partial<Record<TextureRenderRole, TextureRenderPayload>>;
 
-function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, value));
-}
-
 function texturePlaceholder() {
   return '<span class="texture-placeholder">no texture</span>';
 }
@@ -56,10 +52,7 @@ export function renderTextureSvg(payload: TextureRenderPayload | undefined) {
         fill="${payload.color}"
         opacity="${opacity.toFixed(3)}"
       />`
-    );
-    }
-    
-    if (index >= width * height) break;
+    );    
   }
 
   return `<svg class="${payload.className}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">${rects.join('')}</svg>`;
