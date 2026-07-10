@@ -39,11 +39,11 @@ export function decodeTextureRenderPayload(payload) {
 
   for (const run of payload.rle) {
     const [value, count] = run;
-    const opacity = textureOpacityByValue[value] ?? textureOpacityByValue[0];
+    const cellValue = Number(value) === 1 ? 1 : 0;
     const runLength = Math.max(0, Math.floor(Number(count) || 0));
 
     for (let index = 0; index < runLength && cells.length < expectedLength; index += 1) {
-      cells.push(opacity);
+      cells.push(cellValue);
     }
   }
 
