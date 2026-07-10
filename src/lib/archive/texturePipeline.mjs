@@ -245,7 +245,7 @@ function rasterizeMediaBlock(canvas, graph, node) {
     graph.canvas.height,
     x,
     y,
-    shade
+    0
   );
 
 }
@@ -263,7 +263,7 @@ function rasterizeImageBlock(canvas, graph, node) {
       if (isHorizontalEdge || isVerticalEdge) {
         paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 1);
       } else {
-        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 1);
+        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 0);
       }
     }
   }
