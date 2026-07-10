@@ -1,4 +1,4 @@
-export const textureOpacityByValue = [0.05, 0.24, 0.72, 0.85];
+export const textureOpacityByValue = [0, 1];
 
 export function isTextureRenderPayload(value) {
   return Boolean(
