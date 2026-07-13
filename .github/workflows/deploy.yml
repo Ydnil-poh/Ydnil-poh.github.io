@@ -41,12 +41,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build archive field
+        if: github.event_name != 'schedule'
         run: npm run build
+      - name: Build archive field (sleep rebuild)
+        if: github.event_name == 'schedule'
+        run: npm run build
+        env:
+          ARCHIVE_REBUILD_MODE: sleep
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
-
+          
   deploy:
     environment:
       name: github-pages
