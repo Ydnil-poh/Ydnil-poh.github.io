@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-13T09:18:03.906Z",
+  "generatedAt": "2026-07-13T09:43:22.004Z",
   "source": "src/content/records",
   "layoutEvents": [
     {
@@ -14,7 +14,10 @@
       "metadata": {
         "previousSlot": 977,
         "preferredSlot": 977,
-        "attentionDrifted": false,
+        "relationDrifted": false,
+        "anchor": null,
+        "relationDelta": 0,
+        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -29,7 +32,10 @@
       "metadata": {
         "previousSlot": 898,
         "preferredSlot": 898,
-        "attentionDrifted": false,
+        "relationDrifted": false,
+        "anchor": null,
+        "relationDelta": 0,
+        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -44,7 +50,10 @@
       "metadata": {
         "previousSlot": 52,
         "preferredSlot": 52,
-        "attentionDrifted": false,
+        "relationDrifted": false,
+        "anchor": null,
+        "relationDelta": 0,
+        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -59,7 +68,10 @@
       "metadata": {
         "previousSlot": 937,
         "preferredSlot": 937,
-        "attentionDrifted": false,
+        "relationDrifted": false,
+        "anchor": null,
+        "relationDelta": 0,
+        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -74,7 +86,10 @@
       "metadata": {
         "previousSlot": 11,
         "preferredSlot": 11,
-        "attentionDrifted": false,
+        "relationDrifted": false,
+        "anchor": null,
+        "relationDelta": 0,
+        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -89,7 +104,10 @@
       "metadata": {
         "previousSlot": 800,
         "preferredSlot": 800,
-        "attentionDrifted": false,
+        "relationDrifted": false,
+        "anchor": null,
+        "relationDelta": 0,
+        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -104,7 +122,10 @@
       "metadata": {
         "previousSlot": 598,
         "preferredSlot": 598,
-        "attentionDrifted": false,
+        "relationDrifted": false,
+        "anchor": null,
+        "relationDelta": 0,
+        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -119,7 +140,10 @@
       "metadata": {
         "previousSlot": 12,
         "preferredSlot": 12,
-        "attentionDrifted": false,
+        "relationDrifted": false,
+        "anchor": null,
+        "relationDelta": 0,
+        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -134,7 +158,10 @@
       "metadata": {
         "previousSlot": 639,
         "preferredSlot": 639,
-        "attentionDrifted": false,
+        "relationDrifted": false,
+        "anchor": null,
+        "relationDelta": 0,
+        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -149,7 +176,10 @@
       "metadata": {
         "previousSlot": 51,
         "preferredSlot": 51,
-        "attentionDrifted": false,
+        "relationDrifted": false,
+        "anchor": null,
+        "relationDelta": 0,
+        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     }

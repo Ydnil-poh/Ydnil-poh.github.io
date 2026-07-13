@@ -26,7 +26,7 @@ Archive Field는 글 목록 대신 지형을 보여준다.
 
 기록의 위치와 관계는 기본적으로 의미적 유사성(Semantic Similarity)에 의해 결정된다.
 
-Human Attention이나 Machine Attention은 지형을 아주 천천히 변화시키는 약한 신호로만 사용한다.
+Human Attention이나 Machine Attention은 지형을 직접 이동시키지 않고, Runtime 계층에서 texture LOD와 표시 강도를 조절하는 신호로 사용한다.
 
 ---
 
@@ -57,6 +57,10 @@ Record Page
 ```
 
 ---
+
+# Runtime Layer
+
+Archive Field의 Runtime 계층은 "얼마나 선명하게 보이는가"를 담당한다. Runtime Score, Human / Machine Attention, Texture LOD, Visibility / Highlight는 Region Geometry를 바꾸지 않고 texture rendering과 표시 강도에만 영향을 준다. Texture LOD는 rebuild 대상 전체의 `log1p(runtimeScore)` 최대값으로 정규화한 runtime 값에 기존 LOD threshold를 적용해 결정한다. Semantic score는 LOD를 결정하지 않으며 semantic density, texture density, tile color, `data-density` 표현에만 사용한다.
 
 # Human Attention Layer
 
@@ -111,6 +115,8 @@ machine_score
 ---
 
 # Semantic Layer
+
+Archive Field의 Semantic 계층은 "어디에 있는가"를 담당한다. Embedding, Relation Graph, Region Geometry, Cluster, Region Drift는 모두 기록의 의미적 위치와 공간 기억을 다루는 요소다. Runtime 점수가 높아도 의미 관계 변화가 없다면 Region은 이동하지 않는다.
 
 Archive Field의 핵심 계층이다.
 
