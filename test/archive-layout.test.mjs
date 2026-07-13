@@ -11,7 +11,10 @@ import {
   extractSemanticBlocks,
   generateTextureLayoutGraph,
   generateTextureRenderPayload,
+  generateTextureViewModel,
   rasterizeTextureLayoutGraph,
+  semanticLodForScore,
+  textureLodPolicies,
   textureRenderProfiles,
 } from '../src/lib/archive/texturePipeline.mjs';
 import { decodeTextureRenderPayload, isTextureRenderPayload } from '../src/lib/archive/textureRenderContract.mjs';
@@ -45,9 +48,9 @@ test('texture layout graph uses block nodes rather than row records', () => {
   const graph = generateTextureLayoutGraph(blocks);
 
   assert.equal(graph.schemaVersion, 1);
-  assert.deepEqual(graph.canvas, { width: 32, height: 24, unit: 'cell' });
+  assert.deepEqual(graph.canvas, { width: 64, height: 48, unit: 'cell' });
   assert.deepEqual(graph.nodes.map((node) => node.kind), ['textBlock', 'mediaBlock']);
-  assert.equal(graph.nodes[0].lines.length, 2);
+  assert.equal(graph.nodes[0].lines.length, 1);
 });
 
 test('render payload validates against the runtime schema contract', () => {
@@ -56,9 +59,42 @@ test('render payload validates against the runtime schema contract', () => {
   const payload = generateTextureRenderPayload(raster, graph.canvas.width, graph.canvas.height, textureRenderProfiles.field);
 
   assert.equal(isTextureRenderPayload(payload), true);
-  assert.equal(payload.width, 16);
-  assert.equal(payload.height, 12);
-  assert.equal(decodeTextureRenderPayload(payload).length, 192);
+  assert.equal(payload.lod, 0);
+  assert.equal(payload.width, 24);
+  assert.equal(payload.height, 18);
+  assert.equal(decodeTextureRenderPayload(payload).length, 432);
+});
+
+test('semantic score selects an LOD policy for texture downsampling', () => {
+  assert.equal(semanticLodForScore(0.2), 0);
+  assert.equal(semanticLodForScore(0.5), 1);
+  assert.equal(semanticLodForScore(0.9), 2);
+  assert.equal(textureLodPolicies[0].coverageThreshold, 0.6);
+  assert.equal(textureLodPolicies[1].coverageThreshold, 0.45);
+  assert.equal(textureLodPolicies[2].coverageThreshold, 0.3);
+  assert.equal(textureLodPolicies[2].preserveThinLines, true);
+});
+
+test('semantic LOD is applied only to field render payloads', () => {
+  const view = generateTextureViewModel({
+    rawBody: 'semantic density should simplify field only',
+    type: 'standard',
+    score: 0.9,
+    imageUrls: [],
+    galleryImageUrls: [],
+    textLength: 43,
+  }, plainText);
+
+  assert.equal(view.texture.renders.field.lod, 2);
+  assert.equal(view.texture.renders.field.width, 24);
+  assert.equal(view.texture.renders.field.height, 18);
+  assert.equal(view.texture.renders.modal.lod, 1);
+  assert.equal(view.texture.renders.modal.width, 64);
+  assert.equal(view.texture.renders.modal.height, 48);
+  assert.deepEqual(
+    decodeTextureRenderPayload(view.texture.renders.modal),
+    rasterizeTextureLayoutGraph(view.debug.layoutGraph)
+  );
 });
 
 test('field view model stores structural record slots only', () => {
