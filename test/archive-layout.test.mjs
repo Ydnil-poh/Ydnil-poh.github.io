@@ -45,9 +45,9 @@ test('texture layout graph uses block nodes rather than row records', () => {
   const graph = generateTextureLayoutGraph(blocks);
 
   assert.equal(graph.schemaVersion, 1);
-  assert.deepEqual(graph.canvas, { width: 32, height: 24, unit: 'cell' });
+  assert.deepEqual(graph.canvas, { width: 64, height: 48, unit: 'cell' });
   assert.deepEqual(graph.nodes.map((node) => node.kind), ['textBlock', 'mediaBlock']);
-  assert.equal(graph.nodes[0].lines.length, 2);
+  assert.equal(graph.nodes[0].lines.length, 1);
 });
 
 test('render payload validates against the runtime schema contract', () => {
@@ -56,9 +56,9 @@ test('render payload validates against the runtime schema contract', () => {
   const payload = generateTextureRenderPayload(raster, graph.canvas.width, graph.canvas.height, textureRenderProfiles.field);
 
   assert.equal(isTextureRenderPayload(payload), true);
-  assert.equal(payload.width, 16);
-  assert.equal(payload.height, 12);
-  assert.equal(decodeTextureRenderPayload(payload).length, 192);
+  assert.equal(payload.width, 24);
+  assert.equal(payload.height, 18);
+  assert.equal(decodeTextureRenderPayload(payload).length, 432);
 });
 
 test('field view model stores structural record slots only', () => {
