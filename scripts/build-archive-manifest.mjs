@@ -587,7 +587,7 @@ const records = recordsWithTexture.map((record) => ({
   layoutSlot: record.layoutSlot,
   regionId: record.regionId,
   related: record.relations.map((relation) => relation.id),
-  relationSummary: record.relations.slice(0, 4).map((relation) => ({
+  relationSummary: record.relations.map((relation) => ({
     id: relation.id,
     weight: relation.relationWeight,
   })),
