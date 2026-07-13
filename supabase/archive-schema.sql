@@ -104,9 +104,6 @@ create table if not exists public.archive_embeddings (
   updated_at timestamptz not null default now()
 );
 
-alter table public.archive_embeddings
-alter column embedding type vector(64) using null::vector(64);
-
 create table if not exists public.archive_relations (
   source_slug text references public.archive_records(slug) on delete cascade,
   target_slug text references public.archive_records(slug) on delete cascade,
