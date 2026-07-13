@@ -2,7 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fieldLayoutProfile, generateFieldViewModel, nearestOpenSlot } from '../src/lib/archive/fieldViewModel.mjs';
+import { generateFieldViewModel } from '../src/lib/archive/fieldViewModel.mjs';
 import { incrementalRegionLayout } from '../src/lib/archive/regionLayout.mjs';
 import { generateTextureViewModel } from '../src/lib/archive/texturePipeline.mjs';
 import { textureOpacityByValue } from '../src/lib/archive/textureRenderContract.mjs';
@@ -124,12 +124,6 @@ async function listStorageImages(folder) {
 
   const objects = await response.json();
 
-  console.log(
-    '[gallery]',
-    normalizedFolder,
-    JSON.stringify(objects, null, 2)
-  );  
-  
   return objects
     .filter((object) => 
       object?.metadata?.mimetype?.startsWith('image/')
@@ -235,193 +229,44 @@ function projectEmbeddings(records) {
   return positions;
 }
 
-function decoratePosition(
-  record,
-  basePosition,
-  attentionDriftScale,
-) {
-  const hash = createHash('sha1')
-    .update(record.id)
-    .digest();
 
-  const jitterX = (hash[0] / 255 - 0.5) * 0.08;
-  const jitterY = (hash[1] / 255 - 0.5) * 0.08;
-
-  const activity =
-    attentionDriftScale <= 0
-      ? 0
-      : Math.log1p(record.attentionSnapshot.humanScore) /
-        attentionDriftScale;
-
-  const driftX =
-    (hash[2] / 255 - 0.5) *
-    activity *
-    0.035;
-
-  const driftY =
-    (hash[3] / 255 - 0.5) *
-    activity *
-    0.035;
-
-  const x =
-    0.1 +
-    basePosition.x * 0.8 +
-    jitterX +
-    driftX;
-
-  const y =
-    0.1 +
-    basePosition.y * 0.8 +
-    jitterY +
-    driftY;
-
-  return {
-    x: Number(Math.max(0.08, Math.min(0.92, x)).toFixed(4)),
-    y: Number(Math.max(0.08, Math.min(0.92, y)).toFixed(4)),
-  };
-}
-
-
-async function readPreviousManifest() {
+async function readJsonFromFile(filePath) {
   try {
-    return JSON.parse(await readFile(outputPath, 'utf8'));
+    return JSON.parse(await readFile(filePath, 'utf8'));
   } catch (error) {
     if (error?.code !== 'ENOENT') {
-      console.warn(`previous archive manifest ignored: ${error.message}`);
+      console.warn(`previous archive manifest file ignored: ${error.message}`);
     }
     return null;
   }
 }
 
-function slotToPosition(slot, profile = fieldLayoutProfile) {
-  const col = slot % profile.cols;
-  const row = Math.floor(slot / profile.cols);
-  return {
-    x: Number(((col + 0.5) / profile.cols).toFixed(4)),
-    y: Number(((row + 0.5) / profile.rows).toFixed(4)),
-  };
-}
-
-function positionToSlot(position, profile = fieldLayoutProfile) {
-  const col = Math.max(0, Math.min(profile.cols - 1, Math.floor(Number(position?.x ?? 0.5) * profile.cols)));
-  const row = Math.max(0, Math.min(profile.rows - 1, Math.floor(Number(position?.y ?? 0.5) * profile.rows)));
-  return row * profile.cols + col;
-}
-
-function nearestEmbeddingAnchors(record, placedRecords, limit = 2) {
-  return placedRecords
-    .map((candidate) => ({
-      candidate,
-      similarity: cosineSimilarity(record.embedding, candidate.embedding),
-    }))
-    .sort((a, b) => b.similarity - a.similarity)
-    .slice(0, limit);
-}
-
-function targetSlotFromAnchor(anchor, profile = fieldLayoutProfile) {
-  return anchor.layoutSlot ?? positionToSlot(anchor.position, profile);
-}
-
-function nearestOpenSlotWithinRadius(preferred, occupied, profile = fieldLayoutProfile, maxDistance = 2) {
-  if (!occupied.has(preferred)) return preferred;
-
-  const totalSlots = profile.cols * profile.rows;
-  const preferredCol = preferred % profile.cols;
-  const preferredRow = Math.floor(preferred / profile.cols);
-  let best = -1;
-  let bestDistance = Infinity;
-
-  for (let index = 0; index < totalSlots; index += 1) {
-    if (occupied.has(index)) continue;
-    const col = index % profile.cols;
-    const row = Math.floor(index / profile.cols);
-    const distance = Math.abs(col - preferredCol) + Math.abs(row - preferredRow);
-    if (distance > maxDistance) continue;
-    if (distance < bestDistance) {
-      best = index;
-      bestDistance = distance;
+async function readJsonFromUrl(url) {
+  try {
+    const response = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!response.ok) {
+      console.warn(`previous archive manifest url ignored: ${response.status} ${response.statusText}`);
+      return null;
     }
+    return await response.json();
+  } catch (error) {
+    console.warn(`previous archive manifest url ignored: ${error.message}`);
+    return null;
   }
-
-  return best;
 }
 
-function chooseAnchorSlot(anchors, occupied, profile = fieldLayoutProfile) {
-  const primaryAnchor = anchors[0]?.candidate;
-  if (!primaryAnchor) {
-    return Math.floor(profile.rows / 2) * profile.cols + Math.floor(profile.cols / 2);
+async function readPreviousManifest() {
+  const deployedManifestUrl = process.env.ARCHIVE_PREVIOUS_MANIFEST_URL
+    ?? (process.env.GITHUB_ACTIONS ? 'https://ydnil-poh.github.io/archive-manifest.json' : null);
+
+  if (deployedManifestUrl && !isRegionReseed) {
+    const deployedManifest = await readJsonFromUrl(deployedManifestUrl);
+    if (deployedManifest) return deployedManifest;
   }
 
-  const primarySlot = targetSlotFromAnchor(primaryAnchor, profile);
-  const primaryOpenSlot = nearestOpenSlotWithinRadius(primarySlot, occupied, profile);
-  if (primaryOpenSlot !== -1) return primaryOpenSlot;
-
-  const secondaryAnchor = anchors[1]?.candidate;
-  if (secondaryAnchor) {
-    const secondarySlot = targetSlotFromAnchor(secondaryAnchor, profile);
-    const secondaryOpenSlot = nearestOpenSlotWithinRadius(secondarySlot, occupied, profile);
-    if (secondaryOpenSlot !== -1) return secondaryOpenSlot;
-  }
-
-  return nearestOpenSlot(primarySlot, occupied, profile);
+  return readJsonFromFile(outputPath);
 }
 
-function bootstrapLayout(records, attentionDriftScale, profile = fieldLayoutProfile) {
-  const projectedPositions = projectEmbeddings(records);
-  const occupied = new Set();
-  return records.map((record) => {
-    const decorated = decoratePosition(record, projectedPositions.get(record.id), attentionDriftScale);
-    const slot = nearestOpenSlot(positionToSlot(decorated, profile), occupied, profile);
-    occupied.add(slot);
-    return { ...record, position: slotToPosition(slot, profile), layoutSlot: slot };
-  });
-}
-
-function incrementalLayout(records, previousManifest, attentionDriftScale, profile = fieldLayoutProfile) {
-  const previousPositions = new Map((previousManifest?.records ?? [])
-    .filter((record) => record?.id && record?.position)
-    .map((record) => [record.id, record.position]));
-
-  const previousSlots = new Map((previousManifest?.archiveView?.field?.records ?? [])
-    .filter((record) => record?.id && Number.isInteger(record.slot))
-    .map((record) => [record.id, record.slot]));
-
-  if (previousPositions.size === 0 && previousSlots.size === 0) {
-    return bootstrapLayout(records, attentionDriftScale, profile);
-  }
-
-  const occupied = new Set();
-  const placedRecords = [];
-  const pendingRecords = [];
-
-  for (const record of records) {
-    const previousSlot = previousSlots.get(record.id);
-    const previousPosition = previousPositions.get(record.id);
-
-    if (Number.isInteger(previousSlot) || previousPosition) {
-      const preferredSlot = Number.isInteger(previousSlot) ? previousSlot : positionToSlot(previousPosition, profile);
-      const slot = nearestOpenSlot(preferredSlot, occupied, profile);
-      occupied.add(slot);
-      placedRecords.push({
-        ...record,
-        position: previousPosition ?? slotToPosition(slot, profile),
-        layoutSlot: slot,
-      });
-    } else {
-      pendingRecords.push(record);
-    }
-  }
-
-  for (const record of pendingRecords) {
-    const anchors = nearestEmbeddingAnchors(record, placedRecords);
-    const slot = chooseAnchorSlot(anchors, occupied, profile);
-    occupied.add(slot);
-    placedRecords.push({ ...record, position: slotToPosition(slot, profile), layoutSlot: slot });
-  }
-
-  const byId = new Map(placedRecords.map((record) => [record.id, record]));
-  return records.map((record) => byId.get(record.id));
-}
 
 function relationRows(records, source) {
   return records
@@ -695,6 +540,7 @@ const changedRecords = changedRecordCount(scored, previousManifest);
 const regionLayout = incrementalRegionLayout(scored, previousManifest, projectEmbeddings, undefined, {
   sleepRebuild: isSleepRebuild,
   regionReseed: isRegionReseed,
+  attentionDriftScale,
 });
 const laidOutRecords = regionLayout.records;
 const regions = regionLayout.regions;

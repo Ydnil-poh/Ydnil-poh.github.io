@@ -184,20 +184,6 @@ begin
     else 0
   end;
 
-  insert into public.archive_records (slug, title, updated_at, last_event_at)
-  values (record_slug, record_slug, now(), now())
-  on conflict (slug) do nothing;
-
-  insert into public.archive_events (record_slug, event_type, path, referrer, session_id, metadata)
-  values (
-    record_slug,
-    normalized_event,
-    payload->>'path',
-    payload->>'referrer',
-    payload->>'sessionId',
-    payload
-  );
-
   update public.archive_records
   set
     views = views + case when normalized_event in ('tile_click', 'record_open', 'page_view') then 1 else 0 end,
@@ -216,6 +202,20 @@ begin
     updated_at = now()
   where slug = record_slug
   returning * into updated_record;
+
+  if updated_record.slug is null then
+    return jsonb_build_object('slug', record_slug, 'ignored', true, 'reason', 'unknown_record');
+  end if;
+
+  insert into public.archive_events (record_slug, event_type, path, referrer, session_id, metadata)
+  values (
+    record_slug,
+    normalized_event,
+    payload->>'path',
+    payload->>'referrer',
+    payload->>'sessionId',
+    payload
+  );
 
   return jsonb_build_object(
     'slug', updated_record.slug,

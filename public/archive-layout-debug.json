@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-13T08:53:38.133Z",
+  "generatedAt": "2026-07-13T09:18:03.906Z",
   "source": "src/content/records",
   "layoutEvents": [
     {
@@ -13,6 +13,8 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 977,
+        "preferredSlot": 977,
+        "attentionDrifted": false,
         "footprintKind": "rect"
       }
     },
@@ -26,6 +28,8 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 898,
+        "preferredSlot": 898,
+        "attentionDrifted": false,
         "footprintKind": "rect"
       }
     },
@@ -39,6 +43,8 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 52,
+        "preferredSlot": 52,
+        "attentionDrifted": false,
         "footprintKind": "rect"
       }
     },
@@ -52,6 +58,8 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 937,
+        "preferredSlot": 937,
+        "attentionDrifted": false,
         "footprintKind": "rect"
       }
     },
@@ -65,6 +73,8 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 11,
+        "preferredSlot": 11,
+        "attentionDrifted": false,
         "footprintKind": "rect"
       }
     },
@@ -78,6 +88,8 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 800,
+        "preferredSlot": 800,
+        "attentionDrifted": false,
         "footprintKind": "rect"
       }
     },
@@ -91,6 +103,8 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 598,
+        "preferredSlot": 598,
+        "attentionDrifted": false,
         "footprintKind": "rect"
       }
     },
@@ -104,6 +118,8 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 12,
+        "preferredSlot": 12,
+        "attentionDrifted": false,
         "footprintKind": "rect"
       }
     },
@@ -117,6 +133,8 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 639,
+        "preferredSlot": 639,
+        "attentionDrifted": false,
         "footprintKind": "rect"
       }
     },
@@ -130,6 +148,8 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 51,
+        "preferredSlot": 51,
+        "attentionDrifted": false,
         "footprintKind": "rect"
       }
     }
