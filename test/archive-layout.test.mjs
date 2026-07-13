@@ -309,6 +309,49 @@ test('Sleep Rebuild can shrink sparse Region footprints without moving the seed'
   assert.deepEqual(region.footprint.rect, { minCol: 0, maxCol: 2, minRow: 0, maxRow: 2 });
 });
 
+test('Sleep Rebuild applies attention drift inside an existing Region footprint', () => {
+  const profile = { cols: 6, rows: 4 };
+  const records = [
+    {
+      id: 'old-a',
+      tags: ['walk'],
+      date: '2026-01-01',
+      embedding: [1, 0],
+      attentionSnapshot: { humanScore: 10 },
+    },
+  ];
+  const previousManifest = {
+    archiveView: {
+      field: {
+        regions: [
+          {
+            id: regionIdForTag('walk'),
+            tag: 'walk',
+            seedSlot: 7,
+            footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 2, minRow: 0, maxRow: 2 } },
+          },
+        ],
+        records: [{ id: 'old-a', slot: 7 }],
+      },
+    },
+    records: [],
+  };
+
+  const layout = incrementalRegionLayout(records, previousManifest, () => new Map(), profile, {
+    sleepRebuild: true,
+    attentionDriftScale: Math.log1p(10),
+  });
+
+  const record = layout.records[0];
+  assert.notEqual(record.layoutSlot, 7);
+  assert.equal(isSlotInFootprint(record.layoutSlot, layout.regions[0].footprint, profile), true);
+  assert.ok(layout.layoutEvents.some((event) =>
+    event.eventType === 'layout.moved_within_region' &&
+    event.recordId === 'old-a' &&
+    event.metadata.attentionDrifted === true
+  ));
+});
+
 test('archive manifest persists Region footprints and record region ids', () => {
   assert.equal(archiveManifest.schemaVersion, 7);
   assert.equal(archiveManifest.archiveView.field.schemaVersion, 2);

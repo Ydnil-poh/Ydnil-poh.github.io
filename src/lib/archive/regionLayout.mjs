@@ -221,6 +221,41 @@ function slotDistance(a, b, profile = fieldLayoutProfile) {
   return Math.abs(aCell.col - bCell.col) + Math.abs(aCell.row - bCell.row);
 }
 
+function attentionActivity(record, attentionDriftScale) {
+  if (!Number.isFinite(attentionDriftScale) || attentionDriftScale <= 0) return 0;
+  return Math.log1p(record?.attentionSnapshot?.humanScore ?? 0) / attentionDriftScale;
+}
+
+function driftVectorFor(record) {
+  let hash = 2166136261;
+  for (const char of String(record.id ?? '')) {
+    hash ^= char.codePointAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  const horizontal = ((hash >>> 0) % 3) - 1;
+  const vertical = ((hash >>> 8) % 3) - 1;
+  return {
+    col: horizontal === 0 && vertical === 0 ? 1 : horizontal,
+    row: vertical,
+  };
+}
+
+function attentionDriftSlot(record, currentSlot, profile = fieldLayoutProfile, attentionDriftScale = 0) {
+  const activity = attentionActivity(record, attentionDriftScale);
+  if (activity <= 0 || !Number.isInteger(currentSlot)) return currentSlot;
+
+  const current = slotToCell(currentSlot, profile);
+  const drift = driftVectorFor(record);
+  const step = activity >= 0.66 ? 1 : 0;
+  if (step === 0) return currentSlot;
+
+  return cellToSlot(
+    clamp(current.col + drift.col * step, 0, profile.cols - 1),
+    clamp(current.row + drift.row * step, 0, profile.rows - 1),
+    profile,
+  );
+}
+
 function cosineSimilarity(a, b) {
   return a.reduce((sum, value, index) => sum + value * b[index], 0);
 }
@@ -424,9 +459,13 @@ export function incrementalRegionLayout(records, previousManifest, projectEmbedd
     const previousSlot = previousRecordSlots.slotFor(record);
 
     if (Number.isInteger(previousSlot)) {
-      const slot = isSlotInFootprint(previousSlot, region.footprint, profile)
-        ? previousSlot
-        : nearestOpenSlotInFootprint(previousSlot, occupied, region.footprint, profile);
+      const driftSlot = options.sleepRebuild
+        ? attentionDriftSlot(record, previousSlot, profile, options.attentionDriftScale)
+        : previousSlot;
+      const preferredSlot = isSlotInFootprint(driftSlot, region.footprint, profile) ? driftSlot : previousSlot;
+      const slot = isSlotInFootprint(preferredSlot, region.footprint, profile)
+        ? (occupied.has(preferredSlot) ? nearestOpenSlotInFootprint(preferredSlot, occupied, region.footprint, profile) : preferredSlot)
+        : nearestOpenSlotInFootprint(preferredSlot, occupied, region.footprint, profile);
       if (slot === -1) throw new Error(`Region ${region.id} has no open slot for existing record ${record.id}`);
       if (occupied.has(slot)) throw new Error(`layoutSlot collision at ${slot} for record ${record.id}`);
       occupied.add(slot);
@@ -441,6 +480,8 @@ export function incrementalRegionLayout(records, previousManifest, projectEmbedd
         anchorKind: null,
         metadata: {
           previousSlot,
+          preferredSlot,
+          attentionDrifted: preferredSlot !== previousSlot,
           footprintKind: region.footprint?.kind ?? null,
         },
       });
