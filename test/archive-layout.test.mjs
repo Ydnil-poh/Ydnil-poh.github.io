@@ -11,6 +11,7 @@ import {
   extractSemanticBlocks,
   generateTextureLayoutGraph,
   generateTextureRenderPayload,
+  generateTextureViewModel,
   rasterizeTextureLayoutGraph,
   semanticLodForScore,
   textureLodPolicies,
@@ -72,6 +73,28 @@ test('semantic score selects an LOD policy for texture downsampling', () => {
   assert.equal(textureLodPolicies[1].coverageThreshold, 0.45);
   assert.equal(textureLodPolicies[2].coverageThreshold, 0.3);
   assert.equal(textureLodPolicies[2].preserveThinLines, true);
+});
+
+test('semantic LOD is applied only to field render payloads', () => {
+  const view = generateTextureViewModel({
+    rawBody: 'semantic density should simplify field only',
+    type: 'standard',
+    score: 0.9,
+    imageUrls: [],
+    galleryImageUrls: [],
+    textLength: 43,
+  }, plainText);
+
+  assert.equal(view.texture.renders.field.lod, 2);
+  assert.equal(view.texture.renders.field.width, 24);
+  assert.equal(view.texture.renders.field.height, 18);
+  assert.equal(view.texture.renders.modal.lod, 1);
+  assert.equal(view.texture.renders.modal.width, 64);
+  assert.equal(view.texture.renders.modal.height, 48);
+  assert.deepEqual(
+    decodeTextureRenderPayload(view.texture.renders.modal),
+    rasterizeTextureLayoutGraph(view.debug.layoutGraph)
+  );
 });
 
 test('field view model stores structural record slots only', () => {

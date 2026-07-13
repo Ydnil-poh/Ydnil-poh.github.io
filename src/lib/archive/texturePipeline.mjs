@@ -427,14 +427,15 @@ export function downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeig
 }
 
 export function generateTextureRenderPayload(sourceValues, sourceWidth, sourceHeight, profile, lodPolicy = textureLodPolicies[profile.lod] ?? textureLodPolicies[0]) {
-  const values = profile.width === sourceWidth && profile.height === sourceHeight
+  const usesSourceMask = profile.width === sourceWidth && profile.height === sourceHeight;
+  const values = usesSourceMask
     ? sourceValues
     : downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeight, profile.width, profile.height, lodPolicy);
 
   return assertTextureRenderPayload({
     schemaVersion: 1,
     role: profile.role,
-    lod: lodPolicy.lod,
+    lod: usesSourceMask ? profile.lod : lodPolicy.lod,
     width: profile.width,
     height: profile.height,
     color: profile.color,
@@ -469,7 +470,13 @@ export function generateTextureViewModel(record, plainText) {
       renders: Object.fromEntries(
         Object.entries(textureRenderProfiles).map(([key, profile]) => [
           key,
-          generateTextureRenderPayload(rasterValues, layoutGraph.canvas.width, layoutGraph.canvas.height, profile, lodPolicy),
+          generateTextureRenderPayload(
+            rasterValues,
+            layoutGraph.canvas.width,
+            layoutGraph.canvas.height,
+            profile,
+            profile.role === 'field' ? lodPolicy : undefined
+          ),
         ])
       ),
     },
