@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-13T08:41:27.253Z",
+  "generatedAt": "2026-07-13T08:49:10.958Z",
   "source": "src/content/records",
   "layoutEvents": [
     {
@@ -26,6 +26,19 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 898,
+        "footprintKind": "rect"
+      }
+    },
+    {
+      "eventType": "layout.slot_preserved",
+      "recordId": "post11",
+      "regionId": "tag:뚜벅뚜벅",
+      "fromSlot": 52,
+      "toSlot": 52,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "previousSlot": 52,
         "footprintKind": "rect"
       }
     },
@@ -118,47 +131,6 @@
       "metadata": {
         "previousSlot": 51,
         "footprintKind": "rect"
-      }
-    },
-    {
-      "eventType": "record.first_seen",
-      "recordId": "post11",
-      "regionId": "tag:뚜벅뚜벅",
-      "fromSlot": null,
-      "toSlot": null,
-      "anchorId": null,
-      "anchorKind": null,
-      "metadata": {}
-    },
-    {
-      "eventType": "layout.placed",
-      "recordId": "post11",
-      "regionId": "tag:뚜벅뚜벅",
-      "fromSlot": null,
-      "toSlot": 52,
-      "anchorId": null,
-      "anchorKind": null,
-      "metadata": {
-        "preferredSlot": 12,
-        "seedSlot": 11,
-        "seedDistance": 2,
-        "footprintKind": "rect"
-      }
-    },
-    {
-      "eventType": "layout.anchor_record",
-      "recordId": "post11",
-      "regionId": "tag:뚜벅뚜벅",
-      "fromSlot": null,
-      "toSlot": 52,
-      "anchorId": "post7",
-      "anchorKind": "record",
-      "metadata": {
-        "preferredSlot": 12,
-        "anchorSlot": 12,
-        "anchorDistance": 1,
-        "anchorWeight": 0.176138,
-        "similarity": 0.176138
       }
     }
   ],

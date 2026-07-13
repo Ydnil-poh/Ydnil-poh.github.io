@@ -1,4 +1,4 @@
-import { assertTextureRenderPayload, textureOpacityByValue } from './textureRenderContract.mjs';
+import { assertTextureRenderPayload } from './textureRenderContract.mjs';
 
 export const textureLayoutProfile = {
   width: 64,
@@ -14,7 +14,6 @@ export const textureRenderProfiles = {
     lod: 0,
     width: 24,
     height: 18,
-    minOpacity: 0.12,
     color: 'currentColor',
     className: 'archive-texture archive-texture--field',
   },
@@ -23,7 +22,6 @@ export const textureRenderProfiles = {
     lod: 1,
     width: 64,
     height: 48,
-    minOpacity: 0.05,
     color: 'currentColor',
     className: 'archive-texture archive-texture--modal',
   },
@@ -36,6 +34,45 @@ export function youtubeDirectiveUrl(block) {
 
 export function quantizeTextureOpacity(opacity) {
   return opacity > 0 ? 1 : 0;
+}
+
+export const textureLodPolicies = {
+  0: {
+    lod: 0,
+    coverageThreshold: 0.6,
+    removeIsolatedPixels: true,
+    minimumBlockSize: 2,
+    preserveThinLines: false,
+  },
+  1: {
+    lod: 1,
+    coverageThreshold: 0.45,
+    removeIsolatedPixels: false,
+    minimumBlockSize: 1,
+    preserveThinLines: false,
+  },
+  2: {
+    lod: 2,
+    coverageThreshold: 0.3,
+    removeIsolatedPixels: false,
+    minimumBlockSize: 1,
+    preserveThinLines: true,
+  },
+};
+
+export function semanticLodForScore(score) {
+  const numericScore = Number(score);
+  if (!Number.isFinite(numericScore)) return 0;
+  if (numericScore > 0.72) return 2;
+  if (numericScore > 0.38) return 1;
+  return 0;
+}
+
+export function semanticDensityForScore(score) {
+  const lod = semanticLodForScore(score);
+  if (lod === 2) return 'high';
+  if (lod === 1) return 'medium';
+  return 'low';
 }
 
 export function encodeRle4(values) {
@@ -285,7 +322,82 @@ export function rasterizeTextureLayoutGraph(graph) {
   return canvas;
 }
 
-export function downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeight, targetWidth, targetHeight) {
+function neighborCount(values, width, height, x, y) {
+  let count = 0;
+
+  for (let offsetY = -1; offsetY <= 1; offsetY += 1) {
+    for (let offsetX = -1; offsetX <= 1; offsetX += 1) {
+      if (offsetX === 0 && offsetY === 0) continue;
+      const neighborX = x + offsetX;
+      const neighborY = y + offsetY;
+      if (neighborX < 0 || neighborX >= width || neighborY < 0 || neighborY >= height) continue;
+      count += values[neighborY * width + neighborX] ? 1 : 0;
+    }
+  }
+
+  return count;
+}
+
+function removeSmallTextureBlocks(values, width, height, minimumBlockSize) {
+  if (minimumBlockSize <= 1) return values;
+
+  const nextValues = [...values];
+  const visited = new Set();
+
+  for (let index = 0; index < values.length; index += 1) {
+    if (!values[index] || visited.has(index)) continue;
+
+    const component = [];
+    const queue = [index];
+    visited.add(index);
+
+    for (let queueIndex = 0; queueIndex < queue.length; queueIndex += 1) {
+      const currentIndex = queue[queueIndex];
+      component.push(currentIndex);
+      const x = currentIndex % width;
+      const y = Math.floor(currentIndex / width);
+      const neighbors = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ];
+
+      for (const [neighborX, neighborY] of neighbors) {
+        if (neighborX < 0 || neighborX >= width || neighborY < 0 || neighborY >= height) continue;
+        const neighborIndex = neighborY * width + neighborX;
+        if (!values[neighborIndex] || visited.has(neighborIndex)) continue;
+        visited.add(neighborIndex);
+        queue.push(neighborIndex);
+      }
+    }
+
+    if (component.length < minimumBlockSize) {
+      for (const componentIndex of component) {
+        nextValues[componentIndex] = 0;
+      }
+    }
+  }
+
+  return nextValues;
+}
+
+function applyTextureLodMorphology(values, width, height, policy) {
+  let nextValues = values;
+
+  if (policy.removeIsolatedPixels) {
+    nextValues = nextValues.map((value, index) => {
+      if (!value) return 0;
+      const x = index % width;
+      const y = Math.floor(index / width);
+      return neighborCount(nextValues, width, height, x, y) > 0 ? 1 : 0;
+    });
+  }
+
+  return removeSmallTextureBlocks(nextValues, width, height, policy.minimumBlockSize ?? 1);
+}
+
+export function downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeight, targetWidth, targetHeight, policy = textureLodPolicies[0]) {
   const values = [];
 
   for (let y = 0; y < targetHeight; y += 1) {
@@ -305,22 +417,24 @@ export function downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeig
         }
       }
 
-      values.push(quantizeTextureOpacity(total > 0 ? 1 : 0));
+      const coverage = count > 0 ? total / count : 0;
+      const hasThinLine = policy.preserveThinLines && total > 0;
+      values.push(quantizeTextureOpacity(coverage >= policy.coverageThreshold || hasThinLine ? 1 : 0));
     }
   }
 
-  return values;
+  return applyTextureLodMorphology(values, targetWidth, targetHeight, policy);
 }
 
-export function generateTextureRenderPayload(sourceValues, sourceWidth, sourceHeight, profile) {
-  const values = profile.lod === 1
+export function generateTextureRenderPayload(sourceValues, sourceWidth, sourceHeight, profile, lodPolicy = textureLodPolicies[profile.lod] ?? textureLodPolicies[0]) {
+  const values = profile.width === sourceWidth && profile.height === sourceHeight
     ? sourceValues
-    : downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeight, profile.width, profile.height);
+    : downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeight, profile.width, profile.height, lodPolicy);
 
   return assertTextureRenderPayload({
     schemaVersion: 1,
     role: profile.role,
-    lod: profile.lod,
+    lod: lodPolicy.lod,
     width: profile.width,
     height: profile.height,
     color: profile.color,
@@ -337,11 +451,13 @@ export function generateTextureViewModel(record, plainText) {
     galleryImageCount: record.galleryImageUrls?.length ?? 0,
   });
   const rasterValues = rasterizeTextureLayoutGraph(layoutGraph);
+  const semanticLod = semanticLodForScore(record.score);
+  const lodPolicy = textureLodPolicies[semanticLod];
 
   return {
     texture: {
       schemaVersion: 2,
-      density: record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low',
+      density: semanticDensityForScore(record.score),
       imageCount: record.imageUrls.length + record.galleryImageUrls.length,
       textLength: record.textLength,
       layout: {
@@ -353,7 +469,7 @@ export function generateTextureViewModel(record, plainText) {
       renders: Object.fromEntries(
         Object.entries(textureRenderProfiles).map(([key, profile]) => [
           key,
-          generateTextureRenderPayload(rasterValues, layoutGraph.canvas.width, layoutGraph.canvas.height, profile),
+          generateTextureRenderPayload(rasterValues, layoutGraph.canvas.width, layoutGraph.canvas.height, profile, lodPolicy),
         ])
       ),
     },

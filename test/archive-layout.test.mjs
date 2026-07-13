@@ -12,6 +12,8 @@ import {
   generateTextureLayoutGraph,
   generateTextureRenderPayload,
   rasterizeTextureLayoutGraph,
+  semanticLodForScore,
+  textureLodPolicies,
   textureRenderProfiles,
 } from '../src/lib/archive/texturePipeline.mjs';
 import { decodeTextureRenderPayload, isTextureRenderPayload } from '../src/lib/archive/textureRenderContract.mjs';
@@ -56,9 +58,20 @@ test('render payload validates against the runtime schema contract', () => {
   const payload = generateTextureRenderPayload(raster, graph.canvas.width, graph.canvas.height, textureRenderProfiles.field);
 
   assert.equal(isTextureRenderPayload(payload), true);
+  assert.equal(payload.lod, 0);
   assert.equal(payload.width, 24);
   assert.equal(payload.height, 18);
   assert.equal(decodeTextureRenderPayload(payload).length, 432);
+});
+
+test('semantic score selects an LOD policy for texture downsampling', () => {
+  assert.equal(semanticLodForScore(0.2), 0);
+  assert.equal(semanticLodForScore(0.5), 1);
+  assert.equal(semanticLodForScore(0.9), 2);
+  assert.equal(textureLodPolicies[0].coverageThreshold, 0.6);
+  assert.equal(textureLodPolicies[1].coverageThreshold, 0.45);
+  assert.equal(textureLodPolicies[2].coverageThreshold, 0.3);
+  assert.equal(textureLodPolicies[2].preserveThinLines, true);
 });
 
 test('field view model stores structural record slots only', () => {
