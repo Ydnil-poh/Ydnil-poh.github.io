@@ -13,7 +13,8 @@ import {
   generateTextureRenderPayload,
   generateTextureViewModel,
   rasterizeTextureLayoutGraph,
-  semanticLodForScore,
+  normalizedRuntimeScore,
+  runtimeLodForNormalizedScore,
   textureLodPolicies,
   textureRenderProfiles,
 } from '../src/lib/archive/texturePipeline.mjs';
@@ -65,27 +66,30 @@ test('render payload validates against the runtime schema contract', () => {
   assert.equal(decodeTextureRenderPayload(payload).length, 432);
 });
 
-test('semantic score selects an LOD policy for texture downsampling', () => {
-  assert.equal(semanticLodForScore(0.2), 0);
-  assert.equal(semanticLodForScore(0.5), 1);
-  assert.equal(semanticLodForScore(0.9), 2);
+test('runtime score selects an LOD policy after rebuild-local log normalization', () => {
+  assert.equal(runtimeLodForNormalizedScore(0.2), 0);
+  assert.equal(runtimeLodForNormalizedScore(0.5), 1);
+  assert.equal(runtimeLodForNormalizedScore(0.9), 2);
+  assert.equal(normalizedRuntimeScore({ runtimeScore: 9 }, Math.log1p(9)), 1);
   assert.equal(textureLodPolicies[0].coverageThreshold, 0.6);
   assert.equal(textureLodPolicies[1].coverageThreshold, 0.45);
   assert.equal(textureLodPolicies[2].coverageThreshold, 0.3);
   assert.equal(textureLodPolicies[2].preserveThinLines, true);
 });
 
-test('semantic LOD is applied only to field render payloads', () => {
+test('runtime LOD is applied only to field render payloads', () => {
   const view = generateTextureViewModel({
     rawBody: 'semantic density should simplify field only',
     type: 'standard',
-    score: 0.9,
+    score: 0.1,
+    runtimeScore: 9,
     imageUrls: [],
     galleryImageUrls: [],
     textLength: 43,
-  }, plainText);
+  }, plainText, { runtimeLodScale: Math.log1p(9) });
 
   assert.equal(view.texture.renders.field.lod, 2);
+  assert.equal(view.texture.density, 'low');
   assert.equal(view.texture.renders.field.width, 24);
   assert.equal(view.texture.renders.field.height, 18);
   assert.equal(view.texture.renders.modal.lod, 1);
@@ -95,6 +99,22 @@ test('semantic LOD is applied only to field render payloads', () => {
     decodeTextureRenderPayload(view.texture.renders.modal),
     rasterizeTextureLayoutGraph(view.debug.layoutGraph)
   );
+});
+
+
+test('semantic score alone does not raise texture LOD', () => {
+  const view = generateTextureViewModel({
+    rawBody: 'semantic density can be high while runtime texture stays quiet',
+    type: 'standard',
+    score: 0.95,
+    runtimeScore: 0,
+    imageUrls: [],
+    galleryImageUrls: [],
+    textLength: 61,
+  }, plainText, { runtimeLodScale: Math.log1p(10) });
+
+  assert.equal(view.texture.density, 'high');
+  assert.equal(view.texture.renders.field.lod, 0);
 });
 
 test('field view model stores structural record slots only', () => {
@@ -309,16 +329,11 @@ test('Sleep Rebuild can shrink sparse Region footprints without moving the seed'
   assert.deepEqual(region.footprint.rect, { minCol: 0, maxCol: 2, minRow: 0, maxRow: 2 });
 });
 
-test('Sleep Rebuild applies attention drift inside an existing Region footprint', () => {
+test('Sleep Rebuild applies relation drift toward the strongest increased anchor', () => {
   const profile = { cols: 6, rows: 4 };
   const records = [
-    {
-      id: 'old-a',
-      tags: ['walk'],
-      date: '2026-01-01',
-      embedding: [1, 0],
-      attentionSnapshot: { humanScore: 10 },
-    },
+    { id: 'anchor', tags: ['walk'], date: '2026-01-01', embedding: [1, 0], relations: [] },
+    { id: 'old-a', tags: ['walk'], date: '2026-01-02', embedding: [0.9, 0.1], relations: [{ id: 'anchor', relationWeight: 0.8 }] },
   ];
   const previousManifest = {
     archiveView: {
@@ -331,25 +346,116 @@ test('Sleep Rebuild applies attention drift inside an existing Region footprint'
             footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 2, minRow: 0, maxRow: 2 } },
           },
         ],
-        records: [{ id: 'old-a', slot: 7 }],
+        records: [{ id: 'anchor', slot: 0 }, { id: 'old-a', slot: 14 }],
       },
     },
-    records: [],
+    records: [
+      { id: 'anchor', relationSummary: [] },
+      { id: 'old-a', relationSummary: [{ id: 'anchor', weight: 0.2 }] },
+    ],
   };
 
-  const layout = incrementalRegionLayout(records, previousManifest, () => new Map(), profile, {
-    sleepRebuild: true,
-    attentionDriftScale: Math.log1p(10),
-  });
+  const layout = incrementalRegionLayout(records, previousManifest, () => new Map(), profile, { sleepRebuild: true });
+  const record = layout.records.find((candidate) => candidate.id === 'old-a');
 
-  const record = layout.records[0];
-  assert.notEqual(record.layoutSlot, 7);
+  assert.equal(record.layoutSlot, 7);
   assert.equal(isSlotInFootprint(record.layoutSlot, layout.regions[0].footprint, profile), true);
   assert.ok(layout.layoutEvents.some((event) =>
     event.eventType === 'layout.moved_within_region' &&
     event.recordId === 'old-a' &&
-    event.metadata.attentionDrifted === true
+    event.metadata.relationDrifted === true &&
+    event.metadata.anchor.id === 'anchor' &&
+    event.metadata.relationDelta === 0.6 &&
+    event.metadata.driftReason === 'relation_delta_anchor'
   ));
+});
+
+
+
+test('Relation drift does not move without relation growth or outside sleep rebuild', () => {
+  const profile = { cols: 6, rows: 4 };
+  const records = [
+    { id: 'anchor', tags: ['walk'], date: '2026-01-01', embedding: [1, 0], relations: [] },
+    { id: 'old-a', tags: ['walk'], date: '2026-01-02', embedding: [0.9, 0.1], relations: [{ id: 'anchor', relationWeight: 0.2 }] },
+  ];
+  const previousManifest = {
+    archiveView: {
+      field: {
+        regions: [{
+          id: regionIdForTag('walk'),
+          tag: 'walk',
+          seedSlot: 7,
+          footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 2, minRow: 0, maxRow: 2 } },
+        }],
+        records: [{ id: 'anchor', slot: 0 }, { id: 'old-a', slot: 14 }],
+      },
+    },
+    records: [
+      { id: 'anchor', relationSummary: [] },
+      { id: 'old-a', relationSummary: [{ id: 'anchor', weight: 0.2 }] },
+    ],
+  };
+
+  const unchanged = incrementalRegionLayout(records, previousManifest, () => new Map(), profile, { sleepRebuild: true });
+  assert.equal(unchanged.records.find((record) => record.id === 'old-a').layoutSlot, 14);
+
+  const increasedOutsideSleep = incrementalRegionLayout([
+    records[0],
+    { ...records[1], relations: [{ id: 'anchor', relationWeight: 0.8 }] },
+  ], previousManifest, () => new Map(), profile);
+  assert.equal(increasedOutsideSleep.records.find((record) => record.id === 'old-a').layoutSlot, 14);
+});
+
+test('Relation drift is blocked at footprint edge and ignores hash attention direction', () => {
+  const profile = { cols: 6, rows: 4 };
+  const records = [
+    { id: 'anchor', tags: ['make'], date: '2026-01-01', embedding: [1, 0], relations: [] },
+    {
+      id: 'old-a',
+      tags: ['walk'],
+      date: '2026-01-02',
+      embedding: [0.9, 0.1],
+      attentionSnapshot: { humanScore: 999 },
+      relations: [{ id: 'anchor', relationWeight: 0.8 }],
+    },
+  ];
+  const previousManifest = {
+    archiveView: {
+      field: {
+        regions: [
+          {
+            id: regionIdForTag('make'),
+            tag: 'make',
+            seedSlot: 0,
+            footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 0, minRow: 0, maxRow: 0 } },
+          },
+          {
+            id: regionIdForTag('walk'),
+            tag: 'walk',
+            seedSlot: 18,
+            footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 2, minRow: 3, maxRow: 3 } },
+          },
+        ],
+        records: [{ id: 'anchor', slot: 0 }, { id: 'old-a', slot: 18 }],
+      },
+    },
+    records: [
+      { id: 'anchor', relationSummary: [] },
+      { id: 'old-a', relationSummary: [{ id: 'anchor', weight: 0.2 }] },
+    ],
+  };
+
+  const layout = incrementalRegionLayout(records, previousManifest, () => new Map(), profile, {
+    sleepRebuild: true,
+    attentionDriftScale: Math.log1p(999),
+  });
+  const record = layout.records.find((candidate) => candidate.id === 'old-a');
+  const event = layout.layoutEvents.find((candidate) => candidate.recordId === 'old-a');
+
+  assert.equal(record.layoutSlot, 18);
+  assert.equal(event.metadata.relationDrifted, false);
+  assert.equal(event.metadata.driftReason, 'blocked_by_footprint');
+  assert.equal('attentionDrifted' in event.metadata, false);
 });
 
 test('archive manifest persists Region footprints and record region ids', () => {

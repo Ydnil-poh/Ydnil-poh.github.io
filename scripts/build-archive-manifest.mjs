@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { generateFieldViewModel } from '../src/lib/archive/fieldViewModel.mjs';
 import { incrementalRegionLayout } from '../src/lib/archive/regionLayout.mjs';
-import { generateTextureViewModel } from '../src/lib/archive/texturePipeline.mjs';
+import { generateTextureViewModel, normalizedRuntimeScore } from '../src/lib/archive/texturePipeline.mjs';
 import { textureOpacityByValue } from '../src/lib/archive/textureRenderContract.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -524,7 +524,7 @@ const recordsWithAttention = publicRecords.map((record) => ({
   ...record,
   attentionSnapshot: attentionSnapshots.get(record.id) ?? emptyAttentionSnapshot(),
 }));
-const attentionDriftScale = Math.max(...recordsWithAttention.map((record) => Math.log1p(record.attentionSnapshot.humanScore)), 0);
+const recordsRuntimeLodScale = Math.max(...recordsWithAttention.map((record) => Math.log1p(record.attentionSnapshot.runtimeScore)), 0);
 const recordsWithRelations = recordsWithAttention.map((record) => ({ ...record, relations: relationRows(recordsWithAttention, record) }));
 const densityValues = recordsWithRelations.map(semanticDensityFor);
 const densityMin = Math.min(...densityValues, 0);
@@ -540,7 +540,6 @@ const changedRecords = changedRecordCount(scored, previousManifest);
 const regionLayout = incrementalRegionLayout(scored, previousManifest, projectEmbeddings, undefined, {
   sleepRebuild: isSleepRebuild,
   regionReseed: isRegionReseed,
-  attentionDriftScale,
 });
 const laidOutRecords = regionLayout.records;
 const regions = regionLayout.regions;
@@ -557,7 +556,9 @@ const semanticRecords = laidOutRecords.map((record) => ({
 }));
 
 const recordsWithTexture = semanticRecords.map((record) => {
-  const textureViewModel = generateTextureViewModel(record, plainText);
+  const textureViewModel = generateTextureViewModel(record, plainText, {
+    normalizedRuntime: normalizedRuntimeScore(record, recordsRuntimeLodScale),
+  });
   return {
     ...record,
     textureViewModel,

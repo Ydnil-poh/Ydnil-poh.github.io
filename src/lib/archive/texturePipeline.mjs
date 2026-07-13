@@ -60,19 +60,28 @@ export const textureLodPolicies = {
   },
 };
 
-export function semanticLodForScore(score) {
+export function semanticDensityForScore(score) {
   const numericScore = Number(score);
+  if (!Number.isFinite(numericScore)) return 'low';
+  if (numericScore > 0.72) return 'high';
+  if (numericScore > 0.38) return 'medium';
+  return 'low';
+}
+
+export function runtimeLodForNormalizedScore(normalizedRuntime) {
+  const numericScore = Number(normalizedRuntime);
   if (!Number.isFinite(numericScore)) return 0;
   if (numericScore > 0.72) return 2;
   if (numericScore > 0.38) return 1;
   return 0;
 }
 
-export function semanticDensityForScore(score) {
-  const lod = semanticLodForScore(score);
-  if (lod === 2) return 'high';
-  if (lod === 1) return 'medium';
-  return 'low';
+export function normalizedRuntimeScore(record, runtimeScale = 0) {
+  const scale = Number(runtimeScale);
+  if (!Number.isFinite(scale) || scale <= 0) return 0;
+  const runtimeScore = Math.max(0, Number(record?.runtimeScore ?? record?.attentionSnapshot?.runtimeScore ?? 0));
+  if (!Number.isFinite(runtimeScore)) return 0;
+  return Math.log1p(runtimeScore) / scale;
 }
 
 export function encodeRle4(values) {
@@ -445,15 +454,16 @@ export function generateTextureRenderPayload(sourceValues, sourceWidth, sourceHe
   }, `${profile.role} texture render payload`);
 }
 
-export function generateTextureViewModel(record, plainText) {
+export function generateTextureViewModel(record, plainText, options = {}) {
   const semanticBlocks = extractSemanticBlocks(record.rawBody, plainText);
   const layoutGraph = generateTextureLayoutGraph(semanticBlocks, {
     type: record.type,
     galleryImageCount: record.galleryImageUrls?.length ?? 0,
   });
   const rasterValues = rasterizeTextureLayoutGraph(layoutGraph);
-  const semanticLod = semanticLodForScore(record.score);
-  const lodPolicy = textureLodPolicies[semanticLod];
+  const normalizedRuntime = options.normalizedRuntime ?? normalizedRuntimeScore(record, options.runtimeLodScale);
+  const runtimeLod = runtimeLodForNormalizedScore(normalizedRuntime);
+  const lodPolicy = textureLodPolicies[runtimeLod];
 
   return {
     texture: {
