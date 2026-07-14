@@ -16,6 +16,7 @@ import {
   normalizedRuntimeScore,
   runtimeLodForNormalizedScore,
   textureLodPolicies,
+  textureLodRenderResolutions,
   textureRenderProfiles,
 } from '../src/lib/archive/texturePipeline.mjs';
 import { decodeTextureRenderPayload, isTextureRenderPayload } from '../src/lib/archive/textureRenderContract.mjs';
@@ -75,6 +76,9 @@ test('runtime score selects an LOD policy after rebuild-local log normalization'
   assert.equal(textureLodPolicies[1].coverageThreshold, 0.45);
   assert.equal(textureLodPolicies[2].coverageThreshold, 0.3);
   assert.equal(textureLodPolicies[2].preserveThinLines, true);
+  assert.deepEqual(textureLodRenderResolutions[0], { width: 24, height: 18 });
+  assert.deepEqual(textureLodRenderResolutions[1], { width: 32, height: 24 });
+  assert.deepEqual(textureLodRenderResolutions[2], { width: 40, height: 30 });
 });
 
 test('runtime LOD is applied only to field render payloads', () => {
@@ -90,8 +94,8 @@ test('runtime LOD is applied only to field render payloads', () => {
 
   assert.equal(view.texture.renders.field.lod, 2);
   assert.equal(view.texture.density, 'low');
-  assert.equal(view.texture.renders.field.width, 24);
-  assert.equal(view.texture.renders.field.height, 18);
+  assert.equal(view.texture.renders.field.width, 40);
+  assert.equal(view.texture.renders.field.height, 30);
   assert.equal(view.texture.renders.modal.lod, 1);
   assert.equal(view.texture.renders.modal.width, 64);
   assert.equal(view.texture.renders.modal.height, 48);
@@ -115,6 +119,41 @@ test('semantic score alone does not raise texture LOD', () => {
 
   assert.equal(view.texture.density, 'high');
   assert.equal(view.texture.renders.field.lod, 0);
+  assert.equal(view.texture.renders.field.width, 24);
+  assert.equal(view.texture.renders.field.height, 18);
+});
+
+
+test('field runtime LOD changes render resolution while source raster and modal stay fixed', () => {
+  const cases = [
+    { runtimeScore: 0, runtimeLodScale: Math.log1p(9), lod: 0, width: 24, height: 18 },
+    { runtimeScore: 3, runtimeLodScale: Math.log1p(9), lod: 1, width: 32, height: 24 },
+    { runtimeScore: 9, runtimeLodScale: Math.log1p(9), lod: 2, width: 40, height: 30 },
+  ];
+
+  for (const expected of cases) {
+    const view = generateTextureViewModel({
+      rawBody: 'runtime layer controls field render resolution without changing semantic layout',
+      type: 'standard',
+      score: 0.1,
+      runtimeScore: expected.runtimeScore,
+      imageUrls: [],
+      galleryImageUrls: [],
+      textLength: 72,
+    }, plainText, { runtimeLodScale: expected.runtimeLodScale });
+
+    assert.deepEqual(view.debug.layoutGraph.canvas, { width: 64, height: 48, unit: 'cell' });
+    assert.equal(view.texture.renders.field.lod, expected.lod);
+    assert.equal(view.texture.renders.field.width, expected.width);
+    assert.equal(view.texture.renders.field.height, expected.height);
+    assert.equal(decodeTextureRenderPayload(view.texture.renders.field).length, expected.width * expected.height);
+    assert.equal(view.texture.renders.modal.width, 64);
+    assert.equal(view.texture.renders.modal.height, 48);
+    assert.deepEqual(
+      decodeTextureRenderPayload(view.texture.renders.modal),
+      rasterizeTextureLayoutGraph(view.debug.layoutGraph)
+    );
+  }
 });
 
 test('field view model stores structural record slots only', () => {
@@ -152,6 +191,12 @@ test('archive manifest stores texture as rle render payloads, not svg strings or
     assert.equal(typeof record.texture.renders.field, 'object');
     assert.equal(record.texture.renders.field.encoding, 'rle4');
     assert.equal(record.texture.renders.modal.encoding, 'rle4');
+    assert.deepEqual(
+      { width: record.texture.renders.field.width, height: record.texture.renders.field.height },
+      textureLodRenderResolutions[record.texture.renders.field.lod]
+    );
+    assert.equal(record.texture.renders.modal.width, 64);
+    assert.equal(record.texture.renders.modal.height, 48);
     assert.equal('cells' in record.texture.renders.field, false);
     assert.equal('svg' in record.texture.renders.field, false);
   }

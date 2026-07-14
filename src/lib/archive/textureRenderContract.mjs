@@ -6,13 +6,15 @@ export function isTextureRenderPayload(value) {
     typeof value === 'object' &&
     value.schemaVersion === 1 &&
     Number.isInteger(value.lod) &&
-    Number.isFinite(Number(value.width)) &&
-    Number.isFinite(Number(value.height)) &&
+    Number.isInteger(value.width) &&
+    value.width > 0 &&
+    Number.isInteger(value.height) &&
+    value.height > 0 &&
     typeof value.color === 'string' &&
     typeof value.className === 'string' &&
     value.encoding === 'rle4' &&
     Array.isArray(value.rle) &&
-    value.rle.every((run) => Array.isArray(run) && run.length === 2 && Number.isInteger(run[0]) && Number.isInteger(run[1]))
+    value.rle.every((run) => Array.isArray(run) && run.length === 2 && Number.isInteger(run[0]) && (run[0] === 0 || run[0] === 1) && Number.isInteger(run[1]) && run[1] > 0)
   );
 }
 
