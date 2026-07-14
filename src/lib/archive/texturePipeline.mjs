@@ -36,6 +36,12 @@ export function quantizeTextureOpacity(opacity) {
   return opacity > 0 ? 1 : 0;
 }
 
+export const textureLodRenderResolutions = {
+  0: { width: 24, height: 18 },
+  1: { width: 32, height: 24 },
+  2: { width: 40, height: 30 },
+};
+
 export const textureLodPolicies = {
   0: {
     lod: 0,
@@ -435,18 +441,33 @@ export function downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeig
   return applyTextureLodMorphology(values, targetWidth, targetHeight, policy);
 }
 
+export function textureRenderResolutionForLod(lod) {
+  return textureLodRenderResolutions[lod] ?? textureLodRenderResolutions[0];
+}
+
 export function generateTextureRenderPayload(sourceValues, sourceWidth, sourceHeight, profile, lodPolicy = textureLodPolicies[profile.lod] ?? textureLodPolicies[0]) {
-  const usesSourceMask = profile.width === sourceWidth && profile.height === sourceHeight;
+  const usesSourceMask = profile.role === 'modal' || (profile.width === sourceWidth && profile.height === sourceHeight);
+  const renderLod = usesSourceMask ? profile.lod : lodPolicy.lod;
+  const targetResolution = usesSourceMask
+    ? { width: sourceWidth, height: sourceHeight }
+    : textureRenderResolutionForLod(renderLod);
   const values = usesSourceMask
     ? sourceValues
-    : downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeight, profile.width, profile.height, lodPolicy);
+    : downsampleQuantizedTexture(
+      sourceValues,
+      sourceWidth,
+      sourceHeight,
+      targetResolution.width,
+      targetResolution.height,
+      lodPolicy
+    );
 
   return assertTextureRenderPayload({
     schemaVersion: 1,
     role: profile.role,
-    lod: usesSourceMask ? profile.lod : lodPolicy.lod,
-    width: profile.width,
-    height: profile.height,
+    lod: renderLod,
+    width: targetResolution.width,
+    height: targetResolution.height,
     color: profile.color,
     className: profile.className,
     encoding: 'rle4',
