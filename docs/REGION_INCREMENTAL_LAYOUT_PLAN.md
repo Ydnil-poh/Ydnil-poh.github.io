@@ -86,6 +86,23 @@ Bootstrap steps:
 
 Record-level global projection should not run after Region seeds exist.
 
+### Projection Axes Are State
+
+The 2D projection selects its two axes by variance ranking, and that ranking is
+unstable while the archive is small: adding a handful of records can reorder it.
+To keep bootstrap and reseed events reproducible, the selected axes are persisted
+in the manifest as `embeddingProjection` and carried forward verbatim on every
+build.
+
+- Builds reuse the persisted `xAxis`/`yAxis`; variance is not re-ranked.
+- Axes are selected from record embeddings (matching `analyze-embedding.mjs`
+  diagnostics), not from Region centroids.
+- A fresh selection happens only when the persisted state is unusable
+  (embedding model or dimension change, invalid axes) or explicitly requested
+  via `--recalculate-projection` / `ARCHIVE_RECALCULATE_PROJECTION=1`.
+- `--region-reseed` relocates Regions on the *pinned* axes; combine it with
+  `--recalculate-projection` to re-derive the projection as well.
+
 ## New Region Creation
 
 When a new tag appears:

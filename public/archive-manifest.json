@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 7,
-  "generatedAt": "2026-07-14T01:15:41.647Z",
+  "schemaVersion": 8,
+  "generatedAt": "2026-07-16T02:15:06.222Z",
   "rebuild": {
-    "id": "fc389827-6ad1-445c-b3c3-b4ff2ced5893",
+    "id": "f1e10beb-ab65-4d17-8933-6391561d0b34",
     "mode": "general",
     "changedRecordCount": 0
   },
@@ -23,6 +23,16 @@
       "distance": "cosine"
     },
     "manifestPolicy": "render snapshot only; raw vectors are excluded"
+  },
+  "embeddingProjection": {
+    "schemaVersion": 1,
+    "method": "variance-top2",
+    "dimensions": 64,
+    "xAxis": 29,
+    "yAxis": 57,
+    "embeddingModel": "local-feature-hash-ko-en-64",
+    "createdAt": "2026-07-16T02:14:26.251Z",
+    "persistence": "axes are state; carried forward across rebuilds, re-derived only on --recalculate-projection or embedding model change"
   },
   "spatialPolicy": {
     "interpretation": "semantic density terrain",
@@ -67,7 +77,7 @@
     ]
   },
   "counts": {
-    "records": 10,
+    "records": 11,
     "images": 0
   },
   "archiveView": {
@@ -210,6 +220,33 @@
           },
           "seedCol": 18,
           "seedRow": 22
+        },
+        {
+          "id": "tag:쳐묵쳐묵",
+          "tag": "쳐묵쳐묵",
+          "seedSlot": 722,
+          "seedPosition": {
+            "x": 0.0625,
+            "y": 0.74
+          },
+          "footprint": {
+            "schemaVersion": 1,
+            "kind": "rect",
+            "rect": {
+              "minCol": 1,
+              "maxCol": 2,
+              "minRow": 17,
+              "maxRow": 18
+            }
+          },
+          "stats": {
+            "occupiedSlots": 1,
+            "availableSlots": 3,
+            "density": 0.25,
+            "targetDensity": 0.72
+          },
+          "seedCol": 2,
+          "seedRow": 18
         }
       ],
       "records": [
@@ -235,6 +272,14 @@
           "col": 12,
           "row": 1,
           "regionId": "tag:뚜벅뚜벅",
+          "isLatest": false
+        },
+        {
+          "id": "post12",
+          "slot": 722,
+          "col": 2,
+          "row": 18,
+          "regionId": "tag:쳐묵쳐묵",
           "isLatest": true
         },
         {
@@ -323,7 +368,8 @@
         "post9",
         "post10",
         "post4",
-        "post8"
+        "post8",
+        "post12"
       ],
       "relationSummary": [
         {
@@ -349,6 +395,10 @@
         {
           "id": "post8",
           "weight": 0.0185
+        },
+        {
+          "id": "post12",
+          "weight": 0.016
         }
       ],
       "attentionSnapshot": {
@@ -458,7 +508,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "671102b19d71e22479bc16843bbc8526c19ebba837f0f78fdb8aee45ebe10435",
+      "contentHash": "4d3c37ceecf09ea502602a857e2164a394e8b0141daf2ab5b188ec921e15dc67",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -693,7 +743,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "d22f661e9d62a5a0e2f201cf4f51854470fc5201afac684518e4631797712b67",
+      "contentHash": "81b3697234b175d4d91f192f9927c03c9d18d7a7847fd5b336fa37d958a2be40",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -727,10 +777,10 @@
         "post4",
         "post9",
         "post8",
+        "post12",
         "post6",
         "post10",
-        "post3",
-        "post5"
+        "post3"
       ],
       "relationSummary": [
         {
@@ -750,6 +800,10 @@
           "weight": 0.0455
         },
         {
+          "id": "post12",
+          "weight": 0.0313
+        },
+        {
           "id": "post6",
           "weight": 0.0273
         },
@@ -760,10 +814,6 @@
         {
           "id": "post3",
           "weight": 0.0115
-        },
-        {
-          "id": "post5",
-          "weight": 0.0108
         }
       ],
       "attentionSnapshot": {
@@ -881,7 +931,7 @@
       "imageUrls": [],
       "galleryFolder": "june",
       "galleryImageUrls": [],
-      "contentHash": "167499fcf3b5908ba17306a24702a895d24fe4d26de72caaf129fd8b8dc95698",
+      "contentHash": "ad8ac8e2ce78973511f32f11bf918b7d87e370cefdac8c3a2c8593efda38524f",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -889,6 +939,179 @@
       },
       "embeddingModel": "local-feature-hash-ko-en-64",
       "url": "/records/post11/"
+    },
+    {
+      "id": "post12",
+      "slug": "post12",
+      "title": "등심과 와인",
+      "date": "2026-07-14",
+      "location": "서울",
+      "type": "mediaRail",
+      "excerpt": "처음 제대로 알게 된 식당과 오랫동안 좋아했던 와인을 같은 식탁에서 다시 만났다.",
+      "tags": [
+        "쳐묵쳐묵"
+      ],
+      "displayDensity": 0.2452,
+      "score": 0.2452,
+      "scoreMeaning": "semantic density",
+      "position": {
+        "x": 0.0625,
+        "y": 0.74
+      },
+      "layoutSlot": 722,
+      "regionId": "tag:쳐묵쳐묵",
+      "related": [
+        "post5",
+        "post11",
+        "post9",
+        "post1",
+        "post3",
+        "post8",
+        "post7"
+      ],
+      "relationSummary": [
+        {
+          "id": "post5",
+          "weight": 0.0335
+        },
+        {
+          "id": "post11",
+          "weight": 0.0313
+        },
+        {
+          "id": "post9",
+          "weight": 0.0283
+        },
+        {
+          "id": "post1",
+          "weight": 0.016
+        },
+        {
+          "id": "post3",
+          "weight": 0.0136
+        },
+        {
+          "id": "post8",
+          "weight": 0.0088
+        },
+        {
+          "id": "post7",
+          "weight": 0.0017
+        }
+      ],
+      "attentionSnapshot": {
+        "views": 0,
+        "tileClicks": 0,
+        "opens": 0,
+        "pageViews": 0,
+        "runtimeScore": 0,
+        "humanModalOpen": 0,
+        "humanFullOpen": 0,
+        "humanScore": 0,
+        "machineAccess": 0,
+        "machineScore": 0,
+        "lastEventAt": null,
+        "semantics": "nightly snapshot only; source of truth remains Supabase archive_events/archive_records"
+      },
+      "texture": {
+        "schemaVersion": 2,
+        "density": "low",
+        "imageCount": 0,
+        "textLength": 512,
+        "layout": {
+          "schemaVersion": 1,
+          "nodeCount": 6,
+          "canvas": {
+            "width": 64,
+            "height": 48,
+            "unit": "cell"
+          },
+          "documentType": "mediaRail"
+        },
+        "renders": {
+          "field": {
+            "schemaVersion": 1,
+            "role": "field",
+            "lod": 0,
+            "width": 24,
+            "height": 18,
+            "color": "currentColor",
+            "className": "archive-texture archive-texture--field",
+            "encoding": "rle4",
+            "rle": [
+              [0, 2],
+              [1, 20],
+              [0, 4],
+              [1, 4],
+              [0, 20],
+              [1, 20],
+              [0, 4],
+              [1, 14],
+              [0, 10],
+              [1, 7],
+              [0, 17],
+              [1, 6],
+              [0, 18],
+              [1, 8],
+              [0, 278]
+            ]
+          },
+          "modal": {
+            "schemaVersion": 1,
+            "role": "modal",
+            "lod": 1,
+            "width": 64,
+            "height": 48,
+            "color": "currentColor",
+            "className": "archive-texture archive-texture--modal",
+            "encoding": "rle4",
+            "rle": [
+              [0, 4],
+              [1, 56],
+              [0, 8],
+              [1, 56],
+              [0, 8],
+              [1, 12],
+              [0, 116],
+              [1, 56],
+              [0, 8],
+              [1, 56],
+              [0, 8],
+              [1, 55],
+              [0, 73],
+              [1, 56],
+              [0, 8],
+              [1, 39],
+              [0, 89],
+              [1, 56],
+              [0, 8],
+              [1, 56],
+              [0, 8],
+              [1, 19],
+              [0, 109],
+              [1, 56],
+              [0, 8],
+              [1, 25],
+              [0, 103],
+              [1, 56],
+              [0, 8],
+              [1, 21],
+              [0, 1831]
+            ]
+          }
+        }
+      },
+      "imageUrls": [],
+      "galleryFolder": "2607",
+      "galleryImageUrls": [],
+      "contentHash": "2c42475bfd6579cfae445335260aa5189619d2502033d77fad37d91010777097",
+      "embeddingRef": {
+        "provider": "supabase",
+        "table": "archive_embeddings",
+        "key": "post12"
+      },
+      "embeddingModel": "local-feature-hash-ko-en-64",
+      "url": "/records/post12/"
     },
     {
       "id": "post3",
@@ -917,6 +1140,7 @@
         "post4",
         "post5",
         "post8",
+        "post12",
         "post11"
       ],
       "relationSummary": [
@@ -943,6 +1167,10 @@
         {
           "id": "post8",
           "weight": 0.0138
+        },
+        {
+          "id": "post12",
+          "weight": 0.0136
         },
         {
           "id": "post11",
@@ -1058,7 +1286,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "625dd4a2099f04feee60e22340c17aff16e5971ef8c27fffb7d606669868cada",
+      "contentHash": "69834df6c0ccf06d038a65b00b0b281ea633883145053a166575716c6ba2001d",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -1331,7 +1559,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "b9b72472b507de9479f678353902996fa3cbdacdfe7261f707675661a551f2c6",
+      "contentHash": "83fd060ee241b78d27617bd3e448c5d43af31005918dc120bd13b09120f84300",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -1351,8 +1579,8 @@
       "tags": [
         "흥얼흥얼"
       ],
-      "displayDensity": 0.2991,
-      "score": 0.2991,
+      "displayDensity": 0.3029,
+      "score": 0.3029,
       "scoreMeaning": "semantic density",
       "position": {
         "x": 0.0125,
@@ -1362,6 +1590,7 @@
       "regionId": "tag:흥얼흥얼",
       "related": [
         "post1",
+        "post12",
         "post9",
         "post3",
         "post7",
@@ -1371,6 +1600,10 @@
         {
           "id": "post1",
           "weight": 0.0488
+        },
+        {
+          "id": "post12",
+          "weight": 0.0335
         },
         {
           "id": "post9",
@@ -1628,7 +1861,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "a322a339a6fdbc929cd4a42e6a9464e4575aa1e6e46afe9edad3cce5d7bd1a45",
+      "contentHash": "c3c168cbc7807c00196f1d311c0995524f133c8a4080301bd9a64ffd3c140cf0",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -1753,7 +1986,7 @@
       "imageUrls": [],
       "galleryFolder": "glass",
       "galleryImageUrls": [],
-      "contentHash": "ccf21ac9e297f67ba29b9eeec21757f8003e129603b2479cfe4a8544da2a9eeb",
+      "contentHash": "a53243576f4008c7c36a63589914d7d9377f5220b97dc979a1bc284f05b8ce80",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -1787,7 +2020,8 @@
         "post11",
         "post9",
         "post3",
-        "post5"
+        "post5",
+        "post12"
       ],
       "relationSummary": [
         {
@@ -1809,6 +2043,10 @@
         {
           "id": "post5",
           "weight": 0.0122
+        },
+        {
+          "id": "post12",
+          "weight": 0.0017
         }
       ],
       "attentionSnapshot": {
@@ -1986,7 +2224,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "95888f409f9e535ebfa9e456fd8101423a46b2ec1cc5d9ed8d46688cb4852be6",
+      "contentHash": "dfc03be9ba5c5507b88c3237b674aaab1ff4df9ca464e600573d007c69c88efd",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -2021,6 +2259,7 @@
         "post11",
         "post1",
         "post3",
+        "post12",
         "post4"
       ],
       "relationSummary": [
@@ -2043,6 +2282,10 @@
         {
           "id": "post3",
           "weight": 0.0138
+        },
+        {
+          "id": "post12",
+          "weight": 0.0088
         },
         {
           "id": "post4",
@@ -2148,7 +2391,7 @@
       "imageUrls": [],
       "galleryFolder": "gear",
       "galleryImageUrls": [],
-      "contentHash": "e7323ead9e2a5766af078c9512685e70c7ea74f1cc14939f993163c325a2f72a",
+      "contentHash": "d6db2674da8f13ee0bad0493626e9ff83672e87b06bff38e5438961465527b67",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -2183,6 +2426,7 @@
         "post7",
         "post1",
         "post5",
+        "post12",
         "post10"
       ],
       "relationSummary": [
@@ -2205,6 +2449,10 @@
         {
           "id": "post5",
           "weight": 0.03
+        },
+        {
+          "id": "post12",
+          "weight": 0.0283
         },
         {
           "id": "post10",
@@ -2380,7 +2628,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "748c7a19e5ba81a1af201329a3bdcea631a5360d781df8b6ae624aeaf4f3cb5c",
+      "contentHash": "fc782d7dd050f1eeaec07cf72d4bac835d167e8068f28c4f44f012278925421a",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
