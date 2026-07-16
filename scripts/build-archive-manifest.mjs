@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { projectEmbeddingsToPositions, resolveEmbeddingProjection } from '../src/lib/archive/embeddingProjection.mjs';
 import { generateFieldViewModel } from '../src/lib/archive/fieldViewModel.mjs';
 import { incrementalRegionLayout } from '../src/lib/archive/regionLayout.mjs';
 import { generateTextureViewModel, normalizedRuntimeScore } from '../src/lib/archive/texturePipeline.mjs';
@@ -17,9 +18,10 @@ const supabaseStorageBucket = process.env.SUPABASE_STORAGE_BUCKET ?? 'img';
 const embeddingDimensions = 64;
 const isSleepRebuild = process.argv.includes('--sleep-rebuild') || process.env.ARCHIVE_REBUILD_MODE === 'sleep';
 const isRegionReseed = process.argv.includes('--region-reseed') || process.env.ARCHIVE_REGION_RESEED === '1';
+const isRecalculateProjection = process.argv.includes('--recalculate-projection') || process.env.ARCHIVE_RECALCULATE_PROJECTION === '1';
 const rebuildMode = isRegionReseed ? 'region-reseed' : (isSleepRebuild ? 'sleep' : 'general');
 const markdownExtensions = new Set(['.md', '.markdown', '.mdx']);
-const manifestSchemaVersion = 7;
+const manifestSchemaVersion = 8;
 
 async function listMarkdownFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
@@ -166,67 +168,6 @@ function cosineSimilarity(a, b) {
 function normalizeScore(value, min, max) {
   if (max <= min) return 0.5;
   return Number(((value - min) / (max - min)).toFixed(4));
-}
-
-
-function projectEmbeddings(records) {
-  if (records.length === 0) return new Map();
-
-  const dimensions = records[0].embedding.length;
-
-  const variance = Array(dimensions).fill(0);
-  const mean = Array(dimensions).fill(0);
-
-  for (const record of records) {
-    for (let i = 0; i < dimensions; i++) {
-      mean[i] += record.embedding[i];
-    }
-  }
-
-  for (let i = 0; i < dimensions; i++) {
-    mean[i] /= records.length;
-  }
-
-  for (const record of records) {
-    for (let i = 0; i < dimensions; i++) {
-      const diff = record.embedding[i] - mean[i];
-      variance[i] += diff * diff;
-    }
-  }
-
-  const ranked = variance
-    .map((value, index) => ({ value, index }))
-    .sort((a, b) => b.value - a.value);
-
-  const xAxis = ranked[0]?.index ?? 0;
-  const yAxis = ranked[1]?.index ?? 1;
-
-  const xs = records.map((record) => record.embedding[xAxis]);
-  const ys = records.map((record) => record.embedding[yAxis]);
-
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-
-  const positions = new Map();
-
-  records.forEach((record) => {
-    const x =
-      maxX === minX
-        ? 0.5
-        : (record.embedding[xAxis] - minX) / (maxX - minX);
-
-    const y =
-      maxY === minY
-        ? 0.5
-        : (record.embedding[yAxis] - minY) / (maxY - minY);
-
-    positions.set(record.id, { x, y });
-  });
-
-  return positions;
 }
 
 
@@ -537,7 +478,18 @@ const scored = recordsWithRelations.map((record, index) => ({
 
 const previousManifest = await readPreviousManifest();
 const changedRecords = changedRecordCount(scored, previousManifest);
-const regionLayout = incrementalRegionLayout(scored, previousManifest, projectEmbeddings, undefined, {
+const embeddingProjection = resolveEmbeddingProjection({
+  previous: previousManifest?.embeddingProjection,
+  embeddings: scored.map((record) => record.embedding),
+  dimensions: embeddingDimensions,
+  embeddingModel: `local-feature-hash-ko-en-${embeddingDimensions}`,
+  recalculate: isRecalculateProjection,
+  now: generatedAt,
+});
+console.log(embeddingProjection.reused
+  ? `embedding projection: reusing persisted axes x=${embeddingProjection.state.xAxis} y=${embeddingProjection.state.yAxis} (created ${embeddingProjection.state.createdAt})`
+  : `embedding projection: selected fresh axes x=${embeddingProjection.state.xAxis} y=${embeddingProjection.state.yAxis} (${embeddingProjection.reason})`);
+const regionLayout = incrementalRegionLayout(scored, previousManifest, (records) => projectEmbeddingsToPositions(records, embeddingProjection.state), undefined, {
   sleepRebuild: isSleepRebuild,
   regionReseed: isRegionReseed,
 });
@@ -625,6 +577,10 @@ const manifest = {
     embeddingRef: { table: 'archive_embeddings', key: 'record_slug' },
     relationRef: { table: 'archive_relations', distance: 'cosine' },
     manifestPolicy: 'render snapshot only; raw vectors are excluded',
+  },
+  embeddingProjection: {
+    ...embeddingProjection.state,
+    persistence: 'axes are state; carried forward across rebuilds, re-derived only on --recalculate-projection or embedding model change',
   },
   spatialPolicy: {
     interpretation: 'semantic density terrain',

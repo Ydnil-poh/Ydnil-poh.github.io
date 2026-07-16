@@ -503,8 +503,22 @@ test('Relation drift is blocked at footprint edge and ignores hash attention dir
   assert.equal('attentionDrifted' in event.metadata, false);
 });
 
+test('archive manifest persists projection axes as reusable state', () => {
+  const projection = archiveManifest.embeddingProjection;
+  assert.equal(projection.schemaVersion, 1);
+  assert.equal(projection.method, 'variance-top2');
+  assert.equal(projection.dimensions, 64);
+  assert.equal(projection.embeddingModel, archiveManifest.semanticLayer.embeddingModel);
+  assert.equal(Number.isInteger(projection.xAxis), true);
+  assert.equal(Number.isInteger(projection.yAxis), true);
+  assert.notEqual(projection.xAxis, projection.yAxis);
+  assert.ok(projection.xAxis >= 0 && projection.xAxis < projection.dimensions);
+  assert.ok(projection.yAxis >= 0 && projection.yAxis < projection.dimensions);
+  assert.equal(typeof projection.createdAt, 'string');
+});
+
 test('archive manifest persists Region footprints and record region ids', () => {
-  assert.equal(archiveManifest.schemaVersion, 7);
+  assert.equal(archiveManifest.schemaVersion, 8);
   assert.equal(archiveManifest.archiveView.field.schemaVersion, 2);
   assert.ok(Array.isArray(archiveManifest.archiveView.field.regions));
   assert.ok(archiveManifest.archiveView.field.regions.length > 0);
