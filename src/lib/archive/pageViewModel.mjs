@@ -26,6 +26,20 @@ export function createArchiveIndexView(manifest) {
     tone: (slot * 13 + Math.floor(slot / cols) * 7) % 9,
   })).filter((tile) => !occupiedSlots.has(tile.slot));
 
+  const traces = (fieldView.traces ?? [])
+    .map((trace) => {
+      const record = recordByIdFromManifest.get(trace.recordId);
+      if (!record) return null;
+      return {
+        slot: trace.slot,
+        col: trace.col,
+        row: trace.row,
+        recordId: trace.recordId,
+        textureSvg: renderTextureSet(record.texture?.renders).field,
+      };
+    })
+    .filter((trace) => trace !== null && !occupiedSlots.has(trace.slot));
+
   const clientRecords = fieldRecords.map(({ textureSvg, texture, ...record }) => ({
     ...record,
     textureSvg: {
@@ -40,6 +54,7 @@ export function createArchiveIndexView(manifest) {
     totalSlots,
     fieldRecords,
     emptyTiles,
+    traces,
     clientRecords,
     recordById: new Map(fieldRecords.map((record) => [record.id, record])),
     selected: fieldRecords[0],

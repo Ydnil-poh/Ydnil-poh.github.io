@@ -4,7 +4,7 @@ import test from 'node:test';
 
 import archiveManifest from '../public/archive-manifest.json' with { type: 'json' };
 
-import { generateFieldViewModel } from '../src/lib/archive/fieldViewModel.mjs';
+import { deriveFieldTraces, generateFieldViewModel } from '../src/lib/archive/fieldViewModel.mjs';
 import { renderTextureSet, renderTextureSvg } from '../src/lib/archiveTexture.ts';
 import { createArchiveIndexView } from '../src/lib/archive/pageViewModel.mjs';
 import {
@@ -237,6 +237,58 @@ test('field view model stores structural record slots only', () => {
   assert.equal('emptyTiles' in view, false);
   assert.equal(view.records.find((record) => record.id === 'new').isLatest, true);
   assert.notEqual(view.records[0].slot, view.records[1].slot);
+});
+
+test('field traces mark vacated cells from move events and skip reoccupied ones', () => {
+  const profile = { cols: 4, rows: 4 };
+  const events = [
+    { eventType: 'layout.moved_within_region', recordId: 'a', fromSlot: 5, toSlot: 9 },
+    { eventType: 'layout.moved_within_region', recordId: 'b', fromSlot: 6, toSlot: 10 },
+    { eventType: 'layout.moved_within_region', recordId: 'c', fromSlot: 2, toSlot: 2 },
+    { eventType: 'layout.slot_preserved', recordId: 'd', fromSlot: 12, toSlot: 12 },
+    { eventType: 'record.first_seen', recordId: 'e', fromSlot: null, toSlot: null },
+  ];
+  const occupied = new Set([6]);
+
+  const traces = deriveFieldTraces(events, occupied, profile);
+
+  assert.deepEqual(traces, [{ slot: 5, col: 1, row: 1, recordId: 'a' }]);
+});
+
+test('field view model attaches traces derived from the rebuild move events', () => {
+  const records = [
+    { id: 'moved', date: '2025-01-01', position: { x: 0.1, y: 0.1 }, layoutSlot: 4, regionId: 'tag:x' },
+    { id: 'stay', date: '2025-01-02', position: { x: 0.2, y: 0.2 }, layoutSlot: 9, regionId: 'tag:x' },
+  ];
+  const events = [
+    { eventType: 'layout.moved_within_region', recordId: 'moved', fromSlot: 3, toSlot: 4 },
+  ];
+
+  const view = generateFieldViewModel(records, { cols: 40, rows: 25 }, [], events);
+
+  assert.equal(view.traces.length, 1);
+  assert.equal(view.traces[0].recordId, 'moved');
+  assert.equal(view.traces[0].slot, 3);
+  assert.equal(view.traces[0].col, 3);
+  assert.equal(view.traces[0].row, 0);
+});
+
+test('field view model reports no traces when nothing moved', () => {
+  const records = [{ id: 'a', date: '2025-01-01', position: { x: 0.1, y: 0.1 }, layoutSlot: 4, regionId: 'tag:x' }];
+  const view = generateFieldViewModel(records, { cols: 40, rows: 25 }, [], [
+    { eventType: 'layout.slot_preserved', recordId: 'a', fromSlot: 4, toSlot: 4 },
+  ]);
+  assert.deepEqual(view.traces, []);
+});
+
+test('archive manifest exposes a field traces array', () => {
+  assert.ok(Array.isArray(archiveManifest.archiveView.field.traces));
+  for (const trace of archiveManifest.archiveView.field.traces) {
+    assert.equal(typeof trace.recordId, 'string');
+    assert.equal(Number.isInteger(trace.slot), true);
+    assert.equal(Number.isInteger(trace.col), true);
+    assert.equal(Number.isInteger(trace.row), true);
+  }
 });
 
 test('UI texture set renderer only accepts rle render payloads', () => {
@@ -588,7 +640,7 @@ test('archive manifest persists projection axes as reusable state', () => {
 });
 
 test('archive manifest persists Region footprints and record region ids', () => {
-  assert.equal(archiveManifest.schemaVersion, 9);
+  assert.equal(archiveManifest.schemaVersion, 10);
   assert.equal(archiveManifest.archiveView.field.schemaVersion, 2);
   assert.ok(Array.isArray(archiveManifest.archiveView.field.regions));
   assert.ok(archiveManifest.archiveView.field.regions.length > 0);
