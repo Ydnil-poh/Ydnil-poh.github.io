@@ -21,7 +21,7 @@ const isRegionReseed = process.argv.includes('--region-reseed') || process.env.A
 const isRecalculateProjection = process.argv.includes('--recalculate-projection') || process.env.ARCHIVE_RECALCULATE_PROJECTION === '1';
 const rebuildMode = isRegionReseed ? 'region-reseed' : (isSleepRebuild ? 'sleep' : 'general');
 const markdownExtensions = new Set(['.md', '.markdown', '.mdx']);
-const manifestSchemaVersion = 8;
+const manifestSchemaVersion = 9;
 
 async function listMarkdownFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);

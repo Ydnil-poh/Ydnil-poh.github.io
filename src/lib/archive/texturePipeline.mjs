@@ -1,4 +1,4 @@
-import { assertTextureRenderPayload } from './textureRenderContract.mjs';
+import { assertTextureRenderPayload, textureMaxCellValue, textureRenderPayloadSchemaVersion } from './textureRenderContract.mjs';
 
 export const textureLayoutProfile = {
   width: 64,
@@ -33,7 +33,9 @@ export function youtubeDirectiveUrl(block) {
 }
 
 export function quantizeTextureOpacity(opacity) {
-  return opacity > 0 ? 1 : 0;
+  const numeric = Number(opacity);
+  if (!Number.isFinite(numeric) || numeric <= 0) return 0;
+  return Math.min(textureMaxCellValue, Math.round(numeric * textureMaxCellValue));
 }
 
 export const textureLodRenderResolutions = {
@@ -235,7 +237,7 @@ function createTextureCanvas(width, height) {
 
 function paintTextureCell(canvas, width, height, x, y, value) {
   if (x < 0 || x >= width || y < 0 || y >= height) return;
-  canvas[y * width + x] = value ? 1 : 0;
+  canvas[y * width + x] = Math.max(0, Math.min(textureMaxCellValue, Math.floor(Number(value) || 0)));
 }
 
 function rasterizeTextBlock(canvas, graph, node) {
@@ -244,7 +246,7 @@ function rasterizeTextBlock(canvas, graph, node) {
     const y = node.y + lineIndex;
     for (let x = node.x; x < node.x + node.width; x += 1) {
       const insideText = x < node.x + line.fillWidth;
-      paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, insideText ? 1 : 0);
+      paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, insideText ? textureMaxCellValue : 0);
     }
   }
 }
@@ -265,42 +267,12 @@ function rasterizeMediaBlock(canvas, graph, node) {
         (x === centerX && y === centerY) ||
         (x === centerX + 1 && y === centerY);
 
-      if (isHorizontalEdge || isVerticalEdge) {
-
-        paintTextureCell(
-          canvas,
-          graph.canvas.width,
-          graph.canvas.height,
-          x,
-          y,
-          1
-        );
-
-      } else if (playMarker) {
-
-        paintTextureCell(
-          canvas,
-          graph.canvas.width,
-          graph.canvas.height,
-          x,
-          y,
-          1
-        );
-
-} else {
-
-  const shade = (x + y) % 2 === 0 ? 0.22 : 0.30;
-
-  paintTextureCell(
-    canvas,
-    graph.canvas.width,
-    graph.canvas.height,
-    x,
-    y,
-    0
-  );
-
-}
+      if (isHorizontalEdge || isVerticalEdge || playMarker) {
+        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, textureMaxCellValue);
+      } else {
+        // screen fill: a light tone so the media block reads as a surface, not an outline
+        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 1);
+      }
     }
   }
 }
@@ -313,9 +285,9 @@ function rasterizeImageBlock(canvas, graph, node) {
       const isVerticalEdge = x === node.x || x === node.x + node.width - 1;
 
       if (isHorizontalEdge || isVerticalEdge) {
-        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 1);
+        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, textureMaxCellValue);
       } else {
-        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 0);
+        paintTextureCell(canvas, graph.canvas.width, graph.canvas.height, x, y, 1);
       }
     }
   }
@@ -405,7 +377,7 @@ function applyTextureLodMorphology(values, width, height, policy) {
       if (!value) return 0;
       const x = index % width;
       const y = Math.floor(index / width);
-      return neighborCount(nextValues, width, height, x, y) > 0 ? 1 : 0;
+      return neighborCount(nextValues, width, height, x, y) > 0 ? value : 0;
     });
   }
 
@@ -432,9 +404,13 @@ export function downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeig
         }
       }
 
-      const coverage = count > 0 ? total / count : 0;
+      // ink fraction: source cells are tone levels 0..max, so normalize by the
+      // maximum so thresholds keep their original visible-set semantics
+      const coverage = count > 0 ? total / (count * textureMaxCellValue) : 0;
       const hasThinLine = policy.preserveThinLines && total > 0;
-      values.push(quantizeTextureOpacity(coverage >= policy.coverageThreshold || hasThinLine ? 1 : 0));
+      values.push(coverage >= policy.coverageThreshold || hasThinLine
+        ? Math.max(1, quantizeTextureOpacity(coverage))
+        : 0);
     }
   }
 
@@ -463,7 +439,7 @@ export function generateTextureRenderPayload(sourceValues, sourceWidth, sourceHe
     );
 
   return assertTextureRenderPayload({
-    schemaVersion: 1,
+    schemaVersion: textureRenderPayloadSchemaVersion,
     role: profile.role,
     lod: renderLod,
     width: targetResolution.width,

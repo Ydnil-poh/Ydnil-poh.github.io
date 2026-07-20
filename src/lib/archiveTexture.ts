@@ -1,6 +1,7 @@
 import {
   assertTextureRenderPayload,
   decodeTextureRenderPayload,
+  textureOpacityByValue,
 } from './archive/textureRenderContract.mjs';
 import type { TextureRenderPayload } from './archive/textureRenderContract.mjs';
 
@@ -27,32 +28,39 @@ export function renderTextureSvg(payload: TextureRenderPayload | undefined) {
 
   const cells = decodeTextureRenderPayload(payload);
   const rects: string[] = [];
+  const roleOpacity = payload.role === 'field' ? 0.72 : 0.85;
 
-  for (let index = 0; index < cells.length; index += 1) {
-    const cellValue = cells[index];
+  for (let y = 0; y < height; y += 1) {
+    let x = 0;
 
-    if (cellValue === 0) {
-      continue;
+    while (x < width) {
+      const cellValue = cells[y * width + x];
+
+      if (cellValue === 0) {
+        x += 1;
+        continue;
+      }
+
+      let runEnd = x + 1;
+      while (runEnd < width && cells[y * width + runEnd] === cellValue) {
+        runEnd += 1;
+      }
+
+      const opacity = (textureOpacityByValue[cellValue] ?? 1) * roleOpacity;
+
+      rects.push(
+        `<rect
+          x="${x}"
+          y="${y}"
+          width="${runEnd - x}"
+          height="1"
+          fill="${payload.color}"
+          opacity="${opacity.toFixed(3)}"
+        />`
+      );
+
+      x = runEnd;
     }
-
-    const x = index % width;
-    const y = Math.floor(index / width);
-
-    const opacity =
-      payload.role === 'field'
-        ? 0.72
-        : 0.85;
-
-    rects.push(
-      `<rect
-        x="${x}"
-        y="${y}"
-        width="1"
-        height="1"
-        fill="${payload.color}"
-        opacity="${opacity.toFixed(3)}"
-      />`
-    );    
   }
 
   return `<svg class="${payload.className}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">${rects.join('')}</svg>`;

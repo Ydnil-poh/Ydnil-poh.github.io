@@ -5,13 +5,15 @@ import test from 'node:test';
 import archiveManifest from '../public/archive-manifest.json' with { type: 'json' };
 
 import { generateFieldViewModel } from '../src/lib/archive/fieldViewModel.mjs';
-import { renderTextureSet } from '../src/lib/archiveTexture.ts';
+import { renderTextureSet, renderTextureSvg } from '../src/lib/archiveTexture.ts';
 import { createArchiveIndexView } from '../src/lib/archive/pageViewModel.mjs';
 import {
+  downsampleQuantizedTexture,
   extractSemanticBlocks,
   generateTextureLayoutGraph,
   generateTextureRenderPayload,
   generateTextureViewModel,
+  quantizeTextureOpacity,
   rasterizeTextureLayoutGraph,
   normalizedRuntimeScore,
   runtimeLodForNormalizedScore,
@@ -19,7 +21,13 @@ import {
   textureLodRenderResolutions,
   textureRenderProfiles,
 } from '../src/lib/archive/texturePipeline.mjs';
-import { decodeTextureRenderPayload, isTextureRenderPayload } from '../src/lib/archive/textureRenderContract.mjs';
+import {
+  decodeTextureRenderPayload,
+  isTextureRenderPayload,
+  textureMaxCellValue,
+  textureOpacityByValue,
+  textureRenderPayloadSchemaVersion,
+} from '../src/lib/archive/textureRenderContract.mjs';
 
 import {
   calculateRegionStats,
@@ -65,6 +73,68 @@ test('render payload validates against the runtime schema contract', () => {
   assert.equal(payload.width, 24);
   assert.equal(payload.height, 18);
   assert.equal(decodeTextureRenderPayload(payload).length, 432);
+});
+
+test('texture cells quantize opacity into four tone levels', () => {
+  assert.equal(textureOpacityByValue.length, textureMaxCellValue + 1);
+  assert.equal(quantizeTextureOpacity(0), 0);
+  assert.equal(quantizeTextureOpacity(0.2), 1);
+  assert.equal(quantizeTextureOpacity(0.5), 2);
+  assert.equal(quantizeTextureOpacity(0.9), 3);
+  assert.equal(quantizeTextureOpacity(1.4), 3);
+  assert.equal(quantizeTextureOpacity(Number.NaN), 0);
+});
+
+test('field downsampling keeps mid tones instead of flattening to a binary mask', () => {
+  const ink = textureMaxCellValue;
+  const source = [
+    ink, ink, ink, ink,
+    ink, ink, ink, 0,
+  ];
+  const values = downsampleQuantizedTexture(source, 4, 2, 2, 1, textureLodPolicies[1]);
+
+  assert.equal(values[0], 3);
+  assert.equal(values[1], 2);
+});
+
+test('contract rejects tone levels outside the palette and legacy payload versions', () => {
+  const base = {
+    schemaVersion: textureRenderPayloadSchemaVersion,
+    role: 'field',
+    lod: 0,
+    width: 2,
+    height: 1,
+    color: 'currentColor',
+    className: 'archive-texture archive-texture--field',
+    encoding: 'rle4',
+    rle: [[3, 1], [1, 1]],
+  };
+
+  assert.equal(isTextureRenderPayload(base), true);
+  assert.equal(isTextureRenderPayload({ ...base, rle: [[4, 2]] }), false);
+  assert.equal(isTextureRenderPayload({ ...base, schemaVersion: 1 }), false);
+  assert.deepEqual(decodeTextureRenderPayload(base), [3, 1]);
+});
+
+test('svg renderer maps tone levels to opacity and merges horizontal runs', () => {
+  const payload = {
+    schemaVersion: textureRenderPayloadSchemaVersion,
+    role: 'field',
+    lod: 0,
+    width: 3,
+    height: 2,
+    color: 'currentColor',
+    className: 'archive-texture archive-texture--field',
+    encoding: 'rle4',
+    rle: [[3, 2], [1, 2], [0, 2]],
+  };
+
+  const svg = renderTextureSvg(payload);
+  const rects = svg.match(/<rect/g) ?? [];
+
+  assert.equal(rects.length, 3);
+  assert.match(svg, /width="2"[\s\S]*?opacity="0\.720"/);
+  assert.match(svg, /opacity="0\.252"/);
 });
 
 test('runtime score selects an LOD policy after rebuild-local log normalization', () => {
@@ -518,7 +588,7 @@ test('archive manifest persists projection axes as reusable state', () => {
 });
 
 test('archive manifest persists Region footprints and record region ids', () => {
-  assert.equal(archiveManifest.schemaVersion, 8);
+  assert.equal(archiveManifest.schemaVersion, 9);
   assert.equal(archiveManifest.archiveView.field.schemaVersion, 2);
   assert.ok(Array.isArray(archiveManifest.archiveView.field.regions));
   assert.ok(archiveManifest.archiveView.field.regions.length > 0);

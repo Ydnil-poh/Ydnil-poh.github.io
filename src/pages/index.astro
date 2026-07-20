@@ -130,12 +130,27 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         margin-top: 18px;
         min-height: 0;
         min-width: 0;
-        background-image: linear-gradient(rgba(92, 83, 67, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(92, 83, 67, 0.08) 1px, transparent 1px);
+        background-image:
+          linear-gradient(rgba(92, 83, 67, 0.055) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(92, 83, 67, 0.055) 1px, transparent 1px),
+          linear-gradient(rgba(255, 255, 255, 0.34) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.34) 1px, transparent 1px);
         background-size: calc((100% - 36px) / var(--cols)) calc((100% - 36px) / var(--rows));
-        background-position: 18px 18px;
+        background-position: 18px 18px, 18px 18px, 18px 19px, 19px 18px;
         overflow: hidden;
         padding: 18px;
         position: relative;
+      }
+
+      .field::after {
+        background:
+          radial-gradient(ellipse 72% 64% at 48% 40%, rgba(255, 252, 244, 0.5), transparent 70%),
+          radial-gradient(ellipse 130% 120% at 50% 50%, transparent 58%, rgba(74, 66, 50, 0.075) 100%);
+        content: "";
+        inset: 0;
+        pointer-events: none;
+        position: absolute;
+        z-index: 4;
       }
 
       .empty-tile,
@@ -154,9 +169,10 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       }
 
       .record-node {
-        background: rgba(247, 243, 235, 0.55);
-        border: 1px solid rgba(92, 83, 67, 0.2);
+        background: transparent;
+        border: 1px solid rgba(92, 83, 67, 0.12);
         color: var(--olive);
+        mix-blend-mode: multiply;
         opacity: calc(0.58 + var(--score) * 0.36);
         overflow: hidden;
         text-decoration: none;
