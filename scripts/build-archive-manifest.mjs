@@ -21,7 +21,7 @@ const isRegionReseed = process.argv.includes('--region-reseed') || process.env.A
 const isRecalculateProjection = process.argv.includes('--recalculate-projection') || process.env.ARCHIVE_RECALCULATE_PROJECTION === '1';
 const rebuildMode = isRegionReseed ? 'region-reseed' : (isSleepRebuild ? 'sleep' : 'general');
 const markdownExtensions = new Set(['.md', '.markdown', '.mdx']);
-const manifestSchemaVersion = 9;
+const manifestSchemaVersion = 10;
 
 async function listMarkdownFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
@@ -558,7 +558,7 @@ const records = recordsWithTexture.map((record) => ({
 }));
 
 const archiveView = {
-  field: generateFieldViewModel(records, undefined, regions),
+  field: generateFieldViewModel(records, undefined, regions, layoutEvents),
 };
 
 const manifest = {

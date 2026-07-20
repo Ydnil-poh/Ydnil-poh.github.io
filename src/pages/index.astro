@@ -7,6 +7,7 @@ const {
   rows: ROWS,
   fieldRecords,
   emptyTiles,
+  traces,
   clientRecords,
   recordById,
   selected,
@@ -168,6 +169,40 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         z-index: 1;
       }
 
+      /* trace-ghost: where a record sat before the last rebuild moved it —
+         a written-then-erased impression. Smudge + faded graphite, soft. */
+      .trace-ghost {
+        align-self: stretch;
+        display: block;
+        grid-column: calc(var(--col) + 1);
+        grid-row: calc(var(--row) + 1);
+        color: var(--olive);
+        pointer-events: none;
+        position: relative;
+        z-index: 2;
+      }
+      .trace-ghost::before {
+        background:
+          radial-gradient(ellipse 68% 58% at 46% 44%, rgba(74, 66, 50, 0.06), transparent 72%),
+          radial-gradient(ellipse 40% 30% at 70% 66%, rgba(74, 66, 50, 0.042), transparent 70%);
+        content: "";
+        filter: blur(0.6px);
+        inset: -2px;
+        mix-blend-mode: multiply;
+        position: absolute;
+      }
+      .trace-ghost .trace-bars,
+      .trace-ghost .archive-texture {
+        display: block;
+        height: 100%;
+        width: 100%;
+      }
+      .trace-ghost .trace-bars {
+        filter: blur(0.3px);
+        mix-blend-mode: multiply;
+        opacity: 0.1;
+      }
+
       .record-node {
         background: transparent;
         border: 1px solid rgba(92, 83, 67, 0.12);
@@ -303,6 +338,11 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         <div class="field-scroll">
           <div class="field" id="field" style={`--cols:${COLS};--rows:${ROWS};`}>
             {emptyTiles.map((tile) => <span class="empty-tile" style={`--col:${tile.col};--row:${tile.row};--tone:${tile.tone};`} aria-hidden="true"></span>)}
+            {traces.map((trace) => (
+              <span class="trace-ghost" style={`--col:${trace.col};--row:${trace.row};`} aria-hidden="true">
+                <span class="trace-bars" set:html={trace.textureSvg}></span>
+              </span>
+            ))}
             {fieldRecords.map((record) => {
               const density = record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low';
               return (

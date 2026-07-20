@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 9,
-  "generatedAt": "2026-07-16T08:02:06.216Z",
+  "schemaVersion": 10,
+  "generatedAt": "2026-07-20T02:03:28.548Z",
   "rebuild": {
-    "id": "0d3e4c1b-a309-457e-8945-7a08fd90730c",
+    "id": "e4d5290d-a700-4de2-8632-40f6ae14ce1e",
     "mode": "general",
     "changedRecordCount": 0
   },
@@ -338,7 +338,8 @@
           "regionId": "tag:뚜벅뚜벅",
           "isLatest": false
         }
-      ]
+      ],
+      "traces": []
     }
   },
   "records": [

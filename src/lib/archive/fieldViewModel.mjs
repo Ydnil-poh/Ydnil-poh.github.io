@@ -24,7 +24,29 @@ export function nearestOpenSlot(preferred, occupied, profile = fieldLayoutProfil
   return best;
 }
 
-export function generateFieldViewModel(records, profile = fieldLayoutProfile, regions = []) {
+// Traces mark cells a record vacated during the latest rebuild — the "written
+// then erased" impressions the field carries. Only layout.moved_within_region
+// events count, and only when the origin cell is now empty (a preserved tile
+// sitting there would hide the trace anyway). The record still exists at its new
+// slot, so its own texture can be rendered faded at the cell it left.
+export function deriveFieldTraces(layoutEvents = [], occupiedSlots = new Set(), profile = fieldLayoutProfile) {
+  const bySlot = new Map();
+  for (const event of layoutEvents) {
+    if (event?.eventType !== 'layout.moved_within_region') continue;
+    if (!Number.isInteger(event.fromSlot)) continue;
+    if (event.fromSlot === event.toSlot) continue;
+    if (occupiedSlots.has(event.fromSlot)) continue;
+    bySlot.set(event.fromSlot, event.recordId);
+  }
+  return [...bySlot].map(([slot, recordId]) => ({
+    slot,
+    col: slot % profile.cols,
+    row: Math.floor(slot / profile.cols),
+    recordId,
+  }));
+}
+
+export function generateFieldViewModel(records, profile = fieldLayoutProfile, regions = [], layoutEvents = []) {
   const occupied = new Set();
   const latestRecordId = [...records]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.id;
@@ -56,5 +78,6 @@ export function generateFieldViewModel(records, profile = fieldLayoutProfile, re
       seedRow: Math.floor(region.seedSlot / profile.cols),
     })),
     records: fieldRecords,
+    traces: deriveFieldTraces(layoutEvents, occupied, profile),
   };
 }
