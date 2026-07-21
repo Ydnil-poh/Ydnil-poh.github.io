@@ -9,6 +9,7 @@ import { renderTextureSet, renderTextureSvg } from '../src/lib/archiveTexture.ts
 import { createArchiveIndexView } from '../src/lib/archive/pageViewModel.mjs';
 import {
   downsampleQuantizedTexture,
+  remapToneForPolicy,
   extractSemanticBlocks,
   generateTextureLayoutGraph,
   generateTextureRenderPayload,
@@ -70,9 +71,9 @@ test('render payload validates against the runtime schema contract', () => {
 
   assert.equal(isTextureRenderPayload(payload), true);
   assert.equal(payload.lod, 0);
-  assert.equal(payload.width, 24);
-  assert.equal(payload.height, 18);
-  assert.equal(decodeTextureRenderPayload(payload).length, 432);
+  assert.equal(payload.width, 12);
+  assert.equal(payload.height, 9);
+  assert.equal(decodeTextureRenderPayload(payload).length, 108);
 });
 
 test('texture cells quantize opacity into four tone levels', () => {
@@ -91,10 +92,35 @@ test('field downsampling keeps mid tones instead of flattening to a binary mask'
     ink, ink, ink, ink,
     ink, ink, ink, 0,
   ];
-  const values = downsampleQuantizedTexture(source, 4, 2, 2, 1, textureLodPolicies[1]);
+  const values = downsampleQuantizedTexture(source, 4, 2, 2, 1, textureLodPolicies[2]);
 
   assert.equal(values[0], 3);
   assert.equal(values[1], 2);
+});
+
+test('LOD policies restrict the tone palette so fidelity reads at tile scale', () => {
+  assert.deepEqual(textureLodPolicies[0].allowedTones, [2]);
+  assert.deepEqual(textureLodPolicies[1].allowedTones, [1, 3]);
+  assert.deepEqual(textureLodPolicies[2].allowedTones, [1, 2, 3]);
+
+  // nearest allowed tone, ties resolve darker, paper (0) passes through
+  assert.equal(remapToneForPolicy(3, textureLodPolicies[0]), 2);
+  assert.equal(remapToneForPolicy(1, textureLodPolicies[0]), 2);
+  assert.equal(remapToneForPolicy(2, textureLodPolicies[1]), 3);
+  assert.equal(remapToneForPolicy(1, textureLodPolicies[1]), 1);
+  assert.equal(remapToneForPolicy(2, textureLodPolicies[2]), 2);
+  assert.equal(remapToneForPolicy(0, textureLodPolicies[0]), 0);
+
+  const ink = textureMaxCellValue;
+  const source = [
+    ink, ink, ink, ink,
+    ink, ink, ink, 0,
+  ];
+  const flat = downsampleQuantizedTexture(source, 4, 2, 2, 1, textureLodPolicies[0]);
+  const split = downsampleQuantizedTexture(source, 4, 2, 2, 1, textureLodPolicies[1]);
+
+  assert.deepEqual([...new Set(flat.filter((value) => value > 0))], [2]);
+  assert.ok(split.filter((value) => value > 0).every((value) => value === 1 || value === 3));
 });
 
 test('contract rejects tone levels outside the palette and legacy payload versions', () => {
@@ -146,8 +172,8 @@ test('runtime score selects an LOD policy after rebuild-local log normalization'
   assert.equal(textureLodPolicies[1].coverageThreshold, 0.45);
   assert.equal(textureLodPolicies[2].coverageThreshold, 0.3);
   assert.equal(textureLodPolicies[2].preserveThinLines, true);
-  assert.deepEqual(textureLodRenderResolutions[0], { width: 24, height: 18 });
-  assert.deepEqual(textureLodRenderResolutions[1], { width: 32, height: 24 });
+  assert.deepEqual(textureLodRenderResolutions[0], { width: 12, height: 9 });
+  assert.deepEqual(textureLodRenderResolutions[1], { width: 24, height: 18 });
   assert.deepEqual(textureLodRenderResolutions[2], { width: 40, height: 30 });
 });
 
@@ -189,15 +215,15 @@ test('semantic score alone does not raise texture LOD', () => {
 
   assert.equal(view.texture.density, 'high');
   assert.equal(view.texture.renders.field.lod, 0);
-  assert.equal(view.texture.renders.field.width, 24);
-  assert.equal(view.texture.renders.field.height, 18);
+  assert.equal(view.texture.renders.field.width, 12);
+  assert.equal(view.texture.renders.field.height, 9);
 });
 
 
 test('field runtime LOD changes render resolution while source raster and modal stay fixed', () => {
   const cases = [
-    { runtimeScore: 0, runtimeLodScale: Math.log1p(9), lod: 0, width: 24, height: 18 },
-    { runtimeScore: 3, runtimeLodScale: Math.log1p(9), lod: 1, width: 32, height: 24 },
+    { runtimeScore: 0, runtimeLodScale: Math.log1p(9), lod: 0, width: 12, height: 9 },
+    { runtimeScore: 3, runtimeLodScale: Math.log1p(9), lod: 1, width: 24, height: 18 },
     { runtimeScore: 9, runtimeLodScale: Math.log1p(9), lod: 2, width: 40, height: 30 },
   ];
 

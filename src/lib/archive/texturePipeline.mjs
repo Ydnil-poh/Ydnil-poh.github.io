@@ -38,12 +38,19 @@ export function quantizeTextureOpacity(opacity) {
   return Math.min(textureMaxCellValue, Math.round(numeric * textureMaxCellValue));
 }
 
+// Field tiles render at roughly 25px wide, so a cell must stay near or above
+// a screen pixel for the step to read: 12x9 is visibly blocky, 24x18 is the
+// baseline grain, 40x30 reads as smooth. Linear 1.33x steps were
+// indistinguishable at tile scale.
 export const textureLodRenderResolutions = {
-  0: { width: 24, height: 18 },
-  1: { width: 32, height: 24 },
+  0: { width: 12, height: 9 },
+  1: { width: 24, height: 18 },
   2: { width: 40, height: 30 },
 };
 
+// allowedTones limits the tone palette per LOD so fidelity reads at tile
+// scale even where resolution steps are sub-pixel: LOD0 is one flat mid tone,
+// LOD1 splits into light/full, LOD2 keeps the whole palette.
 export const textureLodPolicies = {
   0: {
     lod: 0,
@@ -51,6 +58,7 @@ export const textureLodPolicies = {
     removeIsolatedPixels: true,
     minimumBlockSize: 2,
     preserveThinLines: false,
+    allowedTones: [2],
   },
   1: {
     lod: 1,
@@ -58,6 +66,7 @@ export const textureLodPolicies = {
     removeIsolatedPixels: false,
     minimumBlockSize: 1,
     preserveThinLines: false,
+    allowedTones: [1, 3],
   },
   2: {
     lod: 2,
@@ -65,8 +74,25 @@ export const textureLodPolicies = {
     removeIsolatedPixels: false,
     minimumBlockSize: 1,
     preserveThinLines: true,
+    allowedTones: [1, 2, 3],
   },
 };
+
+// Nearest allowed tone; ties resolve to the darker tone so mid coverage never
+// fades below its LOD1 light/full split. Zero (paper) always passes through.
+export function remapToneForPolicy(tone, policy) {
+  const allowed = policy?.allowedTones;
+  if (tone === 0 || !Array.isArray(allowed) || allowed.length === 0 || allowed.includes(tone)) return tone;
+  let best = allowed[0];
+  for (const candidate of allowed) {
+    const candidateDistance = Math.abs(candidate - tone);
+    const bestDistance = Math.abs(best - tone);
+    if (candidateDistance < bestDistance || (candidateDistance === bestDistance && candidate > best)) {
+      best = candidate;
+    }
+  }
+  return best;
+}
 
 export function semanticDensityForScore(score) {
   const numericScore = Number(score);
@@ -409,7 +435,7 @@ export function downsampleQuantizedTexture(sourceValues, sourceWidth, sourceHeig
       const coverage = count > 0 ? total / (count * textureMaxCellValue) : 0;
       const hasThinLine = policy.preserveThinLines && total > 0;
       values.push(coverage >= policy.coverageThreshold || hasThinLine
-        ? Math.max(1, quantizeTextureOpacity(coverage))
+        ? remapToneForPolicy(Math.max(1, quantizeTextureOpacity(coverage)), policy)
         : 0);
     }
   }
