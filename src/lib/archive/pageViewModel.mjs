@@ -1,4 +1,4 @@
-import { renderTextureSet } from '../archiveTexture.ts';
+import { renderTextureSet, renderTextureSvg } from '../archiveTexture.ts';
 
 export function createArchiveIndexView(manifest) {
   const fieldView = manifest.archiveView.field;
@@ -26,19 +26,28 @@ export function createArchiveIndexView(manifest) {
     tone: (slot * 13 + Math.floor(slot / cols) * 7) % 9,
   })).filter((tile) => !occupiedSlots.has(tile.slot));
 
-  const traces = (fieldView.traces ?? [])
-    .map((trace) => {
-      const record = recordByIdFromManifest.get(trace.recordId);
-      if (!record) return null;
-      return {
-        slot: trace.slot,
-        col: trace.col,
-        row: trace.row,
-        recordId: trace.recordId,
-        textureSvg: renderTextureSet(record.texture?.renders).field,
-      };
-    })
-    .filter((trace) => trace !== null && !occupiedSlots.has(trace.slot));
+  // Impressions are permanent but a tile sitting on the cell covers them; when
+  // several impressions share a cell only the most recent one renders. Traces
+  // carry their own texture payload (so removed records keep their last look);
+  // older payload-less traces fall back to the live record's field render.
+  const latestTraceBySlot = new Map();
+  for (const trace of fieldView.traces ?? []) {
+    if (!trace || occupiedSlots.has(trace.slot)) continue;
+    const record = recordByIdFromManifest.get(trace.recordId);
+    const textureSvg = trace.texture
+      ? renderTextureSvg(trace.texture)
+      : (record ? renderTextureSet(record.texture?.renders).field : null);
+    if (!textureSvg) continue;
+    latestTraceBySlot.set(trace.slot, {
+      slot: trace.slot,
+      col: trace.col,
+      row: trace.row,
+      recordId: trace.recordId,
+      kind: trace.kind ?? 'moved',
+      textureSvg,
+    });
+  }
+  const traces = [...latestTraceBySlot.values()];
 
   const clientRecords = fieldRecords.map(({ textureSvg, texture, ...record }) => ({
     ...record,

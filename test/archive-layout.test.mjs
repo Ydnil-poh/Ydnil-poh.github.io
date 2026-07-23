@@ -4,7 +4,7 @@ import test from 'node:test';
 
 import archiveManifest from '../public/archive-manifest.json' with { type: 'json' };
 
-import { deriveFieldTraces, generateFieldViewModel } from '../src/lib/archive/fieldViewModel.mjs';
+import { deriveFieldTraces, generateFieldViewModel, mergeFieldTraces } from '../src/lib/archive/fieldViewModel.mjs';
 import { renderTextureSet, renderTextureSvg } from '../src/lib/archiveTexture.ts';
 import { createArchiveIndexView } from '../src/lib/archive/pageViewModel.mjs';
 import {
@@ -33,6 +33,7 @@ import {
 import {
   calculateRegionStats,
   createRectFootprintAroundSeed,
+  footprintArea,
   incrementalRegionLayout,
   isSlotInFootprint,
   maintainRegionFootprint,
@@ -268,46 +269,57 @@ test('field view model stores structural record slots only', () => {
   assert.notEqual(view.records[0].slot, view.records[1].slot);
 });
 
-test('field traces mark vacated cells from move events and skip reoccupied ones', () => {
+test('field traces mark vacated cells from moves, displacements, and removals — even covered ones', () => {
   const profile = { cols: 4, rows: 4 };
   const events = [
     { eventType: 'layout.moved_within_region', recordId: 'a', fromSlot: 5, toSlot: 9 },
-    { eventType: 'layout.moved_within_region', recordId: 'b', fromSlot: 6, toSlot: 10 },
+    { eventType: 'layout.displaced', recordId: 'b', fromSlot: 6, toSlot: 10 },
+    { eventType: 'record.removed', recordId: 'gone', fromSlot: 11, toSlot: null },
     { eventType: 'layout.moved_within_region', recordId: 'c', fromSlot: 2, toSlot: 2 },
     { eventType: 'layout.slot_preserved', recordId: 'd', fromSlot: 12, toSlot: 12 },
     { eventType: 'record.first_seen', recordId: 'e', fromSlot: null, toSlot: null },
   ];
-  const occupied = new Set([6]);
 
-  const traces = deriveFieldTraces(events, occupied, profile);
+  const traces = deriveFieldTraces(events, profile);
 
-  assert.deepEqual(traces, [{ slot: 5, col: 1, row: 1, recordId: 'a' }]);
+  assert.deepEqual(traces, [
+    { slot: 5, col: 1, row: 1, recordId: 'a', kind: 'moved' },
+    { slot: 6, col: 2, row: 1, recordId: 'b', kind: 'displaced' },
+    { slot: 11, col: 3, row: 2, recordId: 'gone', kind: 'removed' },
+  ]);
 });
 
-test('field view model attaches traces derived from the rebuild move events', () => {
-  const records = [
-    { id: 'moved', date: '2025-01-01', position: { x: 0.1, y: 0.1 }, layoutSlot: 4, regionId: 'tag:x' },
-    { id: 'stay', date: '2025-01-02', position: { x: 0.2, y: 0.2 }, layoutSlot: 9, regionId: 'tag:x' },
+test('traces accumulate across rebuilds and refresh instead of duplicating', () => {
+  const previous = [
+    { slot: 5, col: 1, row: 1, recordId: 'a', kind: 'moved', rebuildId: 'r1' },
+    { slot: 6, col: 2, row: 1, recordId: 'b', kind: 'moved', rebuildId: 'r1' },
   ];
-  const events = [
-    { eventType: 'layout.moved_within_region', recordId: 'moved', fromSlot: 3, toSlot: 4 },
+  const fresh = [
+    { slot: 5, col: 1, row: 1, recordId: 'a', kind: 'moved', rebuildId: 'r2' },
+    { slot: 9, col: 1, row: 2, recordId: 'c', kind: 'removed', rebuildId: 'r2' },
   ];
 
-  const view = generateFieldViewModel(records, { cols: 40, rows: 25 }, [], events);
+  const merged = mergeFieldTraces(previous, fresh);
+
+  assert.equal(merged.length, 3);
+  assert.deepEqual(merged.map((trace) => `${trace.slot}:${trace.recordId}`), ['6:b', '5:a', '9:c']);
+  assert.equal(merged.find((trace) => trace.recordId === 'a').rebuildId, 'r2');
+});
+
+test('field view model embeds precomposed traces verbatim', () => {
+  const records = [
+    { id: 'moved', date: '2025-01-01', position: { x: 0.1, y: 0.1 }, layoutSlot: 4, regionId: 'tag:x' },
+  ];
+  const traces = deriveFieldTraces([
+    { eventType: 'layout.moved_within_region', recordId: 'moved', fromSlot: 3, toSlot: 4 },
+  ], { cols: 40, rows: 25 });
+
+  const view = generateFieldViewModel(records, { cols: 40, rows: 25 }, [], traces);
 
   assert.equal(view.traces.length, 1);
   assert.equal(view.traces[0].recordId, 'moved');
   assert.equal(view.traces[0].slot, 3);
-  assert.equal(view.traces[0].col, 3);
-  assert.equal(view.traces[0].row, 0);
-});
-
-test('field view model reports no traces when nothing moved', () => {
-  const records = [{ id: 'a', date: '2025-01-01', position: { x: 0.1, y: 0.1 }, layoutSlot: 4, regionId: 'tag:x' }];
-  const view = generateFieldViewModel(records, { cols: 40, rows: 25 }, [], [
-    { eventType: 'layout.slot_preserved', recordId: 'a', fromSlot: 4, toSlot: 4 },
-  ]);
-  assert.deepEqual(view.traces, []);
+  assert.equal(view.traces[0].kind, 'moved');
 });
 
 test('archive manifest exposes a field traces array', () => {
@@ -670,11 +682,12 @@ test('a Region whose seed sits on the contested cells keeps them regardless of a
   assert.deepEqual(regions[0].footprint.rect, { minCol: 1, maxCol: 1, minRow: 1, maxRow: 2 });
 });
 
-test('Sleep Rebuild applies relation drift toward the strongest increased anchor', () => {
+test('a more central newcomer claims the seed-side cell and displaces the occupant outward', () => {
   const profile = { cols: 6, rows: 4 };
   const records = [
-    { id: 'anchor', tags: ['walk'], date: '2026-01-01', embedding: [1, 0], relations: [] },
-    { id: 'old-a', tags: ['walk'], date: '2026-01-02', embedding: [0.9, 0.1], relations: [{ id: 'anchor', relationWeight: 0.8 }] },
+    { id: 'old-a', tags: ['walk'], date: '2026-01-01', embedding: [0, 1] },
+    { id: 'old-b', tags: ['walk'], date: '2026-01-02', embedding: [1, 0.2] },
+    { id: 'new-core', tags: ['walk'], date: '2026-01-03', embedding: [1, 0] },
   ];
   const previousManifest = {
     archiveView: {
@@ -687,116 +700,99 @@ test('Sleep Rebuild applies relation drift toward the strongest increased anchor
             footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 2, minRow: 0, maxRow: 2 } },
           },
         ],
-        records: [{ id: 'anchor', slot: 0 }, { id: 'old-a', slot: 14 }],
+        records: [{ id: 'old-a', slot: 7 }, { id: 'old-b', slot: 8 }],
       },
     },
-    records: [
-      { id: 'anchor', relationSummary: [] },
-      { id: 'old-a', relationSummary: [{ id: 'anchor', weight: 0.2 }] },
-    ],
+    records: [],
   };
 
-  const layout = incrementalRegionLayout(records, previousManifest, () => new Map(), profile, { sleepRebuild: true });
-  const record = layout.records.find((candidate) => candidate.id === 'old-a');
+  const layout = incrementalRegionLayout(records, previousManifest, () => new Map(), profile);
+  const newcomer = layout.records.find((record) => record.id === 'new-core');
+  const displaced = layout.records.find((record) => record.id === 'old-a');
 
-  assert.equal(record.layoutSlot, 7);
-  assert.equal(isSlotInFootprint(record.layoutSlot, layout.regions[0].footprint, profile), true);
+  assert.equal(newcomer.layoutSlot, 7);
+  assert.equal(displaced.layoutSlot, 1);
+  assert.equal(layout.records.find((record) => record.id === 'old-b').layoutSlot, 8);
   assert.ok(layout.layoutEvents.some((event) =>
-    event.eventType === 'layout.moved_within_region' &&
+    event.eventType === 'layout.displaced' &&
     event.recordId === 'old-a' &&
-    event.metadata.relationDrifted === true &&
-    event.metadata.anchor.id === 'anchor' &&
-    event.metadata.relationDelta === 0.6 &&
-    event.metadata.driftReason === 'relation_delta_anchor'
+    event.fromSlot === 7 &&
+    event.toSlot === 1 &&
+    event.anchorId === 'new-core' &&
+    event.anchorKind === 'inserted_record'
+  ));
+  assert.ok(layout.layoutEvents.some((event) =>
+    event.eventType === 'layout.placed' &&
+    event.recordId === 'new-core' &&
+    event.metadata.displacedRecordId === 'old-a'
   ));
 });
 
-
-
-test('Relation drift does not move without relation growth or outside sleep rebuild', () => {
+test('a less central newcomer takes the nearest open cell without displacing anyone', () => {
   const profile = { cols: 6, rows: 4 };
   const records = [
-    { id: 'anchor', tags: ['walk'], date: '2026-01-01', embedding: [1, 0], relations: [] },
-    { id: 'old-a', tags: ['walk'], date: '2026-01-02', embedding: [0.9, 0.1], relations: [{ id: 'anchor', relationWeight: 0.2 }] },
-  ];
-  const previousManifest = {
-    archiveView: {
-      field: {
-        regions: [{
-          id: regionIdForTag('walk'),
-          tag: 'walk',
-          seedSlot: 7,
-          footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 2, minRow: 0, maxRow: 2 } },
-        }],
-        records: [{ id: 'anchor', slot: 0 }, { id: 'old-a', slot: 14 }],
-      },
-    },
-    records: [
-      { id: 'anchor', relationSummary: [] },
-      { id: 'old-a', relationSummary: [{ id: 'anchor', weight: 0.2 }] },
-    ],
-  };
-
-  const unchanged = incrementalRegionLayout(records, previousManifest, () => new Map(), profile, { sleepRebuild: true });
-  assert.equal(unchanged.records.find((record) => record.id === 'old-a').layoutSlot, 14);
-
-  const increasedOutsideSleep = incrementalRegionLayout([
-    records[0],
-    { ...records[1], relations: [{ id: 'anchor', relationWeight: 0.8 }] },
-  ], previousManifest, () => new Map(), profile);
-  assert.equal(increasedOutsideSleep.records.find((record) => record.id === 'old-a').layoutSlot, 14);
-});
-
-test('Relation drift is blocked at footprint edge and ignores hash attention direction', () => {
-  const profile = { cols: 6, rows: 4 };
-  const records = [
-    { id: 'anchor', tags: ['make'], date: '2026-01-01', embedding: [1, 0], relations: [] },
-    {
-      id: 'old-a',
-      tags: ['walk'],
-      date: '2026-01-02',
-      embedding: [0.9, 0.1],
-      attentionSnapshot: { humanScore: 999 },
-      relations: [{ id: 'anchor', relationWeight: 0.8 }],
-    },
+    { id: 'old-a', tags: ['walk'], date: '2026-01-01', embedding: [1, 0] },
+    { id: 'old-b', tags: ['walk'], date: '2026-01-02', embedding: [1, 0.1] },
+    { id: 'new-edge', tags: ['walk'], date: '2026-01-03', embedding: [0, 1] },
   ];
   const previousManifest = {
     archiveView: {
       field: {
         regions: [
           {
-            id: regionIdForTag('make'),
-            tag: 'make',
-            seedSlot: 0,
-            footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 0, minRow: 0, maxRow: 0 } },
+            id: regionIdForTag('walk'),
+            tag: 'walk',
+            seedSlot: 7,
+            footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 2, minRow: 0, maxRow: 2 } },
           },
+        ],
+        records: [{ id: 'old-a', slot: 7 }, { id: 'old-b', slot: 8 }],
+      },
+    },
+    records: [],
+  };
+
+  const layout = incrementalRegionLayout(records, previousManifest, () => new Map(), profile);
+
+  assert.equal(layout.records.find((record) => record.id === 'old-a').layoutSlot, 7);
+  assert.equal(layout.records.find((record) => record.id === 'old-b').layoutSlot, 8);
+  assert.equal(layout.records.find((record) => record.id === 'new-edge').layoutSlot, 1);
+  assert.equal(layout.layoutEvents.some((event) => event.eventType === 'layout.displaced'), false);
+});
+
+test('a full footprint expands on the spot instead of failing the build', () => {
+  const profile = { cols: 6, rows: 4 };
+  const records = [
+    { id: 'old-a', tags: ['walk'], date: '2026-01-01', embedding: [1, 0] },
+    { id: 'new-b', tags: ['walk'], date: '2026-01-02', embedding: [0, 1] },
+  ];
+  const previousManifest = {
+    archiveView: {
+      field: {
+        regions: [
           {
             id: regionIdForTag('walk'),
             tag: 'walk',
-            seedSlot: 18,
-            footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 2, minRow: 3, maxRow: 3 } },
+            seedSlot: 0,
+            footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 0, minRow: 0, maxRow: 0 } },
           },
         ],
-        records: [{ id: 'anchor', slot: 0 }, { id: 'old-a', slot: 18 }],
+        records: [{ id: 'old-a', slot: 0 }],
       },
     },
-    records: [
-      { id: 'anchor', relationSummary: [] },
-      { id: 'old-a', relationSummary: [{ id: 'anchor', weight: 0.2 }] },
-    ],
+    records: [],
   };
 
-  const layout = incrementalRegionLayout(records, previousManifest, () => new Map(), profile, {
-    sleepRebuild: true,
-    attentionDriftScale: Math.log1p(999),
-  });
-  const record = layout.records.find((candidate) => candidate.id === 'old-a');
-  const event = layout.layoutEvents.find((candidate) => candidate.recordId === 'old-a');
+  const layout = incrementalRegionLayout(records, previousManifest, () => new Map(), profile);
+  const region = layout.regions[0];
 
-  assert.equal(record.layoutSlot, 18);
-  assert.equal(event.metadata.relationDrifted, false);
-  assert.equal(event.metadata.driftReason, 'blocked_by_footprint');
-  assert.equal('attentionDrifted' in event.metadata, false);
+  assert.equal(layout.records.find((record) => record.id === 'old-a').layoutSlot, 0);
+  assert.equal(isSlotInFootprint(layout.records.find((record) => record.id === 'new-b').layoutSlot, region.footprint, profile), true);
+  assert.ok(footprintArea(region.footprint, profile) > 1);
+  assert.ok(layout.layoutEvents.some((event) =>
+    event.eventType === 'region.footprint_emergency_expanded' &&
+    event.regionId === regionIdForTag('walk')
+  ));
 });
 
 test('archive manifest persists projection axes as reusable state', () => {

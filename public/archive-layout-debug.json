@@ -1,38 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-23T06:06:13.457Z",
+  "generatedAt": "2026-07-23T07:16:54.699Z",
   "source": "src/content/records",
   "layoutEvents": [
-    {
-      "eventType": "region.footprint_overlap_repaired",
-      "recordId": null,
-      "regionId": "tag:데굴데굴",
-      "fromSlot": null,
-      "toSlot": null,
-      "anchorId": null,
-      "anchorKind": null,
-      "metadata": {
-        "keeperRegionId": "tag:뚝딱뚝딱",
-        "contestedSlots": [936, 937],
-        "footprintKindBefore": "rect",
-        "footprintKindAfter": "rect"
-      }
-    },
-    {
-      "eventType": "region.footprint_overlap_repaired",
-      "recordId": null,
-      "regionId": "tag:쳐묵쳐묵",
-      "fromSlot": null,
-      "toSlot": null,
-      "anchorId": null,
-      "anchorKind": null,
-      "metadata": {
-        "keeperRegionId": "tag:흥얼흥얼",
-        "contestedSlots": [760, 761],
-        "footprintKindBefore": "rect",
-        "footprintKindAfter": "rect"
-      }
-    },
     {
       "eventType": "layout.slot_preserved",
       "recordId": "post1",
@@ -43,11 +13,6 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 977,
-        "preferredSlot": 977,
-        "relationDrifted": false,
-        "anchor": null,
-        "relationDelta": 0,
-        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -61,11 +26,6 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 898,
-        "preferredSlot": 898,
-        "relationDrifted": false,
-        "anchor": null,
-        "relationDelta": 0,
-        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -79,11 +39,6 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 52,
-        "preferredSlot": 52,
-        "relationDrifted": false,
-        "anchor": null,
-        "relationDelta": 0,
-        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -97,11 +52,6 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 720,
-        "preferredSlot": 720,
-        "relationDrifted": false,
-        "anchor": null,
-        "relationDelta": 0,
-        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -115,11 +65,6 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 858,
-        "preferredSlot": 858,
-        "relationDrifted": false,
-        "anchor": null,
-        "relationDelta": 0,
-        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -133,11 +78,19 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 818,
-        "preferredSlot": 818,
-        "relationDrifted": false,
-        "anchor": null,
-        "relationDelta": 0,
-        "driftReason": "not_sleep_rebuild",
+        "footprintKind": "rect"
+      }
+    },
+    {
+      "eventType": "layout.slot_preserved",
+      "recordId": "post15",
+      "regionId": "tag:데굴데굴",
+      "fromSlot": 897,
+      "toSlot": 897,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "previousSlot": 897,
         "footprintKind": "rect"
       }
     },
@@ -151,11 +104,6 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 937,
-        "preferredSlot": 937,
-        "relationDrifted": false,
-        "anchor": null,
-        "relationDelta": 0,
-        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -169,11 +117,6 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 11,
-        "preferredSlot": 11,
-        "relationDrifted": false,
-        "anchor": null,
-        "relationDelta": 0,
-        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -187,11 +130,6 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 800,
-        "preferredSlot": 800,
-        "relationDrifted": false,
-        "anchor": null,
-        "relationDelta": 0,
-        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -205,11 +143,6 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 598,
-        "preferredSlot": 598,
-        "relationDrifted": false,
-        "anchor": null,
-        "relationDelta": 0,
-        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -223,11 +156,6 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 12,
-        "preferredSlot": 12,
-        "relationDrifted": false,
-        "anchor": null,
-        "relationDelta": 0,
-        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -241,11 +169,6 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 639,
-        "preferredSlot": 639,
-        "relationDrifted": false,
-        "anchor": null,
-        "relationDelta": 0,
-        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
       }
     },
@@ -259,53 +182,7 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 51,
-        "preferredSlot": 51,
-        "relationDrifted": false,
-        "anchor": null,
-        "relationDelta": 0,
-        "driftReason": "not_sleep_rebuild",
         "footprintKind": "rect"
-      }
-    },
-    {
-      "eventType": "record.first_seen",
-      "recordId": "psot15",
-      "regionId": "tag:데굴데굴",
-      "fromSlot": null,
-      "toSlot": null,
-      "anchorId": null,
-      "anchorKind": null,
-      "metadata": {}
-    },
-    {
-      "eventType": "layout.placed",
-      "recordId": "psot15",
-      "regionId": "tag:데굴데굴",
-      "fromSlot": null,
-      "toSlot": 897,
-      "anchorId": null,
-      "anchorKind": null,
-      "metadata": {
-        "preferredSlot": 898,
-        "seedSlot": 898,
-        "seedDistance": 1,
-        "footprintKind": "rect"
-      }
-    },
-    {
-      "eventType": "layout.anchor_record",
-      "recordId": "psot15",
-      "regionId": "tag:데굴데굴",
-      "fromSlot": null,
-      "toSlot": 897,
-      "anchorId": "post10",
-      "anchorKind": "record",
-      "metadata": {
-        "preferredSlot": 898,
-        "anchorSlot": 898,
-        "anchorDistance": 1,
-        "anchorWeight": 0.125333,
-        "similarity": 0.125333
       }
     }
   ],
@@ -1538,6 +1415,224 @@
       }
     },
     {
+      "id": "post15",
+      "semanticBlocks": [
+        {
+          "id": "block-0",
+          "kind": "paragraph",
+          "text": "오랜만에 넷플릭스로 볼 영화 한 편을 골랐다. 짝꿍의 추천으로 아메리칸 사이코. 직접 고른 영화는 아니었기 때문에 별다른 정보 없이 시청했다. 나는 처음에 스릴러 영화인 줄 알았지."
+        },
+        {
+          "id": "block-1",
+          "kind": "paragraph",
+          "text": "그 명함씬이 시작될 때, 짝꿍이 \"여기가 아주 유명한 장면이야\" 하고 일러둔다. 그러나 그 장면보다는 베이트먼의 아파트 장면에 더 흥미를 느낀다."
+        },
+        {
+          "id": "block-2",
+          "kind": "paragraph",
+          "text": "오늘의집이나 29CM을 탐색해보기를 즐겨 하던 사람이라, 베이트먼의 아파트 인테리어 스타일이나, 특히 놓여 있는 가구들이 친숙하기 때문이다. 바르셀로나 체어 두 개의 배치가 특히 재밌다. 왜 커피테이블을 중심으로 소파처럼 배치했을까."
+        },
+        {
+          "id": "block-3",
+          "kind": "paragraph",
+          "text": "나라면 그런 배치는 하지 않았을 것 같다. 오브제로도 기능하는 라운지 체어를 굳이 같은 모델로 고를 이유가 없다. 배치도 그렇다. 먼저 플로어 스탠드와 러그로 존을 만들고, 그 안에서 체어끼리 마주 보게 하거나, 약간 틀어서 대화가 가능한 각도를 만드는 게 자연스럽다. 각각의 사이드 테이블도 하나씩 두겠다."
+        },
+        {
+          "id": "block-4",
+          "kind": "paragraph",
+          "text": "베이트먼의 인간됨을 생각했을 때, 그런 배치에는 의도가 있었을 것이다. 캐릭터의 의도이든 미술감독의 의도이든. 어쩌면 두 개의 의도는 중첩되어 있다. 전시하는 베이트먼과 그런 베이트먼을 전시하는 미술감독."
+        },
+        {
+          "id": "block-5",
+          "kind": "paragraph",
+          "text": "아메리칸 사이코의 제작진은 그들의 영화에 대해 설명을 많이 한 편이다. 그들은 베이트먼을 명백하게 비꼬기 위한 인물로 연출했다고 말한다. 그리고 비꼬는 장치 중 하나는 베이트먼의 스타일이었다. 그러나 2026년도의 관객이 베이트먼의 아파트를 보고 친숙함을 느낄 정도로, 그의 스타일은... 갖고 싶은 무언가로 살아남는다. 제작진은 이 지점에 대해서 당혹해하면서, 자신들이 실패했는지를 묻는다."
+        },
+        {
+          "id": "block-6",
+          "kind": "paragraph",
+          "text": "그건 아마 그들만의 잘못은 아닐 거다. 베이트먼의 스타일로 베이트먼을 비꼰다는 것은, 그 스타일이 텅 비었다는 걸 보여주면 조롱이 되리라는 기대다. 그런데 그런 기대가 작동하지 않는 시대가 됐다. 텅 비었음이 더 이상 결격이 되지 않는 시대. 이미지로도 그만인 시대. 시대의 변화까지 상업영화 제작진이 내다봤어야 한다는 건 좀 가혹한 이야기다."
+        },
+        {
+          "id": "block-7",
+          "kind": "paragraph",
+          "text": "오래전 보드리야르의 책을 읽었을 때 잘 이해되지 않던 문장이 있다. 어떤 전망이 읽는 사람보다 먼저 도착해 있었기 때문이었을까. 시대가 그 문장을 따라잡은 것 같다. 내 방의 라운지 체어에 앉아 그 책을 다시 펼쳐봐야겠다."
+        }
+      ],
+      "layoutGraph": {
+        "schemaVersion": 1,
+        "canvas": {
+          "width": 64,
+          "height": 48,
+          "unit": "cell"
+        },
+        "nodes": [
+          {
+            "id": "node-0",
+            "kind": "textBlock",
+            "sourceBlockId": "block-0",
+            "x": 4,
+            "y": 0,
+            "width": 56,
+            "height": 2,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 45
+              }
+            ]
+          },
+          {
+            "id": "node-1",
+            "kind": "textBlock",
+            "sourceBlockId": "block-1",
+            "x": 4,
+            "y": 3,
+            "width": 56,
+            "height": 2,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 25
+              }
+            ]
+          },
+          {
+            "id": "node-2",
+            "kind": "textBlock",
+            "sourceBlockId": "block-2",
+            "x": 4,
+            "y": 6,
+            "width": 56,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 18
+              }
+            ]
+          },
+          {
+            "id": "node-3",
+            "kind": "textBlock",
+            "sourceBlockId": "block-3",
+            "x": 4,
+            "y": 10,
+            "width": 56,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 4
+              }
+            ]
+          },
+          {
+            "id": "node-4",
+            "kind": "textBlock",
+            "sourceBlockId": "block-4",
+            "x": 4,
+            "y": 15,
+            "width": 56,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 2
+              }
+            ]
+          },
+          {
+            "id": "node-5",
+            "kind": "textBlock",
+            "sourceBlockId": "block-5",
+            "x": 4,
+            "y": 19,
+            "width": 56,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 51
+              }
+            ]
+          },
+          {
+            "id": "node-6",
+            "kind": "textBlock",
+            "sourceBlockId": "block-6",
+            "x": 4,
+            "y": 24,
+            "width": 56,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 24
+              }
+            ]
+          },
+          {
+            "id": "node-7",
+            "kind": "textBlock",
+            "sourceBlockId": "block-7",
+            "x": 4,
+            "y": 29,
+            "width": 56,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 12
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "id": "post3",
       "semanticBlocks": [
         {
@@ -2498,224 +2593,6 @@
               },
               {
                 "fillWidth": 43
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "psot15",
-      "semanticBlocks": [
-        {
-          "id": "block-0",
-          "kind": "paragraph",
-          "text": "오랜만에 넷플릭스로 볼 영화 한 편을 골랐다. 짝꿍의 추천으로 아메리칸 사이코. 직접 고른 영화는 아니었기 때문에 별다른 정보 없이 시청했다. 나는 처음에 스릴러 영화인 줄 알았지."
-        },
-        {
-          "id": "block-1",
-          "kind": "paragraph",
-          "text": "그 명함씬이 시작될 때, 짝꿍이 \"여기가 아주 유명한 장면이야\" 하고 일러둔다. 그러나 그 장면보다는 베이트먼의 아파트 장면에 더 흥미를 느낀다."
-        },
-        {
-          "id": "block-2",
-          "kind": "paragraph",
-          "text": "오늘의집이나 29CM을 탐색해보기를 즐겨 하던 사람이라, 베이트먼의 아파트 인테리어 스타일이나, 특히 놓여 있는 가구들이 친숙하기 때문이다. 바르셀로나 체어 두 개의 배치가 특히 재밌다. 왜 커피테이블을 중심으로 소파처럼 배치했을까."
-        },
-        {
-          "id": "block-3",
-          "kind": "paragraph",
-          "text": "나라면 그런 배치는 하지 않았을 것 같다. 오브제로도 기능하는 라운지 체어를 굳이 같은 모델로 고를 이유가 없다. 배치도 그렇다. 먼저 플로어 스탠드와 러그로 존을 만들고, 그 안에서 체어끼리 마주 보게 하거나, 약간 틀어서 대화가 가능한 각도를 만드는 게 자연스럽다. 각각의 사이드 테이블도 하나씩 두겠다."
-        },
-        {
-          "id": "block-4",
-          "kind": "paragraph",
-          "text": "베이트먼의 인간됨을 생각했을 때, 그런 배치에는 의도가 있었을 것이다. 캐릭터의 의도이든 미술감독의 의도이든. 어쩌면 두 개의 의도는 중첩되어 있다. 전시하는 베이트먼과 그런 베이트먼을 전시하는 미술감독."
-        },
-        {
-          "id": "block-5",
-          "kind": "paragraph",
-          "text": "아메리칸 사이코의 제작진은 그들의 영화에 대해 설명을 많이 한 편이다. 그들은 베이트먼을 명백하게 비꼬기 위한 인물로 연출했다고 말한다. 그리고 비꼬는 장치 중 하나는 베이트먼의 스타일이었다. 그러나 2026년도의 관객이 베이트먼의 아파트를 보고 친숙함을 느낄 정도로, 그의 스타일은... 갖고 싶은 무언가로 살아남는다. 제작진은 이 지점에 대해서 당혹해하면서, 자신들이 실패했는지를 묻는다."
-        },
-        {
-          "id": "block-6",
-          "kind": "paragraph",
-          "text": "그건 아마 그들만의 잘못은 아닐 거다. 베이트먼의 스타일로 베이트먼을 비꼰다는 것은, 그 스타일이 텅 비었다는 걸 보여주면 조롱이 되리라는 기대다. 그런데 그런 기대가 작동하지 않는 시대가 됐다. 텅 비었음이 더 이상 결격이 되지 않는 시대. 이미지로도 그만인 시대. 시대의 변화까지 상업영화 제작진이 내다봤어야 한다는 건 좀 가혹한 이야기다."
-        },
-        {
-          "id": "block-7",
-          "kind": "paragraph",
-          "text": "오래전 보드리야르의 책을 읽었을 때 잘 이해되지 않던 문장이 있다. 어떤 전망이 읽는 사람보다 먼저 도착해 있었기 때문이었을까. 시대가 그 문장을 따라잡은 것 같다. 내 방의 라운지 체어에 앉아 그 책을 다시 펼쳐봐야겠다."
-        }
-      ],
-      "layoutGraph": {
-        "schemaVersion": 1,
-        "canvas": {
-          "width": 64,
-          "height": 48,
-          "unit": "cell"
-        },
-        "nodes": [
-          {
-            "id": "node-0",
-            "kind": "textBlock",
-            "sourceBlockId": "block-0",
-            "x": 4,
-            "y": 0,
-            "width": 56,
-            "height": 2,
-            "lines": [
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 45
-              }
-            ]
-          },
-          {
-            "id": "node-1",
-            "kind": "textBlock",
-            "sourceBlockId": "block-1",
-            "x": 4,
-            "y": 3,
-            "width": 56,
-            "height": 2,
-            "lines": [
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 25
-              }
-            ]
-          },
-          {
-            "id": "node-2",
-            "kind": "textBlock",
-            "sourceBlockId": "block-2",
-            "x": 4,
-            "y": 6,
-            "width": 56,
-            "height": 3,
-            "lines": [
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 18
-              }
-            ]
-          },
-          {
-            "id": "node-3",
-            "kind": "textBlock",
-            "sourceBlockId": "block-3",
-            "x": 4,
-            "y": 10,
-            "width": 56,
-            "height": 4,
-            "lines": [
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 4
-              }
-            ]
-          },
-          {
-            "id": "node-4",
-            "kind": "textBlock",
-            "sourceBlockId": "block-4",
-            "x": 4,
-            "y": 15,
-            "width": 56,
-            "height": 3,
-            "lines": [
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 2
-              }
-            ]
-          },
-          {
-            "id": "node-5",
-            "kind": "textBlock",
-            "sourceBlockId": "block-5",
-            "x": 4,
-            "y": 19,
-            "width": 56,
-            "height": 4,
-            "lines": [
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 51
-              }
-            ]
-          },
-          {
-            "id": "node-6",
-            "kind": "textBlock",
-            "sourceBlockId": "block-6",
-            "x": 4,
-            "y": 24,
-            "width": 56,
-            "height": 4,
-            "lines": [
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 24
-              }
-            ]
-          },
-          {
-            "id": "node-7",
-            "kind": "textBlock",
-            "sourceBlockId": "block-7",
-            "x": 4,
-            "y": 29,
-            "width": 56,
-            "height": 3,
-            "lines": [
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 56
-              },
-              {
-                "fillWidth": 12
               }
             ]
           }

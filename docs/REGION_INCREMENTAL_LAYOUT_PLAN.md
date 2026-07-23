@@ -187,6 +187,14 @@ cells keeps them (ties go to the older Region); the yielding Region cedes the
 cells, preferring an edge crop that keeps its footprint a rect, and the repair
 is recorded as a `region.footprint_overlap_repaired` layout event.
 
+Drift is insertion displacement, and it happens on general builds, not Sleep
+Rebuild: a newcomer that is more central to its Region (embedding similarity to
+the Region centroid) claims the first seed-outward cell held by a less central
+record, which moves one step outward (`layout.displaced`; no cascading). When a
+footprint has no open cell for a record, the build performs an on-the-spot
+neighbor-guarded emergency expansion (`region.footprint_emergency_expanded`)
+instead of failing.
+
 Any record movement during Sleep Rebuild should be local to the Region and should use existing slots as preferred positions.
 
 ## Manifest Changes

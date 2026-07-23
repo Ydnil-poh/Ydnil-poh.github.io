@@ -3,7 +3,7 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { projectEmbeddingsToPositions, resolveEmbeddingProjection } from '../src/lib/archive/embeddingProjection.mjs';
-import { generateFieldViewModel } from '../src/lib/archive/fieldViewModel.mjs';
+import { deriveFieldTraces, generateFieldViewModel, mergeFieldTraces } from '../src/lib/archive/fieldViewModel.mjs';
 import { incrementalRegionLayout } from '../src/lib/archive/regionLayout.mjs';
 import { generateTextureViewModel, normalizedRuntimeScore } from '../src/lib/archive/texturePipeline.mjs';
 import { textureOpacityByValue } from '../src/lib/archive/textureRenderContract.mjs';
@@ -363,6 +363,56 @@ function layoutEventRows(layoutEvents, rebuildId) {
   }));
 }
 
+function regionSnapshotRows(regions, rebuildId) {
+  return regions.map((region) => ({
+    rebuild_id: rebuildId,
+    region_id: region.id,
+    tag: region.tag,
+    seed_slot: region.seedSlot,
+    footprint: region.footprint,
+    occupied_slots: region.stats?.occupiedSlots ?? 0,
+    available_slots: region.stats?.availableSlots ?? 0,
+    density: region.stats?.density ?? 0,
+    metadata: {},
+  }));
+}
+
+async function supabaseRest(pathAndQuery, init = {}) {
+  const endpoint = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/${pathAndQuery}`;
+  const response = await fetch(endpoint, {
+    ...init,
+    headers: {
+      apikey: supabaseServiceKey,
+      Authorization: `Bearer ${supabaseServiceKey}`,
+      'Content-Type': 'application/json',
+      ...(init.headers ?? {}),
+    },
+  });
+  if (!response.ok) throw new Error(`Supabase request failed (${pathAndQuery}): ${response.status} ${await response.text()}`);
+  return response;
+}
+
+// Records deleted from the repo are tombstoned, not erased: the row keeps its
+// history (events, snapshots) and gains removed_at. Reappearing slugs are
+// resurrected by the regular upsert clearing removed_at. Derived relation rows
+// of removed records are deleted outright.
+async function tombstoneRemovedRecords(currentSlugs) {
+  const response = await supabaseRest('archive_records?select=slug&removed_at=is.null');
+  const rows = await response.json();
+  const staleSlugs = rows.map((row) => row.slug).filter((slug) => !currentSlugs.has(slug));
+  if (staleSlugs.length === 0) return staleSlugs;
+
+  const quoted = staleSlugs.map((slug) => `"${String(slug).replaceAll('"', '\\"')}"`).join(',');
+  await supabaseRest(`archive_records?slug=in.(${quoted})`, {
+    method: 'PATCH',
+    body: JSON.stringify({ removed_at: new Date().toISOString() }),
+    headers: { Prefer: 'return=minimal' },
+  });
+  await supabaseRest(`archive_relations?source_slug=in.(${quoted})`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+  await supabaseRest(`archive_relations?target_slug=in.(${quoted})`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+  return staleSlugs;
+}
+
 async function syncSupabase(records, history = {}) {
   if (!supabaseUrl || !supabaseServiceKey) {
     console.log('supabase sync skipped: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set');
@@ -386,6 +436,7 @@ async function syncSupabase(records, history = {}) {
     },
     score: record.score,
     position: record.position,
+    removed_at: null,
     updated_at: new Date().toISOString(),
   }));
   const embeddingRows = records.map((record) => ({
@@ -416,7 +467,13 @@ async function syncSupabase(records, history = {}) {
       changed_record_count: history.changedRecordCount ?? records.length,
     }], 'id');
     await supabaseUpsert('archive_record_snapshots', recordSnapshotRows(records, history.rebuildId), 'rebuild_id,record_slug');
+    await supabaseUpsert('archive_region_snapshots', regionSnapshotRows(history.regions ?? [], history.rebuildId), 'rebuild_id,region_id');
     await supabaseUpsert('archive_layout_events', layoutEventRows(history.layoutEvents ?? [], history.rebuildId), 'rebuild_id,event_index');
+  }
+
+  if (isSleepRebuild) {
+    const staleSlugs = await tombstoneRemovedRecords(new Set(records.map((record) => record.id)));
+    if (staleSlugs.length > 0) console.log(`tombstoned removed records: ${staleSlugs.join(', ')}`);
   }
 
   console.log(`supabase sync complete: ${recordRows.length} records, ${embeddingRows.length} embeddings, ${relationRowsForSync.length} relations`);
@@ -557,8 +614,53 @@ const records = recordsWithTexture.map((record) => ({
   url: record.url,
 }));
 
+// Records that existed in the previous manifest but are gone now vanished from
+// the field — that erasure is an observation too, recorded as a layout event
+// and left behind as a permanent trace at their last cell.
+const currentRecordIds = new Set(records.map((record) => record.id));
+const previousRecordsById = new Map((previousManifest?.records ?? [])
+  .filter((record) => record?.id)
+  .map((record) => [record.id, record]));
+const previousSlotsById = new Map((previousManifest?.archiveView?.field?.records ?? [])
+  .filter((record) => record?.id)
+  .map((record) => [record.id, record.slot]));
+if (!isRegionReseed) {
+  for (const [id, previousRecord] of previousRecordsById) {
+    if (currentRecordIds.has(id)) continue;
+    const fromSlot = previousSlotsById.get(id) ?? previousRecord.layoutSlot ?? null;
+    if (!Number.isInteger(fromSlot)) continue;
+    layoutEvents.push({
+      eventType: 'record.removed',
+      recordId: id,
+      regionId: previousRecord.regionId ?? null,
+      fromSlot,
+      toSlot: null,
+      anchorId: null,
+      anchorKind: null,
+      metadata: { lastKnownSlot: fromSlot },
+    });
+  }
+}
+
+// Traces are permanent impressions: carry every previous one forward and add
+// this rebuild's vacated cells, each with a snapshot of the texture that sat
+// there (so removed records keep their last look). A region reseed resets the
+// field's memory, traces included.
+const fieldRenderById = new Map(recordsWithTexture.map((record) => [record.id, record.textureViewModel.texture.renders.field]));
+const newTraces = deriveFieldTraces(layoutEvents).map((trace) => ({
+  ...trace,
+  rebuildId,
+  texture: fieldRenderById.get(trace.recordId)
+    ?? previousRecordsById.get(trace.recordId)?.texture?.renders?.field
+    ?? null,
+}));
+const fieldTraces = mergeFieldTraces(
+  isRegionReseed ? [] : (previousManifest?.archiveView?.field?.traces ?? []),
+  newTraces
+);
+
 const archiveView = {
-  field: generateFieldViewModel(records, undefined, regions, layoutEvents),
+  field: generateFieldViewModel(records, undefined, regions, fieldTraces),
 };
 
 const manifest = {
@@ -657,4 +759,5 @@ await syncSupabase(semanticRecords, {
   rebuildMode,
   changedRecordCount: changedRecords,
   layoutEvents,
+  regions: archiveView.field.regions,
 });

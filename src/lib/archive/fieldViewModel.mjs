@@ -24,29 +24,50 @@ export function nearestOpenSlot(preferred, occupied, profile = fieldLayoutProfil
   return best;
 }
 
-// Traces mark cells a record vacated during the latest rebuild — the "written
-// then erased" impressions the field carries. Only layout.moved_within_region
-// events count, and only when the origin cell is now empty (a preserved tile
-// sitting there would hide the trace anyway). The record still exists at its new
-// slot, so its own texture can be rendered faded at the cell it left.
-export function deriveFieldTraces(layoutEvents = [], occupiedSlots = new Set(), profile = fieldLayoutProfile) {
-  const bySlot = new Map();
+// Traces mark cells a record vacated — the "written then erased" impressions
+// the field carries. They are permanent: covered while a tile sits on the
+// cell, visible again once it leaves, so a cell can accumulate the layered
+// history of being written, erased, and written over. Moves, displacements,
+// and removals all leave one.
+const traceKindByEventType = new Map([
+  ['layout.moved_within_region', 'moved'],
+  ['layout.displaced', 'displaced'],
+  ['record.removed', 'removed'],
+]);
+
+export function deriveFieldTraces(layoutEvents = [], profile = fieldLayoutProfile) {
+  const byCell = new Map();
   for (const event of layoutEvents) {
-    if (event?.eventType !== 'layout.moved_within_region') continue;
+    const kind = traceKindByEventType.get(event?.eventType);
+    if (!kind) continue;
     if (!Number.isInteger(event.fromSlot)) continue;
     if (event.fromSlot === event.toSlot) continue;
-    if (occupiedSlots.has(event.fromSlot)) continue;
-    bySlot.set(event.fromSlot, event.recordId);
+    byCell.set(`${event.fromSlot}:${event.recordId}`, {
+      slot: event.fromSlot,
+      col: event.fromSlot % profile.cols,
+      row: Math.floor(event.fromSlot / profile.cols),
+      recordId: event.recordId,
+      kind,
+    });
   }
-  return [...bySlot].map(([slot, recordId]) => ({
-    slot,
-    col: slot % profile.cols,
-    row: Math.floor(slot / profile.cols),
-    recordId,
-  }));
+  return [...byCell.values()];
 }
 
-export function generateFieldViewModel(records, profile = fieldLayoutProfile, regions = [], layoutEvents = []) {
+// Accumulate impressions across rebuilds. A record leaving the same cell again
+// refreshes its existing impression instead of duplicating it; refreshed and
+// new impressions move to the end so the latest one per cell renders on top.
+export function mergeFieldTraces(previousTraces = [], newTraces = []) {
+  const merged = new Map();
+  for (const trace of [...previousTraces, ...newTraces]) {
+    if (!trace || !Number.isInteger(trace.slot) || !trace.recordId) continue;
+    const key = `${trace.slot}:${trace.recordId}`;
+    merged.delete(key);
+    merged.set(key, trace);
+  }
+  return [...merged.values()];
+}
+
+export function generateFieldViewModel(records, profile = fieldLayoutProfile, regions = [], traces = []) {
   const occupied = new Set();
   const latestRecordId = [...records]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.id;
@@ -78,6 +99,6 @@ export function generateFieldViewModel(records, profile = fieldLayoutProfile, re
       seedRow: Math.floor(region.seedSlot / profile.cols),
     })),
     records: fieldRecords,
-    traces: deriveFieldTraces(layoutEvents, occupied, profile),
+    traces,
   };
 }

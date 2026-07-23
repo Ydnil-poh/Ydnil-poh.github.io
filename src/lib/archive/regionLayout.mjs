@@ -221,59 +221,59 @@ function slotDistance(a, b, profile = fieldLayoutProfile) {
   return Math.abs(aCell.col - bCell.col) + Math.abs(aCell.row - bCell.row);
 }
 
-function relationSummariesFor(record) {
-  const relations = record?.relations ?? record?.relationSummary ?? [];
-  return relations
-    .map((relation) => ({
-      id: relation.id ?? relation.targetId ?? relation.target_slug ?? relation.targetSlug,
-      weight: Number(relation.relationWeight ?? relation.weight ?? 0),
-    }))
-    .filter((relation) => relation.id && Number.isFinite(relation.weight));
+// Drift is a consequence of insertion, not a nightly force: a newcomer that is
+// more central to its Region (closer to the Region centroid in embedding
+// space) may claim a cell nearer the seed, displacing the less central
+// occupant one step outward. Seed distance thereby reads as semantic
+// centrality. Runtime attention never participates.
+export function centralityFor(record, centroid) {
+  if (!Array.isArray(centroid) || centroid.length === 0) return 0;
+  return cosineSimilarity(record.embedding, centroid);
 }
 
-function previousRelationSummaryMap(previousManifest) {
-  return new Map((previousManifest?.records ?? [])
-    .filter((record) => record?.id)
-    .map((record) => [record.id, new Map(relationSummariesFor(record).map((relation) => [relation.id, relation.weight]))]));
+// Walk the footprint from the seed outward; the newcomer claims the first cell
+// that is open, or that is held by a strictly less central record of the same
+// Region.
+function insertionTarget(record, region, centroid, occupied, occupantBySlot, profile) {
+  const newcomerCentrality = centralityFor(record, centroid);
+  const cells = slotsInFootprint(region.footprint, profile)
+    .map((slot) => ({ slot, distance: slotDistance(slot, region.seedSlot, profile) }))
+    .sort((a, b) => a.distance - b.distance || a.slot - b.slot);
+
+  for (const cell of cells) {
+    if (!occupied.has(cell.slot)) {
+      return { slot: cell.slot, displaced: null, newcomerCentrality };
+    }
+    const occupant = occupantBySlot.get(cell.slot);
+    if (!occupant || occupant.regionId !== region.id) continue;
+    const occupantCentrality = centralityFor(occupant, centroid);
+    if (occupantCentrality < newcomerCentrality) {
+      return {
+        slot: cell.slot,
+        displaced: { record: occupant, centrality: occupantCentrality },
+        newcomerCentrality,
+      };
+    }
+  }
+  return { slot: -1, displaced: null, newcomerCentrality };
 }
 
-function relationDriftTarget(record, previousRelationSummaries, placedById, anchorSlotFor, threshold = 0.05) {
-  const previousRelations = previousRelationSummaries.get(record.id) ?? new Map();
-  const candidates = relationSummariesFor(record)
-    .map((relation) => ({
-      anchorId: relation.id,
-      relationWeight: relation.weight,
-      relationDelta: relation.weight - (previousRelations.get(relation.id) ?? 0),
-    }))
-    .map((candidate) => ({
-      ...candidate,
-      anchor: placedById.get(candidate.anchorId) ?? { id: candidate.anchorId, layoutSlot: anchorSlotFor(candidate.anchorId) },
-    }))
-    .filter((candidate) => Number.isInteger(candidate.anchor.layoutSlot))
-    .sort((a, b) => b.relationDelta - a.relationDelta || b.relationWeight - a.relationWeight);
-  const best = candidates[0] ?? null;
-  if (!best || best.relationDelta < threshold) return null;
-  return best;
-}
-
-function stepTowardSlot(currentSlot, anchorSlot, profile = fieldLayoutProfile) {
-  if (!Number.isInteger(currentSlot) || !Number.isInteger(anchorSlot)) return currentSlot;
-  const current = slotToCell(currentSlot, profile);
-  const anchor = slotToCell(anchorSlot, profile);
-  return cellToSlot(
-    clamp(current.col + Math.sign(anchor.col - current.col), 0, profile.cols - 1),
-    clamp(current.row + Math.sign(anchor.row - current.row), 0, profile.rows - 1),
-    profile,
-  );
-}
-
-function relationDriftSlot(record, currentSlot, previousRelationSummaries, placedById, anchorSlotFor, footprint, profile = fieldLayoutProfile, threshold = 0.05) {
-  const target = relationDriftTarget(record, previousRelationSummaries, placedById, anchorSlotFor, threshold);
-  if (!target) return { slot: currentSlot, target: null, reason: 'relation_delta_below_threshold' };
-  const candidateSlot = stepTowardSlot(currentSlot, target.anchor.layoutSlot, profile);
-  if (candidateSlot === currentSlot) return { slot: currentSlot, target, reason: 'already_at_anchor_direction' };
-  if (!isSlotInFootprint(candidateSlot, footprint, profile)) return { slot: currentSlot, target, reason: 'blocked_by_footprint' };
-  return { slot: candidateSlot, target, reason: 'relation_delta_anchor' };
+// A displaced record moves one ring outward: nearest open cell whose seed
+// distance is not smaller than the vacated cell's, falling back to any open
+// cell. Displacement never cascades — the target must already be open.
+function outwardOpenSlot(fromSlot, seedSlot, occupied, footprint, profile) {
+  const fromDistance = slotDistance(fromSlot, seedSlot, profile);
+  const candidates = slotsInFootprint(footprint, profile)
+    .filter((slot) => !occupied.has(slot))
+    .map((slot) => ({
+      slot,
+      seedDistance: slotDistance(slot, seedSlot, profile),
+      moveDistance: slotDistance(slot, fromSlot, profile),
+    }));
+  const outward = candidates.filter((candidate) => candidate.seedDistance >= fromDistance);
+  const pool = outward.length > 0 ? outward : candidates;
+  pool.sort((a, b) => a.moveDistance - b.moveDistance || a.seedDistance - b.seedDistance || a.slot - b.slot);
+  return pool[0]?.slot ?? -1;
 }
 
 function cosineSimilarity(a, b) {
@@ -584,6 +584,18 @@ export function maintainRegionFootprint(region, records, profile = fieldLayoutPr
   return region.footprint;
 }
 
+// Insertion pressure between sleep rebuilds may fill a footprint before the
+// nightly maintenance can grow it; rather than failing the build, grow the
+// footprint on the spot with the same neighbor-guarded directional expansion.
+function emergencyExpandRegion(region, regions, profile) {
+  const areaBefore = footprintArea(region.footprint, profile);
+  const expanded = expandRectFootprint(region.footprint, region, regions, profile);
+  const areaAfter = footprintArea(expanded, profile);
+  if (areaAfter <= areaBefore) return null;
+  region.footprint = expanded;
+  return { areaBefore, areaAfter };
+}
+
 export function incrementalRegionLayout(records, previousManifest, projectEmbeddings, profile = fieldLayoutProfile, options = {}) {
   const builtRegions = buildRegions(records, previousManifest, projectEmbeddings, profile, options);
   const previousRecordSlots = options.regionReseed ? { slotFor: () => null } : previousRecordSlotMaps(previousManifest, profile);
@@ -595,12 +607,28 @@ export function incrementalRegionLayout(records, previousManifest, projectEmbedd
     })), profile);
   const regions = overlapRepair.regions;
   const regionById = new Map(regions.map((region) => [region.id, region]));
-  const previousRelationSummaries = options.regionReseed ? new Map() : previousRelationSummaryMap(previousManifest);
   const knownRecordIds = options.regionReseed ? new Set() : previousRecordIds(previousManifest);
   const occupied = new Set();
+  const occupantBySlot = new Map();
   const placedRecords = [];
   const pendingRecords = [];
   const layoutEvents = [...overlapRepair.events];
+
+  const expandForPressure = (region, trigger) => {
+    const growth = emergencyExpandRegion(region, regions, profile);
+    if (!growth) return false;
+    layoutEvents.push({
+      eventType: 'region.footprint_emergency_expanded',
+      recordId: null,
+      regionId: region.id,
+      fromSlot: null,
+      toSlot: null,
+      anchorId: null,
+      anchorKind: null,
+      metadata: { ...growth, trigger },
+    });
+    return true;
+  };
 
   for (const record of records) {
     const tag = primaryTagFor(record);
@@ -609,27 +637,17 @@ export function incrementalRegionLayout(records, previousManifest, projectEmbedd
     const previousSlot = previousRecordSlots.slotFor(record);
 
     if (Number.isInteger(previousSlot)) {
-      const placedById = new Map(placedRecords.map((placedRecord) => [placedRecord.id, placedRecord]));
-      const drift = options.sleepRebuild
-        ? relationDriftSlot(
-          record,
-          previousSlot,
-          previousRelationSummaries,
-          placedById,
-          (anchorId) => previousRecordSlots.slotFor({ id: anchorId }),
-          region.footprint,
-          profile,
-          options.relationDriftThreshold
-        )
-        : { slot: previousSlot, target: null, reason: 'not_sleep_rebuild' };
-      const preferredSlot = isSlotInFootprint(drift.slot, region.footprint, profile) ? drift.slot : previousSlot;
-      const slot = isSlotInFootprint(preferredSlot, region.footprint, profile)
-        ? (occupied.has(preferredSlot) ? nearestOpenSlotInFootprint(preferredSlot, occupied, region.footprint, profile) : preferredSlot)
-        : nearestOpenSlotInFootprint(preferredSlot, occupied, region.footprint, profile);
+      let slot = isSlotInFootprint(previousSlot, region.footprint, profile) && !occupied.has(previousSlot)
+        ? previousSlot
+        : nearestOpenSlotInFootprint(previousSlot, occupied, region.footprint, profile);
+      if (slot === -1 && expandForPressure(region, 'existing_record')) {
+        slot = nearestOpenSlotInFootprint(previousSlot, occupied, region.footprint, profile);
+      }
       if (slot === -1) throw new Error(`Region ${region.id} has no open slot for existing record ${record.id}`);
-      if (occupied.has(slot)) throw new Error(`layoutSlot collision at ${slot} for record ${record.id}`);
       occupied.add(slot);
-      placedRecords.push({ ...record, regionId, position: slotToPosition(slot, profile), layoutSlot: slot });
+      const placed = { ...record, regionId, position: slotToPosition(slot, profile), layoutSlot: slot };
+      occupantBySlot.set(slot, placed);
+      placedRecords.push(placed);
       layoutEvents.push({
         eventType: slot === previousSlot ? 'layout.slot_preserved' : 'layout.moved_within_region',
         recordId: record.id,
@@ -640,11 +658,6 @@ export function incrementalRegionLayout(records, previousManifest, projectEmbedd
         anchorKind: null,
         metadata: {
           previousSlot,
-          preferredSlot,
-          relationDrifted: preferredSlot !== previousSlot,
-          anchor: drift.target ? { id: drift.target.anchorId, slot: drift.target.anchor.layoutSlot } : null,
-          relationDelta: drift.target ? Number(drift.target.relationDelta.toFixed(6)) : 0,
-          driftReason: drift.reason,
           footprintKind: region.footprint?.kind ?? null,
         },
       });
@@ -653,15 +666,74 @@ export function incrementalRegionLayout(records, previousManifest, projectEmbedd
     }
   }
 
-  for (const record of pendingRecords) {
+  const regionRecordGroups = new Map();
+  for (const record of records) {
+    const regionId = regionIdForTag(primaryTagFor(record));
+    if (!regionRecordGroups.has(regionId)) regionRecordGroups.set(regionId, []);
+    regionRecordGroups.get(regionId).push(record);
+  }
+  const centroidByRegion = new Map([...regionRecordGroups].map(([regionId, group]) => [regionId, centroidEmbedding(group)]));
+
+  // most central newcomers claim their cells first so a single build with
+  // several insertions settles into the same ordering a one-by-one arrival would
+  const rankedPending = [...pendingRecords]
+    .map((record) => ({ record, centrality: centralityFor(record, centroidByRegion.get(record.regionId)) }))
+    .sort((a, b) => b.centrality - a.centrality || String(a.record.id).localeCompare(String(b.record.id)))
+    .map((entry) => entry.record);
+
+  for (const record of rankedPending) {
     const region = regionById.get(record.regionId);
+    const centroid = centroidByRegion.get(record.regionId);
     const anchors = nearestEmbeddingAnchors(record, placedRecords.filter((candidate) => candidate.regionId === record.regionId));
     const anchor = anchors[0] ?? null;
-    const preferredSlot = anchor?.candidate?.layoutSlot ?? region.seedSlot;
-    const slot = nearestOpenSlotInFootprint(preferredSlot, occupied, region.footprint, profile);
-    if (slot === -1) throw new Error(`Region ${region.id} has no open slot for new record ${record.id}`);
+
+    let target = insertionTarget(record, region, centroid, occupied, occupantBySlot, profile);
+    if (target.slot === -1 && expandForPressure(region, 'insertion')) {
+      target = insertionTarget(record, region, centroid, occupied, occupantBySlot, profile);
+    }
+    if (target.slot === -1) throw new Error(`Region ${region.id} has no open slot for new record ${record.id}`);
+
+    if (target.displaced) {
+      let victimSlot = outwardOpenSlot(target.slot, region.seedSlot, occupied, region.footprint, profile);
+      if (victimSlot === -1 && expandForPressure(region, 'displacement')) {
+        victimSlot = outwardOpenSlot(target.slot, region.seedSlot, occupied, region.footprint, profile);
+      }
+      if (victimSlot === -1) {
+        // occupant cannot be relocated; the newcomer settles for the nearest open cell instead
+        const fallback = nearestOpenSlotInFootprint(region.seedSlot, occupied, region.footprint, profile);
+        if (fallback === -1) throw new Error(`Region ${region.id} has no open slot for new record ${record.id}`);
+        target = { slot: fallback, displaced: null, newcomerCentrality: target.newcomerCentrality };
+      } else {
+        const victim = target.displaced.record;
+        const fromSlot = victim.layoutSlot;
+        victim.layoutSlot = victimSlot;
+        victim.position = slotToPosition(victimSlot, profile);
+        occupied.add(victimSlot);
+        occupantBySlot.delete(fromSlot);
+        occupantBySlot.set(victimSlot, victim);
+        layoutEvents.push({
+          eventType: 'layout.displaced',
+          recordId: victim.id,
+          regionId: region.id,
+          fromSlot,
+          toSlot: victimSlot,
+          anchorId: record.id,
+          anchorKind: 'inserted_record',
+          metadata: {
+            newcomerCentrality: Number(target.newcomerCentrality.toFixed(6)),
+            occupantCentrality: Number(target.displaced.centrality.toFixed(6)),
+            seedDistanceFrom: slotDistance(fromSlot, region.seedSlot, profile),
+            seedDistanceTo: slotDistance(victimSlot, region.seedSlot, profile),
+          },
+        });
+      }
+    }
+
+    const slot = target.slot;
     occupied.add(slot);
-    placedRecords.push({ ...record, position: slotToPosition(slot, profile), layoutSlot: slot });
+    const placed = { ...record, position: slotToPosition(slot, profile), layoutSlot: slot };
+    occupantBySlot.set(slot, placed);
+    placedRecords.push(placed);
     if (!knownRecordIds.has(record.id)) {
       layoutEvents.push({
         eventType: 'record.first_seen',
@@ -683,9 +755,10 @@ export function incrementalRegionLayout(records, previousManifest, projectEmbedd
       anchorId: null,
       anchorKind: null,
       metadata: {
-        preferredSlot,
         seedSlot: region.seedSlot,
         seedDistance: slotDistance(slot, region.seedSlot, profile),
+        newcomerCentrality: Number(target.newcomerCentrality.toFixed(6)),
+        displacedRecordId: target.displaced?.record?.id ?? null,
         footprintKind: region.footprint?.kind ?? null,
       },
     });
@@ -698,7 +771,6 @@ export function incrementalRegionLayout(records, previousManifest, projectEmbedd
       anchorId: anchor?.candidate?.id ?? null,
       anchorKind: anchor ? 'record' : 'region_seed',
       metadata: {
-        preferredSlot,
         anchorSlot: anchor?.candidate?.layoutSlot ?? region.seedSlot,
         anchorDistance: slotDistance(slot, anchor?.candidate?.layoutSlot ?? region.seedSlot, profile),
         anchorWeight: anchor ? Number(anchor.similarity.toFixed(6)) : null,
