@@ -1,10 +1,10 @@
 {
   "schemaVersion": 10,
-  "generatedAt": "2026-07-23T06:06:13.457Z",
+  "generatedAt": "2026-07-23T07:16:54.699Z",
   "rebuild": {
-    "id": "8ae3b4f6-0354-4dc5-97ee-28a6fb149da7",
+    "id": "e1c9f538-03a3-492e-b288-c7559f7f1a38",
     "mode": "general",
-    "changedRecordCount": 14
+    "changedRecordCount": 0
   },
   "source": "src/content/records",
   "storage": {
@@ -299,6 +299,14 @@
           "isLatest": false
         },
         {
+          "id": "post15",
+          "slot": 897,
+          "col": 17,
+          "row": 22,
+          "regionId": "tag:데굴데굴",
+          "isLatest": true
+        },
+        {
           "id": "post3",
           "slot": 937,
           "col": 17,
@@ -353,14 +361,6 @@
           "row": 1,
           "regionId": "tag:뚜벅뚜벅",
           "isLatest": false
-        },
-        {
-          "id": "psot15",
-          "slot": 897,
-          "col": 17,
-          "row": 22,
-          "regionId": "tag:데굴데굴",
-          "isLatest": true
         }
       ],
       "traces": []
@@ -563,7 +563,7 @@
       "regionId": "tag:데굴데굴",
       "related": [
         "post13",
-        "psot15",
+        "post15",
         "post14",
         "post8",
         "post3",
@@ -577,7 +577,7 @@
           "weight": 1.0326
         },
         {
-          "id": "psot15",
+          "id": "post15",
           "weight": 1.0251
         },
         {
@@ -1128,7 +1128,7 @@
       "regionId": "tag:데굴데굴",
       "related": [
         "post10",
-        "psot15",
+        "post15",
         "post14",
         "post6",
         "post11",
@@ -1142,7 +1142,7 @@
           "weight": 1.0326
         },
         {
-          "id": "psot15",
+          "id": "post15",
           "weight": 1.0207
         },
         {
@@ -1303,7 +1303,7 @@
       "layoutSlot": 818,
       "regionId": "tag:데굴데굴",
       "related": [
-        "psot15",
+        "post15",
         "post10",
         "post13",
         "post4",
@@ -1314,7 +1314,7 @@
       ],
       "relationSummary": [
         {
-          "id": "psot15",
+          "id": "post15",
           "weight": 1.0119
         },
         {
@@ -1479,6 +1479,197 @@
       },
       "embeddingModel": "local-feature-hash-ko-en-64",
       "url": "/records/post14/"
+    },
+    {
+      "id": "post15",
+      "slug": "post15",
+      "title": "베이트먼의 바르셀로나 체어",
+      "date": "2026-07-22",
+      "location": "서울",
+      "type": "standard",
+      "excerpt": "아메리칸 사이코 감상.",
+      "tags": [
+        "데굴데굴"
+      ],
+      "displayDensity": 0.6919,
+      "score": 0.6919,
+      "scoreMeaning": "semantic density",
+      "position": {
+        "x": 0.4375,
+        "y": 0.9
+      },
+      "layoutSlot": 897,
+      "regionId": "tag:데굴데굴",
+      "related": [
+        "post10",
+        "post13",
+        "post14",
+        "post6",
+        "post8",
+        "post11",
+        "post7"
+      ],
+      "relationSummary": [
+        {
+          "id": "post10",
+          "weight": 1.0251
+        },
+        {
+          "id": "post13",
+          "weight": 1.0207
+        },
+        {
+          "id": "post14",
+          "weight": 1.0119
+        },
+        {
+          "id": "post6",
+          "weight": 0.0517
+        },
+        {
+          "id": "post8",
+          "weight": 0.0255
+        },
+        {
+          "id": "post11",
+          "weight": 0.0103
+        },
+        {
+          "id": "post7",
+          "weight": 0.0055
+        }
+      ],
+      "attentionSnapshot": {
+        "views": 0,
+        "tileClicks": 0,
+        "opens": 0,
+        "pageViews": 0,
+        "runtimeScore": 0,
+        "humanModalOpen": 0,
+        "humanFullOpen": 0,
+        "humanScore": 0,
+        "machineAccess": 0,
+        "machineScore": 0,
+        "lastEventAt": null,
+        "semantics": "nightly snapshot only; source of truth remains Supabase archive_events/archive_records"
+      },
+      "texture": {
+        "schemaVersion": 2,
+        "density": "medium",
+        "imageCount": 0,
+        "textLength": 869,
+        "layout": {
+          "schemaVersion": 1,
+          "nodeCount": 8,
+          "canvas": {
+            "width": 64,
+            "height": 48,
+            "unit": "cell"
+          },
+          "documentType": "standard"
+        },
+        "renders": {
+          "field": {
+            "schemaVersion": 2,
+            "role": "field",
+            "lod": 0,
+            "width": 12,
+            "height": 9,
+            "color": "currentColor",
+            "className": "archive-texture archive-texture--field",
+            "encoding": "rle4",
+            "rle": [
+              [0, 1],
+              [2, 4],
+              [0, 8],
+              [2, 3],
+              [0, 9],
+              [2, 10],
+              [0, 2],
+              [2, 10],
+              [0, 2],
+              [2, 10],
+              [0, 2],
+              [2, 4],
+              [0, 43]
+            ]
+          },
+          "modal": {
+            "schemaVersion": 2,
+            "role": "modal",
+            "lod": 1,
+            "width": 64,
+            "height": 48,
+            "color": "currentColor",
+            "className": "archive-texture archive-texture--modal",
+            "encoding": "rle4",
+            "rle": [
+              [0, 4],
+              [3, 56],
+              [0, 8],
+              [3, 45],
+              [0, 83],
+              [3, 56],
+              [0, 8],
+              [3, 25],
+              [0, 103],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 18],
+              [0, 110],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 4],
+              [0, 124],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 2],
+              [0, 126],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 51],
+              [0, 77],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 24],
+              [0, 104],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 12],
+              [0, 1072]
+            ]
+          }
+        }
+      },
+      "imageUrls": [],
+      "galleryFolder": "\"\"",
+      "galleryImageUrls": [],
+      "contentHash": "876b2c2aba9f60ac07eac7450a40fbabb016e45b67ad9cf3d98c20d4981f6c36",
+      "embeddingRef": {
+        "provider": "supabase",
+        "table": "archive_embeddings",
+        "key": "post15"
+      },
+      "embeddingModel": "local-feature-hash-ko-en-64",
+      "url": "/records/post15/"
     },
     {
       "id": "post3",
@@ -2254,7 +2445,7 @@
       "related": [
         "post8",
         "post13",
-        "psot15",
+        "post15",
         "post11",
         "post10",
         "post14"
@@ -2269,7 +2460,7 @@
           "weight": 0.0771
         },
         {
-          "id": "psot15",
+          "id": "post15",
           "weight": 0.0517
         },
         {
@@ -2396,7 +2587,7 @@
         "post3",
         "post14",
         "post5",
-        "psot15",
+        "post15",
         "post12"
       ],
       "relationSummary": [
@@ -2425,7 +2616,7 @@
           "weight": 0.0122
         },
         {
-          "id": "psot15",
+          "id": "post15",
           "weight": 0.0055
         },
         {
@@ -2635,7 +2826,7 @@
         "post6",
         "post10",
         "post11",
-        "psot15",
+        "post15",
         "post1",
         "post3",
         "post12",
@@ -2655,7 +2846,7 @@
           "weight": 0.0455
         },
         {
-          "id": "psot15",
+          "id": "post15",
           "weight": 0.0255
         },
         {
@@ -3014,197 +3205,6 @@
       },
       "embeddingModel": "local-feature-hash-ko-en-64",
       "url": "/records/post9/"
-    },
-    {
-      "id": "psot15",
-      "slug": "psot15",
-      "title": "베이트먼의 바르셀로나 체어",
-      "date": "2026-07-22",
-      "location": "서울",
-      "type": "standard",
-      "excerpt": "아메리칸 사이코 감상.",
-      "tags": [
-        "데굴데굴"
-      ],
-      "displayDensity": 0.6919,
-      "score": 0.6919,
-      "scoreMeaning": "semantic density",
-      "position": {
-        "x": 0.4375,
-        "y": 0.9
-      },
-      "layoutSlot": 897,
-      "regionId": "tag:데굴데굴",
-      "related": [
-        "post10",
-        "post13",
-        "post14",
-        "post6",
-        "post8",
-        "post11",
-        "post7"
-      ],
-      "relationSummary": [
-        {
-          "id": "post10",
-          "weight": 1.0251
-        },
-        {
-          "id": "post13",
-          "weight": 1.0207
-        },
-        {
-          "id": "post14",
-          "weight": 1.0119
-        },
-        {
-          "id": "post6",
-          "weight": 0.0517
-        },
-        {
-          "id": "post8",
-          "weight": 0.0255
-        },
-        {
-          "id": "post11",
-          "weight": 0.0103
-        },
-        {
-          "id": "post7",
-          "weight": 0.0055
-        }
-      ],
-      "attentionSnapshot": {
-        "views": 0,
-        "tileClicks": 0,
-        "opens": 0,
-        "pageViews": 0,
-        "runtimeScore": 0,
-        "humanModalOpen": 0,
-        "humanFullOpen": 0,
-        "humanScore": 0,
-        "machineAccess": 0,
-        "machineScore": 0,
-        "lastEventAt": null,
-        "semantics": "nightly snapshot only; source of truth remains Supabase archive_events/archive_records"
-      },
-      "texture": {
-        "schemaVersion": 2,
-        "density": "medium",
-        "imageCount": 0,
-        "textLength": 869,
-        "layout": {
-          "schemaVersion": 1,
-          "nodeCount": 8,
-          "canvas": {
-            "width": 64,
-            "height": 48,
-            "unit": "cell"
-          },
-          "documentType": "standard"
-        },
-        "renders": {
-          "field": {
-            "schemaVersion": 2,
-            "role": "field",
-            "lod": 0,
-            "width": 12,
-            "height": 9,
-            "color": "currentColor",
-            "className": "archive-texture archive-texture--field",
-            "encoding": "rle4",
-            "rle": [
-              [0, 1],
-              [2, 4],
-              [0, 8],
-              [2, 3],
-              [0, 9],
-              [2, 10],
-              [0, 2],
-              [2, 10],
-              [0, 2],
-              [2, 10],
-              [0, 2],
-              [2, 4],
-              [0, 43]
-            ]
-          },
-          "modal": {
-            "schemaVersion": 2,
-            "role": "modal",
-            "lod": 1,
-            "width": 64,
-            "height": 48,
-            "color": "currentColor",
-            "className": "archive-texture archive-texture--modal",
-            "encoding": "rle4",
-            "rle": [
-              [0, 4],
-              [3, 56],
-              [0, 8],
-              [3, 45],
-              [0, 83],
-              [3, 56],
-              [0, 8],
-              [3, 25],
-              [0, 103],
-              [3, 56],
-              [0, 8],
-              [3, 56],
-              [0, 8],
-              [3, 18],
-              [0, 110],
-              [3, 56],
-              [0, 8],
-              [3, 56],
-              [0, 8],
-              [3, 56],
-              [0, 8],
-              [3, 4],
-              [0, 124],
-              [3, 56],
-              [0, 8],
-              [3, 56],
-              [0, 8],
-              [3, 2],
-              [0, 126],
-              [3, 56],
-              [0, 8],
-              [3, 56],
-              [0, 8],
-              [3, 56],
-              [0, 8],
-              [3, 51],
-              [0, 77],
-              [3, 56],
-              [0, 8],
-              [3, 56],
-              [0, 8],
-              [3, 56],
-              [0, 8],
-              [3, 24],
-              [0, 104],
-              [3, 56],
-              [0, 8],
-              [3, 56],
-              [0, 8],
-              [3, 12],
-              [0, 1072]
-            ]
-          }
-        }
-      },
-      "imageUrls": [],
-      "galleryFolder": "\"\"",
-      "galleryImageUrls": [],
-      "contentHash": "876b2c2aba9f60ac07eac7450a40fbabb016e45b67ad9cf3d98c20d4981f6c36",
-      "embeddingRef": {
-        "provider": "supabase",
-        "table": "archive_embeddings",
-        "key": "psot15"
-      },
-      "embeddingModel": "local-feature-hash-ko-en-64",
-      "url": "/records/psot15/"
     }
   ]
 }

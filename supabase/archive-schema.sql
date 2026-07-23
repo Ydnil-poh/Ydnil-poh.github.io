@@ -32,7 +32,10 @@ add column if not exists human_full_open integer not null default 0,
 add column if not exists human_score double precision not null default 0,
 add column if not exists machine_access integer not null default 0,
 add column if not exists machine_score double precision not null default 0,
-add column if not exists last_event_at timestamptz;
+add column if not exists last_event_at timestamptz,
+-- Deleted repo records are tombstoned rather than erased so their events and
+-- snapshots keep their referent; reappearing slugs clear the marker on upsert.
+add column if not exists removed_at timestamptz;
 
 create table if not exists public.archive_events (
   id bigserial primary key,
@@ -79,6 +82,19 @@ create table if not exists public.archive_record_snapshots (
   primary key (rebuild_id, record_slug)
 );
 
+create table if not exists public.archive_region_snapshots (
+  rebuild_id uuid references public.archive_rebuilds(id) on delete cascade,
+  region_id text not null,
+  tag text,
+  seed_slot integer,
+  footprint jsonb not null default '{}'::jsonb,
+  occupied_slots integer not null default 0,
+  available_slots integer not null default 0,
+  density double precision not null default 0,
+  metadata jsonb not null default '{}'::jsonb,
+  primary key (rebuild_id, region_id)
+);
+
 create table if not exists public.archive_layout_events (
   rebuild_id uuid references public.archive_rebuilds(id) on delete cascade,
   event_index integer not null,
@@ -121,6 +137,9 @@ with (lists = 100);
 create index if not exists archive_record_snapshots_record_idx
 on public.archive_record_snapshots (record_slug, rebuild_id);
 
+create index if not exists archive_region_snapshots_region_idx
+on public.archive_region_snapshots (region_id, rebuild_id);
+
 create index if not exists archive_layout_events_record_idx
 on public.archive_layout_events (record_slug, event_type, rebuild_id, event_index);
 
@@ -133,6 +152,7 @@ alter table public.archive_relations enable row level security;
 alter table public.archive_events enable row level security;
 alter table public.archive_rebuilds enable row level security;
 alter table public.archive_record_snapshots enable row level security;
+alter table public.archive_region_snapshots enable row level security;
 alter table public.archive_layout_events enable row level security;
 
 drop policy if exists "public read archive records" on public.archive_records;
