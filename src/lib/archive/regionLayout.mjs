@@ -421,17 +421,32 @@ function nearestEmbeddingAnchors(record, placedRecords, limit = 2) {
     .slice(0, limit);
 }
 
-function expandRectFootprint(footprint, profile) {
+function intersectsAnyOtherRegion(footprint, region, regions, profile) {
+  return regions
+    .filter((candidate) => candidate.id !== region.id)
+    .some((candidate) => footprintIntersects(footprint, candidate.footprint, profile));
+}
+
+function expandRectFootprint(footprint, region, regions, profile) {
   if (footprint.kind !== 'rect') return footprint;
-  const rect = footprint.rect;
+  let rect = { ...footprint.rect };
+  const candidates = [
+    { key: 'minCol', value: clamp(rect.minCol - 1, 0, profile.cols - 1) },
+    { key: 'maxCol', value: clamp(rect.maxCol + 1, 0, profile.cols - 1) },
+    { key: 'minRow', value: clamp(rect.minRow - 1, 0, profile.rows - 1) },
+    { key: 'maxRow', value: clamp(rect.maxRow + 1, 0, profile.rows - 1) },
+  ];
+
+  for (const candidate of candidates) {
+    if (rect[candidate.key] === candidate.value) continue;
+    const nextFootprint = { ...footprint, rect: { ...rect, [candidate.key]: candidate.value } };
+    if (intersectsAnyOtherRegion(nextFootprint, region, regions, profile)) continue;
+    rect = nextFootprint.rect;
+  }
+
   return {
     ...footprint,
-    rect: {
-      minCol: clamp(rect.minCol - 1, 0, profile.cols - 1),
-      maxCol: clamp(rect.maxCol + 1, 0, profile.cols - 1),
-      minRow: clamp(rect.minRow - 1, 0, profile.rows - 1),
-      maxRow: clamp(rect.maxRow + 1, 0, profile.rows - 1),
-    },
+    rect,
   };
 }
 
@@ -455,9 +470,9 @@ function shrinkRectFootprint(footprint, region, records, profile) {
   };
 }
 
-export function maintainRegionFootprint(region, records, profile = fieldLayoutProfile, policy = regionDensityPolicy) {
+export function maintainRegionFootprint(region, records, profile = fieldLayoutProfile, policy = regionDensityPolicy, regions = []) {
   const stats = calculateRegionStats(region, records, profile, policy);
-  if (stats.density > policy.expandAbove) return expandRectFootprint(region.footprint, profile);
+  if (stats.density > policy.expandAbove) return expandRectFootprint(region.footprint, region, regions, profile);
   if (stats.density < policy.shrinkBelow) return shrinkRectFootprint(region.footprint, region, records, profile);
   return region.footprint;
 }
@@ -583,7 +598,7 @@ export function incrementalRegionLayout(records, previousManifest, projectEmbedd
   const maintainedRegions = options.sleepRebuild
     ? regions.map((region) => ({
       ...region,
-      footprint: maintainRegionFootprint(region, laidOutRecords, profile),
+      footprint: maintainRegionFootprint(region, laidOutRecords, profile, regionDensityPolicy, regions),
     }))
     : regions;
 

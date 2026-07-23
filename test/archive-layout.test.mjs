@@ -35,7 +35,9 @@ import {
   createRectFootprintAroundSeed,
   incrementalRegionLayout,
   isSlotInFootprint,
+  maintainRegionFootprint,
   nearestOpenSlotInFootprint,
+  regionDensityPolicy,
   regionIdForTag,
   slotsInFootprint,
 } from '../src/lib/archive/regionLayout.mjs';
@@ -520,6 +522,53 @@ test('Sleep Rebuild can shrink sparse Region footprints without moving the seed'
 
   assert.equal(region.seedSlot, 7);
   assert.deepEqual(region.footprint.rect, { minCol: 0, maxCol: 2, minRow: 0, maxRow: 2 });
+});
+
+test('Sleep Rebuild expands only directions that do not cross neighboring Regions', () => {
+  const profile = { cols: 7, rows: 5 };
+  const crowded = {
+    id: regionIdForTag('crowded'),
+    seedSlot: 9,
+    footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 2, maxCol: 2, minRow: 1, maxRow: 1 } },
+  };
+  const neighbor = {
+    id: regionIdForTag('neighbor'),
+    seedSlot: 17,
+    footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 3, maxCol: 3, minRow: 2, maxRow: 2 } },
+  };
+  const records = [
+    { id: 'a', regionId: crowded.id, layoutSlot: 9 },
+    { id: 'b', regionId: neighbor.id, layoutSlot: 17 },
+  ];
+
+  const footprint = maintainRegionFootprint(
+    crowded,
+    records,
+    profile,
+    { ...regionDensityPolicy, expandAbove: 0.5 },
+    [crowded, neighbor]
+  );
+
+  assert.deepEqual(footprint.rect, { minCol: 1, maxCol: 3, minRow: 0, maxRow: 1 });
+});
+
+test('Sleep Rebuild expansion leaves non-rect footprints unchanged', () => {
+  const profile = { cols: 4, rows: 4 };
+  const region = {
+    id: regionIdForTag('cells'),
+    seedSlot: 0,
+    footprint: { schemaVersion: 1, kind: 'cells', cells: [0] },
+  };
+
+  const footprint = maintainRegionFootprint(
+    region,
+    [{ id: 'a', regionId: region.id, layoutSlot: 0 }],
+    profile,
+    { ...regionDensityPolicy, expandAbove: 0.5 },
+    [region]
+  );
+
+  assert.deepEqual(footprint, region.footprint);
 });
 
 test('Sleep Rebuild applies relation drift toward the strongest increased anchor', () => {

@@ -176,6 +176,9 @@ Sleep Rebuild should not:
 - Reproject all records globally.
 - Move Region seeds by default.
 - Place records outside their Region footprint.
+- Expand a Region footprint into another Region's footprint; if one expansion
+  direction is blocked, skip that direction and still allow the other safe
+  directions.
 
 Any record movement during Sleep Rebuild should be local to the Region and should use existing slots as preferred positions.
 
