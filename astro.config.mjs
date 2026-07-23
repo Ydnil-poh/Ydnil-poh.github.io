@@ -4,7 +4,7 @@ import sitemap from '@astrojs/sitemap';
 import remarkYoutube from './src/plugins/remark-youtube.js';
 
 export default defineConfig({
-  site: 'https://ydnil-poh.github.io',
+  site: 'https://ydnil-poh.pages.dev',
 
   integrations: [
     sitemap()

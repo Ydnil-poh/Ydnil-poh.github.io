@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy to Cloudflare Pages
 
 on:
   push:
@@ -10,24 +10,22 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-    
+
     env:
         PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
         PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        SUPABASE_STORAGE_BUCKET: img    
-        
+        SUPABASE_STORAGE_BUCKET: img
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,8 +34,6 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
       - name: Install dependencies
         run: npm ci
       - name: Build archive field
@@ -48,21 +44,12 @@ jobs:
         run: npm run build
         env:
           ARCHIVE_REBUILD_MODE: sleep
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
         with:
-          path: ./dist
-          
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    env:
-      # actions/deploy-pages@v4 still runs on Node 20 until GitHub ships a Node 24-compatible release.
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Functions in ./functions are bundled into the deployment automatically.
+          # The prebuild step rewrites public/archive-manifest.json, so the tree is
+          # dirty at deploy time; --commit-dirty suppresses the wrangler warning.
+          command: pages deploy dist --project-name=ydnil-poh --branch=main --commit-dirty=true
