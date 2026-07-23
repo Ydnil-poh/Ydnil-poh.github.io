@@ -45,6 +45,34 @@ create table if not exists public.archive_events (
   created_at timestamptz not null default now()
 );
 
+-- Machine Attention Layer principle:
+-- Store observations, not interpretations. The raw user_agent is the
+-- observation; agent/category/confidence are derived labels that may be
+-- recomputed as classification rules improve. Scoring weights live in
+-- record_machine_event and can change without touching stored events.
+create table if not exists public.machine_events (
+  id bigserial primary key,
+  record_slug text references public.archive_records(slug) on delete set null,
+  path text,
+  agent text not null,
+  category text not null check (category in ('search', 'crawler', 'ai', 'unknown')),
+  confidence double precision not null default 0,
+  user_agent text,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists machine_events_record_idx
+on public.machine_events (record_slug, created_at);
+
+create index if not exists machine_events_category_idx
+on public.machine_events (category, created_at);
+
+alter table public.machine_events enable row level security;
+
+-- No public policies on machine_events: writes go through the security
+-- definer record_machine_event function; reads happen with the service role.
+
 -- History layer principle:
 -- Store observations, not interpretations.
 -- These append-only rebuild/layout tables preserve what happened during archive
@@ -250,3 +278,66 @@ $$;
 
 grant execute on function public.record_archive_event(text, text, jsonb) to anon, authenticated;
 grant execute on function public.increment_record_view(text) to anon, authenticated;
+
+drop function if exists public.record_machine_event(text, text, text, double precision, text, text, jsonb);
+
+create or replace function public.record_machine_event(
+  event_path text,
+  agent_name text,
+  agent_category text,
+  agent_confidence double precision default 0,
+  agent_user_agent text default null,
+  record_slug text default null,
+  event_metadata jsonb default '{}'::jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  normalized_category text := case
+    when agent_category in ('search', 'crawler', 'ai') then agent_category
+    else 'unknown'
+  end;
+  clamped_confidence double precision := greatest(least(coalesce(agent_confidence, 0), 1), 0);
+  -- search indexing is bookkeeping, not attention; it is observed but not scored.
+  score_delta double precision := case normalized_category
+    when 'ai' then 0.30
+    when 'crawler' then 0.10
+    else 0
+  end * clamped_confidence;
+  updated_record public.archive_records%rowtype;
+begin
+  if record_slug is not null then
+    update public.archive_records
+    set
+      machine_access = machine_access + 1,
+      machine_score = machine_score + score_delta,
+      last_event_at = now(),
+      updated_at = now()
+    where slug = record_slug
+    returning * into updated_record;
+  end if;
+
+  insert into public.machine_events (record_slug, path, agent, category, confidence, user_agent, metadata)
+  values (
+    updated_record.slug,
+    event_path,
+    coalesce(agent_name, 'Unknown'),
+    normalized_category,
+    clamped_confidence,
+    agent_user_agent,
+    coalesce(event_metadata, '{}'::jsonb)
+  );
+
+  return jsonb_build_object(
+    'slug', updated_record.slug,
+    'category', normalized_category,
+    'machineAccess', updated_record.machine_access,
+    'machineScore', updated_record.machine_score
+  );
+end;
+$$;
+
+grant execute on function public.record_machine_event(text, text, text, double precision, text, text, jsonb) to anon, authenticated;

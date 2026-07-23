@@ -198,7 +198,7 @@ async function readJsonFromUrl(url) {
 
 async function readPreviousManifest() {
   const deployedManifestUrl = process.env.ARCHIVE_PREVIOUS_MANIFEST_URL
-    ?? (process.env.GITHUB_ACTIONS ? 'https://ydnil-poh.github.io/archive-manifest.json' : null);
+    ?? (process.env.GITHUB_ACTIONS ? 'https://ydnil-poh.pages.dev/archive-manifest.json' : null);
 
   if (deployedManifestUrl && !isRegionReseed) {
     const deployedManifest = await readJsonFromUrl(deployedManifestUrl);
