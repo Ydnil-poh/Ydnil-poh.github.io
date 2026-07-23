@@ -1,8 +1,38 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-23T05:59:27.206Z",
+  "generatedAt": "2026-07-23T06:06:13.457Z",
   "source": "src/content/records",
   "layoutEvents": [
+    {
+      "eventType": "region.footprint_overlap_repaired",
+      "recordId": null,
+      "regionId": "tag:데굴데굴",
+      "fromSlot": null,
+      "toSlot": null,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "keeperRegionId": "tag:뚝딱뚝딱",
+        "contestedSlots": [936, 937],
+        "footprintKindBefore": "rect",
+        "footprintKindAfter": "rect"
+      }
+    },
+    {
+      "eventType": "region.footprint_overlap_repaired",
+      "recordId": null,
+      "regionId": "tag:쳐묵쳐묵",
+      "fromSlot": null,
+      "toSlot": null,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "keeperRegionId": "tag:흥얼흥얼",
+        "contestedSlots": [760, 761],
+        "footprintKindBefore": "rect",
+        "footprintKindAfter": "rect"
+      }
+    },
     {
       "eventType": "layout.slot_preserved",
       "recordId": "post1",
@@ -238,21 +268,44 @@
       }
     },
     {
-      "eventType": "layout.slot_preserved",
+      "eventType": "record.first_seen",
       "recordId": "psot15",
       "regionId": "tag:데굴데굴",
-      "fromSlot": 897,
+      "fromSlot": null,
+      "toSlot": null,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {}
+    },
+    {
+      "eventType": "layout.placed",
+      "recordId": "psot15",
+      "regionId": "tag:데굴데굴",
+      "fromSlot": null,
       "toSlot": 897,
       "anchorId": null,
       "anchorKind": null,
       "metadata": {
-        "previousSlot": 897,
-        "preferredSlot": 897,
-        "relationDrifted": false,
-        "anchor": null,
-        "relationDelta": 0,
-        "driftReason": "not_sleep_rebuild",
+        "preferredSlot": 898,
+        "seedSlot": 898,
+        "seedDistance": 1,
         "footprintKind": "rect"
+      }
+    },
+    {
+      "eventType": "layout.anchor_record",
+      "recordId": "psot15",
+      "regionId": "tag:데굴데굴",
+      "fromSlot": null,
+      "toSlot": 897,
+      "anchorId": "post10",
+      "anchorKind": "record",
+      "metadata": {
+        "preferredSlot": 898,
+        "anchorSlot": 898,
+        "anchorDistance": 1,
+        "anchorWeight": 0.125333,
+        "similarity": 0.125333
       }
     }
   ],

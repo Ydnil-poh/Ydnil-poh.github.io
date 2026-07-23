@@ -470,6 +470,113 @@ function shrinkRectFootprint(footprint, region, records, profile) {
   };
 }
 
+function contestedSlotsBetween(a, b, profile) {
+  const aSlots = new Set(slotsInFootprint(a.footprint, profile));
+  return slotsInFootprint(b.footprint, profile).filter((slot) => aSlots.has(slot));
+}
+
+function overlapKeeperScore(region, contested, recordSlotsByRegion) {
+  const owned = recordSlotsByRegion.get(region.id) ?? new Set();
+  const seedScore = contested.includes(region.seedSlot) ? 2 : 0;
+  return seedScore + contested.filter((slot) => owned.has(slot)).length;
+}
+
+// Try to clear the contested cells by shrinking one edge of the yielder's rect
+// so it stays a rect (and keeps expandability). The seed must survive the crop;
+// records caught in the cropped strip are a soft cost, cropped area a lighter
+// one. Returns the best valid rect or null when every edge crop is invalid.
+function cropRectAwayFromContested(region, contested, recordSlotsByRegion, profile) {
+  const rect = region.footprint.rect;
+  const cells = contested.map((slot) => slotToCell(slot, profile));
+  const seed = slotToCell(region.seedSlot, profile);
+  const owned = recordSlotsByRegion.get(region.id) ?? new Set();
+  const candidates = [
+    { ...rect, minRow: Math.max(...cells.map((cell) => cell.row)) + 1 },
+    { ...rect, maxRow: Math.min(...cells.map((cell) => cell.row)) - 1 },
+    { ...rect, minCol: Math.max(...cells.map((cell) => cell.col)) + 1 },
+    { ...rect, maxCol: Math.min(...cells.map((cell) => cell.col)) - 1 },
+  ];
+
+  let best = null;
+  let bestCost = Infinity;
+  for (const candidate of candidates) {
+    if (candidate.minCol > candidate.maxCol || candidate.minRow > candidate.maxRow) continue;
+    if (seed.col < candidate.minCol || seed.col > candidate.maxCol || seed.row < candidate.minRow || seed.row > candidate.maxRow) continue;
+    const keptSlots = new Set(slotsInFootprint({ kind: 'rect', rect: candidate }, profile));
+    const lostRecords = [...owned].filter((slot) => !keptSlots.has(slot)).length;
+    const removedArea = footprintArea(region.footprint, profile) - keptSlots.size;
+    const cost = lostRecords * 10000 + removedArea;
+    if (cost < bestCost) {
+      best = candidate;
+      bestCost = cost;
+    }
+  }
+  return best;
+}
+
+function repairYielderFootprint(region, contested, recordSlotsByRegion, profile) {
+  const footprint = region.footprint;
+  if (footprint.kind === 'rect') {
+    const cropped = cropRectAwayFromContested(region, contested, recordSlotsByRegion, profile);
+    if (cropped) return { ...footprint, rect: cropped };
+  }
+  const contestedSet = new Set(contested.filter((slot) => slot !== region.seedSlot));
+  return {
+    schemaVersion: 1,
+    kind: 'cells',
+    cells: slotsInFootprint(footprint, profile).filter((slot) => !contestedSet.has(slot)).sort((a, b) => a - b),
+  };
+}
+
+// Footprint exclusivity is an invariant: earlier unguarded expansion let
+// neighboring Regions grow into each other, and carried-over manifests may
+// still hold those overlaps. Every rebuild resolves them once here — the
+// Region whose seed or records sit on the contested cells keeps them (ties go
+// to the older Region), the yielder cedes and preferably stays a rect.
+export function repairFootprintOverlaps(regions, recordSlotHints, profile = fieldLayoutProfile) {
+  const recordSlotsByRegion = new Map();
+  for (const hint of recordSlotHints) {
+    if (!Number.isInteger(hint.slot)) continue;
+    if (!recordSlotsByRegion.has(hint.regionId)) recordSlotsByRegion.set(hint.regionId, new Set());
+    recordSlotsByRegion.get(hint.regionId).add(hint.slot);
+  }
+
+  const repaired = regions.map((region) => ({ ...region }));
+  const events = [];
+
+  for (let i = 0; i < repaired.length; i += 1) {
+    for (let j = i + 1; j < repaired.length; j += 1) {
+      const a = repaired[i];
+      const b = repaired[j];
+      const contested = contestedSlotsBetween(a, b, profile);
+      if (contested.length === 0) continue;
+
+      const keeper = overlapKeeperScore(b, contested, recordSlotsByRegion) > overlapKeeperScore(a, contested, recordSlotsByRegion) ? b : a;
+      const yielder = keeper === a ? b : a;
+      const footprintBefore = yielder.footprint;
+      yielder.footprint = repairYielderFootprint(yielder, contested, recordSlotsByRegion, profile);
+
+      events.push({
+        eventType: 'region.footprint_overlap_repaired',
+        recordId: null,
+        regionId: yielder.id,
+        fromSlot: null,
+        toSlot: null,
+        anchorId: null,
+        anchorKind: null,
+        metadata: {
+          keeperRegionId: keeper.id,
+          contestedSlots: contested,
+          footprintKindBefore: footprintBefore.kind,
+          footprintKindAfter: yielder.footprint.kind,
+        },
+      });
+    }
+  }
+
+  return { regions: repaired, events };
+}
+
 export function maintainRegionFootprint(region, records, profile = fieldLayoutProfile, policy = regionDensityPolicy, regions = []) {
   const stats = calculateRegionStats(region, records, profile, policy);
   if (stats.density > policy.expandAbove) return expandRectFootprint(region.footprint, region, regions, profile);
@@ -478,15 +585,22 @@ export function maintainRegionFootprint(region, records, profile = fieldLayoutPr
 }
 
 export function incrementalRegionLayout(records, previousManifest, projectEmbeddings, profile = fieldLayoutProfile, options = {}) {
-  const regions = buildRegions(records, previousManifest, projectEmbeddings, profile, options);
-  const regionById = new Map(regions.map((region) => [region.id, region]));
+  const builtRegions = buildRegions(records, previousManifest, projectEmbeddings, profile, options);
   const previousRecordSlots = options.regionReseed ? { slotFor: () => null } : previousRecordSlotMaps(previousManifest, profile);
+  const overlapRepair = options.regionReseed
+    ? { regions: builtRegions, events: [] }
+    : repairFootprintOverlaps(builtRegions, records.map((record) => ({
+      regionId: regionIdForTag(primaryTagFor(record)),
+      slot: previousRecordSlots.slotFor(record),
+    })), profile);
+  const regions = overlapRepair.regions;
+  const regionById = new Map(regions.map((region) => [region.id, region]));
   const previousRelationSummaries = options.regionReseed ? new Map() : previousRelationSummaryMap(previousManifest);
   const knownRecordIds = options.regionReseed ? new Set() : previousRecordIds(previousManifest);
   const occupied = new Set();
   const placedRecords = [];
   const pendingRecords = [];
-  const layoutEvents = [];
+  const layoutEvents = [...overlapRepair.events];
 
   for (const record of records) {
     const tag = primaryTagFor(record);

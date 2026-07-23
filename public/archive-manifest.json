@@ -1,8 +1,8 @@
 {
   "schemaVersion": 10,
-  "generatedAt": "2026-07-23T05:59:27.206Z",
+  "generatedAt": "2026-07-23T06:06:13.457Z",
   "rebuild": {
-    "id": "86b6af70-3635-403f-8db5-d5043e234361",
+    "id": "8ae3b4f6-0354-4dc5-97ee-28a6fb149da7",
     "mode": "general",
     "changedRecordCount": 14
   },
@@ -209,13 +209,13 @@
               "minCol": 16,
               "maxCol": 19,
               "minRow": 19,
-              "maxRow": 23
+              "maxRow": 22
             }
           },
           "stats": {
             "occupiedSlots": 4,
-            "availableSlots": 16,
-            "density": 0.2,
+            "availableSlots": 12,
+            "density": 0.25,
             "targetDensity": 0.72
           },
           "seedCol": 18,
@@ -236,13 +236,13 @@
               "minCol": 0,
               "maxCol": 1,
               "minRow": 17,
-              "maxRow": 19
+              "maxRow": 18
             }
           },
           "stats": {
             "occupiedSlots": 1,
-            "availableSlots": 5,
-            "density": 0.1667,
+            "availableSlots": 3,
+            "density": 0.25,
             "targetDensity": 0.72
           },
           "seedCol": 0,

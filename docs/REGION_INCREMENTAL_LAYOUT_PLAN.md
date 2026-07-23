@@ -180,6 +180,13 @@ Sleep Rebuild should not:
   direction is blocked, skip that direction and still allow the other safe
   directions.
 
+Footprint exclusivity is also an invariant on load: overlaps carried over from
+older manifests (created before expansion was guarded) are repaired once at the
+start of every rebuild. The Region whose seed or records occupy the contested
+cells keeps them (ties go to the older Region); the yielding Region cedes the
+cells, preferring an edge crop that keeps its footprint a rect, and the repair
+is recorded as a `region.footprint_overlap_repaired` layout event.
+
 Any record movement during Sleep Rebuild should be local to the Region and should use existing slots as preferred positions.
 
 ## Manifest Changes
