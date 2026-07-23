@@ -39,6 +39,7 @@ import {
   nearestOpenSlotInFootprint,
   regionDensityPolicy,
   regionIdForTag,
+  repairFootprintOverlaps,
   slotsInFootprint,
 } from '../src/lib/archive/regionLayout.mjs';
 
@@ -569,6 +570,104 @@ test('Sleep Rebuild expansion leaves non-rect footprints unchanged', () => {
   );
 
   assert.deepEqual(footprint, region.footprint);
+});
+
+test('carried-over footprint overlaps are repaired before placement', () => {
+  // mirrors the production overlap: the yielder's rect grew over the keeper's
+  // top row, and the keeper holds a record on one of the contested cells
+  const profile = { cols: 40, rows: 25 };
+  const previousManifest = {
+    archiveView: {
+      field: {
+        regions: [
+          {
+            id: regionIdForTag('keeper'),
+            tag: 'keeper',
+            seedSlot: 977,
+            footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 16, maxCol: 17, minRow: 23, maxRow: 24 } },
+          },
+          {
+            id: regionIdForTag('yielder'),
+            tag: 'yielder',
+            seedSlot: 898,
+            footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 16, maxCol: 19, minRow: 19, maxRow: 23 } },
+          },
+        ],
+        records: [
+          { id: 'old-a', slot: 937 },
+          { id: 'old-b', slot: 898 },
+        ],
+      },
+    },
+    records: [],
+  };
+  const records = [
+    { id: 'old-a', tags: ['keeper'], date: '2026-01-01', embedding: [1, 0] },
+    { id: 'old-b', tags: ['yielder'], date: '2026-01-02', embedding: [0, 1] },
+  ];
+
+  const layout = incrementalRegionLayout(records, previousManifest, () => new Map(), profile);
+  const keeper = layout.regions.find((region) => region.id === regionIdForTag('keeper'));
+  const yielder = layout.regions.find((region) => region.id === regionIdForTag('yielder'));
+
+  assert.deepEqual(keeper.footprint.rect, { minCol: 16, maxCol: 17, minRow: 23, maxRow: 24 });
+  assert.equal(yielder.footprint.kind, 'rect');
+  assert.deepEqual(yielder.footprint.rect, { minCol: 16, maxCol: 19, minRow: 19, maxRow: 22 });
+  assert.equal(layout.records.find((record) => record.id === 'old-a').layoutSlot, 937);
+  assert.equal(layout.records.find((record) => record.id === 'old-b').layoutSlot, 898);
+  assert.ok(layout.layoutEvents.some((event) =>
+    event.eventType === 'region.footprint_overlap_repaired' &&
+    event.regionId === regionIdForTag('yielder') &&
+    event.metadata.keeperRegionId === regionIdForTag('keeper') &&
+    event.metadata.footprintKindAfter === 'rect'
+  ));
+});
+
+test('unoccupied contested cells go to the older Region', () => {
+  const profile = { cols: 40, rows: 25 };
+  const older = {
+    id: regionIdForTag('older'),
+    tag: 'older',
+    seedSlot: 800,
+    footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 1, minRow: 19, maxRow: 21 } },
+  };
+  const younger = {
+    id: regionIdForTag('younger'),
+    tag: 'younger',
+    seedSlot: 720,
+    footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 1, minRow: 17, maxRow: 19 } },
+  };
+
+  const { regions, events } = repairFootprintOverlaps([older, younger], [
+    { regionId: older.id, slot: 800 },
+    { regionId: younger.id, slot: 720 },
+  ], profile);
+
+  assert.deepEqual(regions[0].footprint.rect, older.footprint.rect);
+  assert.deepEqual(regions[1].footprint.rect, { minCol: 0, maxCol: 1, minRow: 17, maxRow: 18 });
+  assert.equal(events.length, 1);
+  assert.equal(events[0].regionId, younger.id);
+});
+
+test('a Region whose seed sits on the contested cells keeps them regardless of age', () => {
+  const profile = { cols: 4, rows: 4 };
+  const older = {
+    id: regionIdForTag('older'),
+    tag: 'older',
+    seedSlot: 5,
+    footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 1, maxCol: 2, minRow: 1, maxRow: 2 } },
+  };
+  const younger = {
+    id: regionIdForTag('younger'),
+    tag: 'younger',
+    seedSlot: 6,
+    footprint: { schemaVersion: 1, kind: 'cells', cells: [6, 7, 11] },
+  };
+
+  const { regions } = repairFootprintOverlaps([older, younger], [], profile);
+
+  assert.deepEqual(regions[1].footprint.cells, [6, 7, 11]);
+  assert.deepEqual(regions[0].footprint.rect, { minCol: 1, maxCol: 1, minRow: 1, maxRow: 2 });
 });
 
 test('Sleep Rebuild applies relation drift toward the strongest increased anchor', () => {
