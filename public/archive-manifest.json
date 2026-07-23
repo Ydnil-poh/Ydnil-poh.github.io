@@ -1,10 +1,10 @@
 {
   "schemaVersion": 10,
-  "generatedAt": "2026-07-21T08:30:16.018Z",
+  "generatedAt": "2026-07-23T05:34:46.878Z",
   "rebuild": {
-    "id": "441dea82-28aa-4ccb-9656-6f8bd8933f11",
+    "id": "2a1e3b27-32d1-4174-864e-eb6e62d35c88",
     "mode": "general",
-    "changedRecordCount": 2
+    "changedRecordCount": 0
   },
   "source": "src/content/records",
   "storage": {
@@ -77,7 +77,7 @@
     ]
   },
   "counts": {
-    "records": 13,
+    "records": 14,
     "images": 0
   },
   "archiveView": {
@@ -89,19 +89,19 @@
         {
           "id": "tag:뚝딱뚝딱",
           "tag": "뚝딱뚝딱",
-          "seedSlot": 977,
+          "seedSlot": 19,
           "seedPosition": {
-            "x": 0.4375,
-            "y": 0.98
+            "x": 0.4875,
+            "y": 0.02
           },
           "footprint": {
             "schemaVersion": 1,
             "kind": "rect",
             "rect": {
-              "minCol": 16,
-              "maxCol": 17,
-              "minRow": 23,
-              "maxRow": 24
+              "minCol": 18,
+              "maxCol": 19,
+              "minRow": 0,
+              "maxRow": 1
             }
           },
           "stats": {
@@ -110,25 +110,25 @@
             "density": 0.5,
             "targetDensity": 0.72
           },
-          "seedCol": 17,
-          "seedRow": 24
+          "seedCol": 19,
+          "seedRow": 0
         },
         {
-          "id": "tag:뚜벅뚜벅",
-          "tag": "뚜벅뚜벅",
-          "seedSlot": 11,
+          "id": "tag:데굴데굴",
+          "tag": "데굴데굴",
+          "seedSlot": 120,
           "seedPosition": {
-            "x": 0.2875,
-            "y": 0.02
+            "x": 0.0125,
+            "y": 0.14
           },
           "footprint": {
             "schemaVersion": 1,
             "kind": "rect",
             "rect": {
-              "minCol": 10,
-              "maxCol": 12,
-              "minRow": 0,
-              "maxRow": 1
+              "minCol": 0,
+              "maxCol": 2,
+              "minRow": 2,
+              "maxRow": 3
             }
           },
           "stats": {
@@ -137,25 +137,52 @@
             "density": 0.6667,
             "targetDensity": 0.72
           },
-          "seedCol": 11,
-          "seedRow": 0
+          "seedCol": 0,
+          "seedRow": 3
         },
         {
-          "id": "tag:흥얼흥얼",
-          "tag": "흥얼흥얼",
-          "seedSlot": 800,
+          "id": "tag:뚜벅뚜벅",
+          "tag": "뚜벅뚜벅",
+          "seedSlot": 468,
           "seedPosition": {
-            "x": 0.0125,
-            "y": 0.82
+            "x": 0.7125,
+            "y": 0.46
           },
           "footprint": {
             "schemaVersion": 1,
             "kind": "rect",
             "rect": {
-              "minCol": 0,
-              "maxCol": 1,
-              "minRow": 19,
-              "maxRow": 20
+              "minCol": 27,
+              "maxCol": 29,
+              "minRow": 10,
+              "maxRow": 11
+            }
+          },
+          "stats": {
+            "occupiedSlots": 4,
+            "availableSlots": 2,
+            "density": 0.6667,
+            "targetDensity": 0.72
+          },
+          "seedCol": 28,
+          "seedRow": 11
+        },
+        {
+          "id": "tag:쳐묵쳐묵",
+          "tag": "쳐묵쳐묵",
+          "seedSlot": 988,
+          "seedPosition": {
+            "x": 0.7125,
+            "y": 0.98
+          },
+          "footprint": {
+            "schemaVersion": 1,
+            "kind": "rect",
+            "rect": {
+              "minCol": 27,
+              "maxCol": 28,
+              "minRow": 23,
+              "maxRow": 24
             }
           },
           "stats": {
@@ -164,16 +191,16 @@
             "density": 0.25,
             "targetDensity": 0.72
           },
-          "seedCol": 0,
-          "seedRow": 20
+          "seedCol": 28,
+          "seedRow": 24
         },
         {
-          "id": "tag:인벤토리",
-          "tag": "인벤토리",
-          "seedSlot": 639,
+          "id": "tag:흥얼흥얼",
+          "tag": "흥얼흥얼",
+          "seedSlot": 559,
           "seedPosition": {
             "x": 0.9875,
-            "y": 0.62
+            "y": 0.54
           },
           "footprint": {
             "schemaVersion": 1,
@@ -181,8 +208,35 @@
             "rect": {
               "minCol": 38,
               "maxCol": 39,
-              "minRow": 14,
-              "maxRow": 15
+              "minRow": 12,
+              "maxRow": 13
+            }
+          },
+          "stats": {
+            "occupiedSlots": 1,
+            "availableSlots": 3,
+            "density": 0.25,
+            "targetDensity": 0.72
+          },
+          "seedCol": 39,
+          "seedRow": 13
+        },
+        {
+          "id": "tag:인벤토리",
+          "tag": "인벤토리",
+          "seedSlot": 381,
+          "seedPosition": {
+            "x": 0.5375,
+            "y": 0.38
+          },
+          "footprint": {
+            "schemaVersion": 1,
+            "kind": "rect",
+            "rect": {
+              "minCol": 20,
+              "maxCol": 21,
+              "minRow": 8,
+              "maxRow": 9
             }
           },
           "stats": {
@@ -191,168 +245,122 @@
             "density": 0.5,
             "targetDensity": 0.72
           },
-          "seedCol": 39,
-          "seedRow": 15
-        },
-        {
-          "id": "tag:데굴데굴",
-          "tag": "데굴데굴",
-          "seedSlot": 898,
-          "seedPosition": {
-            "x": 0.4625,
-            "y": 0.9
-          },
-          "footprint": {
-            "schemaVersion": 1,
-            "kind": "rect",
-            "rect": {
-              "minCol": 17,
-              "maxCol": 18,
-              "minRow": 21,
-              "maxRow": 22
-            }
-          },
-          "stats": {
-            "occupiedSlots": 3,
-            "availableSlots": 1,
-            "density": 0.75,
-            "targetDensity": 0.72
-          },
-          "seedCol": 18,
-          "seedRow": 22
-        },
-        {
-          "id": "tag:쳐묵쳐묵",
-          "tag": "쳐묵쳐묵",
-          "seedSlot": 722,
-          "seedPosition": {
-            "x": 0.0625,
-            "y": 0.74
-          },
-          "footprint": {
-            "schemaVersion": 1,
-            "kind": "rect",
-            "rect": {
-              "minCol": 1,
-              "maxCol": 2,
-              "minRow": 17,
-              "maxRow": 18
-            }
-          },
-          "stats": {
-            "occupiedSlots": 1,
-            "availableSlots": 3,
-            "density": 0.25,
-            "targetDensity": 0.72
-          },
-          "seedCol": 2,
-          "seedRow": 18
+          "seedCol": 21,
+          "seedRow": 9
         }
       ],
       "records": [
         {
           "id": "post1",
-          "slot": 977,
-          "col": 17,
-          "row": 24,
+          "slot": 19,
+          "col": 19,
+          "row": 0,
           "regionId": "tag:뚝딱뚝딱",
           "isLatest": false
         },
         {
           "id": "post10",
-          "slot": 898,
-          "col": 18,
-          "row": 22,
+          "slot": 120,
+          "col": 0,
+          "row": 3,
           "regionId": "tag:데굴데굴",
           "isLatest": false
         },
         {
           "id": "post11",
-          "slot": 52,
-          "col": 12,
-          "row": 1,
+          "slot": 468,
+          "col": 28,
+          "row": 11,
           "regionId": "tag:뚜벅뚜벅",
           "isLatest": false
         },
         {
           "id": "post12",
-          "slot": 722,
-          "col": 2,
-          "row": 18,
+          "slot": 988,
+          "col": 28,
+          "row": 24,
           "regionId": "tag:쳐묵쳐묵",
           "isLatest": false
         },
         {
           "id": "post13",
-          "slot": 858,
-          "col": 18,
-          "row": 21,
+          "slot": 80,
+          "col": 0,
+          "row": 2,
           "regionId": "tag:데굴데굴",
           "isLatest": false
         },
         {
           "id": "post14",
-          "slot": 897,
-          "col": 17,
-          "row": 22,
+          "slot": 121,
+          "col": 1,
+          "row": 3,
           "regionId": "tag:데굴데굴",
-          "isLatest": true
+          "isLatest": false
         },
         {
           "id": "post3",
-          "slot": 937,
-          "col": 17,
-          "row": 23,
+          "slot": 18,
+          "col": 18,
+          "row": 0,
           "regionId": "tag:뚝딱뚝딱",
           "isLatest": false
         },
         {
           "id": "post4",
-          "slot": 11,
-          "col": 11,
-          "row": 0,
+          "slot": 428,
+          "col": 28,
+          "row": 10,
           "regionId": "tag:뚜벅뚜벅",
           "isLatest": false
         },
         {
           "id": "post5",
-          "slot": 800,
-          "col": 0,
-          "row": 20,
+          "slot": 559,
+          "col": 39,
+          "row": 13,
           "regionId": "tag:흥얼흥얼",
           "isLatest": false
         },
         {
           "id": "post6",
-          "slot": 598,
-          "col": 38,
-          "row": 14,
+          "slot": 381,
+          "col": 21,
+          "row": 9,
           "regionId": "tag:인벤토리",
           "isLatest": false
         },
         {
           "id": "post7",
-          "slot": 12,
-          "col": 12,
-          "row": 0,
+          "slot": 427,
+          "col": 27,
+          "row": 10,
           "regionId": "tag:뚜벅뚜벅",
           "isLatest": false
         },
         {
           "id": "post8",
-          "slot": 639,
-          "col": 39,
-          "row": 15,
+          "slot": 341,
+          "col": 21,
+          "row": 8,
           "regionId": "tag:인벤토리",
           "isLatest": false
         },
         {
           "id": "post9",
-          "slot": 51,
-          "col": 11,
-          "row": 1,
+          "slot": 467,
+          "col": 27,
+          "row": 11,
           "regionId": "tag:뚜벅뚜벅",
           "isLatest": false
+        },
+        {
+          "id": "psot15",
+          "slot": 81,
+          "col": 1,
+          "row": 2,
+          "regionId": "tag:데굴데굴",
+          "isLatest": true
         }
       ],
       "traces": []
@@ -374,10 +382,10 @@
       "score": 0.4517,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.4375,
-        "y": 0.98
+        "x": 0.4875,
+        "y": 0.02
       },
-      "layoutSlot": 977,
+      "layoutSlot": 19,
       "regionId": "tag:뚝딱뚝딱",
       "related": [
         "post3",
@@ -524,7 +532,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "4d3c37ceecf09ea502602a857e2164a394e8b0141daf2ab5b188ec921e15dc67",
+      "contentHash": "671102b19d71e22479bc16843bbc8526c19ebba837f0f78fdb8aee45ebe10435",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -544,29 +552,33 @@
       "tags": [
         "데굴데굴"
       ],
-      "displayDensity": 0.6646,
-      "score": 0.6646,
+      "displayDensity": 0.8408,
+      "score": 0.8408,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.4625,
-        "y": 0.9
+        "x": 0.0125,
+        "y": 0.14
       },
-      "layoutSlot": 898,
+      "layoutSlot": 120,
       "regionId": "tag:데굴데굴",
       "related": [
         "post13",
+        "psot15",
         "post14",
         "post8",
         "post3",
         "post1",
         "post11",
-        "post4",
-        "post6"
+        "post4"
       ],
       "relationSummary": [
         {
           "id": "post13",
           "weight": 1.0326
+        },
+        {
+          "id": "psot15",
+          "weight": 1.0251
         },
         {
           "id": "post14",
@@ -591,10 +603,6 @@
         {
           "id": "post4",
           "weight": 0.0219
-        },
-        {
-          "id": "post6",
-          "weight": 0.0157
         }
       ],
       "attentionSnapshot": {
@@ -613,7 +621,7 @@
       },
       "texture": {
         "schemaVersion": 2,
-        "density": "medium",
+        "density": "high",
         "imageCount": 0,
         "textLength": 1881,
         "layout": {
@@ -746,7 +754,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "81b3697234b175d4d91f192f9927c03c9d18d7a7847fd5b336fa37d958a2be40",
+      "contentHash": "d22f661e9d62a5a0e2f201cf4f51854470fc5201afac684518e4631797712b67",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -770,10 +778,10 @@
       "score": 0.7296,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.3125,
-        "y": 0.06
+        "x": 0.7125,
+        "y": 0.46
       },
-      "layoutSlot": 52,
+      "layoutSlot": 468,
       "regionId": "tag:뚜벅뚜벅",
       "related": [
         "post7",
@@ -924,7 +932,7 @@
       "imageUrls": [],
       "galleryFolder": "june",
       "galleryImageUrls": [],
-      "contentHash": "ad8ac8e2ce78973511f32f11bf918b7d87e370cefdac8c3a2c8593efda38524f",
+      "contentHash": "167499fcf3b5908ba17306a24702a895d24fe4d26de72caaf129fd8b8dc95698",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -948,10 +956,10 @@
       "score": 0.2452,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.0625,
-        "y": 0.74
+        "x": 0.7125,
+        "y": 0.98
       },
-      "layoutSlot": 722,
+      "layoutSlot": 988,
       "regionId": "tag:쳐묵쳐묵",
       "related": [
         "post5",
@@ -1089,7 +1097,7 @@
       "imageUrls": [],
       "galleryFolder": "2607",
       "galleryImageUrls": [],
-      "contentHash": "2c42475bfd6579cfae445335260aa5189619d2502033d77fad37d91010777097",
+      "contentHash": "441f215d9ce52dd463face869148523618395b246fbe67a69f82c717907244a5",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -1109,29 +1117,33 @@
       "tags": [
         "데굴데굴"
       ],
-      "displayDensity": 0.6694,
-      "score": 0.6694,
+      "displayDensity": 0.8435,
+      "score": 0.8435,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.4625,
-        "y": 0.86
+        "x": 0.0125,
+        "y": 0.1
       },
-      "layoutSlot": 858,
+      "layoutSlot": 80,
       "regionId": "tag:데굴데굴",
       "related": [
         "post10",
+        "psot15",
         "post14",
         "post6",
         "post11",
         "post4",
         "post3",
-        "post1",
-        "post5"
+        "post1"
       ],
       "relationSummary": [
         {
           "id": "post10",
           "weight": 1.0326
+        },
+        {
+          "id": "psot15",
+          "weight": 1.0207
         },
         {
           "id": "post14",
@@ -1156,10 +1168,6 @@
         {
           "id": "post1",
           "weight": 0.0178
-        },
-        {
-          "id": "post5",
-          "weight": 0.0093
         }
       ],
       "attentionSnapshot": {
@@ -1178,7 +1186,7 @@
       },
       "texture": {
         "schemaVersion": 2,
-        "density": "medium",
+        "density": "high",
         "imageCount": 0,
         "textLength": 607,
         "layout": {
@@ -1265,7 +1273,7 @@
       "imageUrls": [],
       "galleryFolder": "\"\"",
       "galleryImageUrls": [],
-      "contentHash": "6cce61b68f17b07301f6ef1334000480693e6e57e23edbd93f4b2f09bc1d5f51",
+      "contentHash": "1c9bb52a3671cabda6a3cfc7024648409b6f2bd70164b557510085791e18af46",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -1285,26 +1293,30 @@
       "tags": [
         "데굴데굴"
       ],
-      "displayDensity": 0.5425,
-      "score": 0.5425,
+      "displayDensity": 0.7168,
+      "score": 0.7168,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.4375,
-        "y": 0.9
+        "x": 0.0375,
+        "y": 0.14
       },
-      "layoutSlot": 897,
+      "layoutSlot": 121,
       "regionId": "tag:데굴데굴",
       "related": [
+        "psot15",
         "post10",
         "post13",
         "post4",
         "post7",
         "post3",
         "post1",
-        "post9",
-        "post8"
+        "post9"
       ],
       "relationSummary": [
+        {
+          "id": "psot15",
+          "weight": 1.0119
+        },
         {
           "id": "post10",
           "weight": 1.0015
@@ -1332,10 +1344,6 @@
         {
           "id": "post9",
           "weight": 0.0123
-        },
-        {
-          "id": "post8",
-          "weight": 0.0047
         }
       ],
       "attentionSnapshot": {
@@ -1463,7 +1471,7 @@
       "imageUrls": [],
       "galleryFolder": "\"\"",
       "galleryImageUrls": [],
-      "contentHash": "200ade0e51c808792b7fa93565e62aee05d99ad701429952ba2337e9f280a17a",
+      "contentHash": "6f75a0f51781ca847dd01596b78e9007ffe607acf2d3ff9c91193d2a975fd186",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -1487,10 +1495,10 @@
       "score": 0.2999,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.4375,
-        "y": 0.94
+        "x": 0.4625,
+        "y": 0.02
       },
-      "layoutSlot": 937,
+      "layoutSlot": 18,
       "regionId": "tag:뚝딱뚝딱",
       "related": [
         "post1",
@@ -1637,7 +1645,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "69834df6c0ccf06d038a65b00b0b281ea633883145053a166575716c6ba2001d",
+      "contentHash": "625dd4a2099f04feee60e22340c17aff16e5971ef8c27fffb7d606669868cada",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -1661,10 +1669,10 @@
       "score": 0.6827,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.2875,
-        "y": 0.02
+        "x": 0.7125,
+        "y": 0.42
       },
-      "layoutSlot": 11,
+      "layoutSlot": 428,
       "regionId": "tag:뚜벅뚜벅",
       "related": [
         "post7",
@@ -1907,7 +1915,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "83fd060ee241b78d27617bd3e448c5d43af31005918dc120bd13b09120f84300",
+      "contentHash": "b9b72472b507de9479f678353902996fa3cbdacdfe7261f707675661a551f2c6",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -1931,10 +1939,10 @@
       "score": 0.3029,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.0125,
-        "y": 0.82
+        "x": 0.9875,
+        "y": 0.54
       },
-      "layoutSlot": 800,
+      "layoutSlot": 559,
       "regionId": "tag:흥얼흥얼",
       "related": [
         "post1",
@@ -2214,7 +2222,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "c3c168cbc7807c00196f1d311c0995524f133c8a4080301bd9a64ffd3c140cf0",
+      "contentHash": "a322a339a6fdbc929cd4a42e6a9464e4575aa1e6e46afe9edad3cce5d7bd1a45",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -2234,18 +2242,19 @@
       "tags": [
         "인벤토리"
       ],
-      "displayDensity": 0.3572,
-      "score": 0.3572,
+      "displayDensity": 0.3637,
+      "score": 0.3637,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.9625,
-        "y": 0.58
+        "x": 0.5375,
+        "y": 0.38
       },
-      "layoutSlot": 598,
+      "layoutSlot": 381,
       "regionId": "tag:인벤토리",
       "related": [
         "post8",
         "post13",
+        "psot15",
         "post11",
         "post10",
         "post14"
@@ -2258,6 +2267,10 @@
         {
           "id": "post13",
           "weight": 0.0771
+        },
+        {
+          "id": "psot15",
+          "weight": 0.0517
         },
         {
           "id": "post11",
@@ -2347,7 +2360,7 @@
       "imageUrls": [],
       "galleryFolder": "glass",
       "galleryImageUrls": [],
-      "contentHash": "a53243576f4008c7c36a63589914d7d9377f5220b97dc979a1bc284f05b8ce80",
+      "contentHash": "ccf21ac9e297f67ba29b9eeec21757f8003e129603b2479cfe4a8544da2a9eeb",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -2371,10 +2384,10 @@
       "score": 0.7956,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.3125,
-        "y": 0.02
+        "x": 0.6875,
+        "y": 0.42
       },
-      "layoutSlot": 12,
+      "layoutSlot": 427,
       "regionId": "tag:뚜벅뚜벅",
       "related": [
         "post4",
@@ -2383,6 +2396,7 @@
         "post3",
         "post14",
         "post5",
+        "psot15",
         "post12"
       ],
       "relationSummary": [
@@ -2409,6 +2423,10 @@
         {
           "id": "post5",
           "weight": 0.0122
+        },
+        {
+          "id": "psot15",
+          "weight": 0.0055
         },
         {
           "id": "post12",
@@ -2584,7 +2602,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "dfc03be9ba5c5507b88c3237b674aaab1ff4df9ca464e600573d007c69c88efd",
+      "contentHash": "95888f409f9e535ebfa9e456fd8101423a46b2ec1cc5d9ed8d46688cb4852be6",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -2604,24 +2622,24 @@
       "tags": [
         "인벤토리"
       ],
-      "displayDensity": 0.4817,
-      "score": 0.4817,
+      "displayDensity": 0.483,
+      "score": 0.483,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.9875,
-        "y": 0.62
+        "x": 0.5375,
+        "y": 0.34
       },
-      "layoutSlot": 639,
+      "layoutSlot": 341,
       "regionId": "tag:인벤토리",
       "related": [
         "post6",
         "post10",
         "post11",
+        "psot15",
         "post1",
         "post3",
         "post12",
-        "post14",
-        "post4"
+        "post14"
       ],
       "relationSummary": [
         {
@@ -2635,6 +2653,10 @@
         {
           "id": "post11",
           "weight": 0.0455
+        },
+        {
+          "id": "psot15",
+          "weight": 0.0255
         },
         {
           "id": "post1",
@@ -2651,10 +2673,6 @@
         {
           "id": "post14",
           "weight": 0.0047
-        },
-        {
-          "id": "post4",
-          "weight": 0.0044
         }
       ],
       "attentionSnapshot": {
@@ -2750,7 +2768,7 @@
       "imageUrls": [],
       "galleryFolder": "gear",
       "galleryImageUrls": [],
-      "contentHash": "d6db2674da8f13ee0bad0493626e9ff83672e87b06bff38e5438961465527b67",
+      "contentHash": "e7323ead9e2a5766af078c9512685e70c7ea74f1cc14939f993163c325a2f72a",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -2774,10 +2792,10 @@
       "score": 0.8361,
       "scoreMeaning": "semantic density",
       "position": {
-        "x": 0.2875,
-        "y": 0.06
+        "x": 0.6875,
+        "y": 0.46
       },
-      "layoutSlot": 51,
+      "layoutSlot": 467,
       "regionId": "tag:뚜벅뚜벅",
       "related": [
         "post11",
@@ -2988,7 +3006,7 @@
       "imageUrls": [],
       "galleryFolder": "",
       "galleryImageUrls": [],
-      "contentHash": "fc782d7dd050f1eeaec07cf72d4bac835d167e8068f28c4f44f012278925421a",
+      "contentHash": "748c7a19e5ba81a1af201329a3bdcea631a5360d781df8b6ae624aeaf4f3cb5c",
       "embeddingRef": {
         "provider": "supabase",
         "table": "archive_embeddings",
@@ -2996,6 +3014,197 @@
       },
       "embeddingModel": "local-feature-hash-ko-en-64",
       "url": "/records/post9/"
+    },
+    {
+      "id": "psot15",
+      "slug": "psot15",
+      "title": "베이트먼의 바르셀로나 체어",
+      "date": "2026-07-22",
+      "location": "서울",
+      "type": "standard",
+      "excerpt": "아메리칸 사이코 감상.",
+      "tags": [
+        "데굴데굴"
+      ],
+      "displayDensity": 0.6919,
+      "score": 0.6919,
+      "scoreMeaning": "semantic density",
+      "position": {
+        "x": 0.0375,
+        "y": 0.1
+      },
+      "layoutSlot": 81,
+      "regionId": "tag:데굴데굴",
+      "related": [
+        "post10",
+        "post13",
+        "post14",
+        "post6",
+        "post8",
+        "post11",
+        "post7"
+      ],
+      "relationSummary": [
+        {
+          "id": "post10",
+          "weight": 1.0251
+        },
+        {
+          "id": "post13",
+          "weight": 1.0207
+        },
+        {
+          "id": "post14",
+          "weight": 1.0119
+        },
+        {
+          "id": "post6",
+          "weight": 0.0517
+        },
+        {
+          "id": "post8",
+          "weight": 0.0255
+        },
+        {
+          "id": "post11",
+          "weight": 0.0103
+        },
+        {
+          "id": "post7",
+          "weight": 0.0055
+        }
+      ],
+      "attentionSnapshot": {
+        "views": 0,
+        "tileClicks": 0,
+        "opens": 0,
+        "pageViews": 0,
+        "runtimeScore": 0,
+        "humanModalOpen": 0,
+        "humanFullOpen": 0,
+        "humanScore": 0,
+        "machineAccess": 0,
+        "machineScore": 0,
+        "lastEventAt": null,
+        "semantics": "nightly snapshot only; source of truth remains Supabase archive_events/archive_records"
+      },
+      "texture": {
+        "schemaVersion": 2,
+        "density": "medium",
+        "imageCount": 0,
+        "textLength": 869,
+        "layout": {
+          "schemaVersion": 1,
+          "nodeCount": 8,
+          "canvas": {
+            "width": 64,
+            "height": 48,
+            "unit": "cell"
+          },
+          "documentType": "standard"
+        },
+        "renders": {
+          "field": {
+            "schemaVersion": 2,
+            "role": "field",
+            "lod": 0,
+            "width": 12,
+            "height": 9,
+            "color": "currentColor",
+            "className": "archive-texture archive-texture--field",
+            "encoding": "rle4",
+            "rle": [
+              [0, 1],
+              [2, 4],
+              [0, 8],
+              [2, 3],
+              [0, 9],
+              [2, 10],
+              [0, 2],
+              [2, 10],
+              [0, 2],
+              [2, 10],
+              [0, 2],
+              [2, 4],
+              [0, 43]
+            ]
+          },
+          "modal": {
+            "schemaVersion": 2,
+            "role": "modal",
+            "lod": 1,
+            "width": 64,
+            "height": 48,
+            "color": "currentColor",
+            "className": "archive-texture archive-texture--modal",
+            "encoding": "rle4",
+            "rle": [
+              [0, 4],
+              [3, 56],
+              [0, 8],
+              [3, 45],
+              [0, 83],
+              [3, 56],
+              [0, 8],
+              [3, 25],
+              [0, 103],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 18],
+              [0, 110],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 4],
+              [0, 124],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 2],
+              [0, 126],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 51],
+              [0, 77],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 24],
+              [0, 104],
+              [3, 56],
+              [0, 8],
+              [3, 56],
+              [0, 8],
+              [3, 12],
+              [0, 1072]
+            ]
+          }
+        }
+      },
+      "imageUrls": [],
+      "galleryFolder": "\"\"",
+      "galleryImageUrls": [],
+      "contentHash": "29b368802441e91a6a121d8965b73e906dffa2fbffd32d70b5dfa11933a85a21",
+      "embeddingRef": {
+        "provider": "supabase",
+        "table": "archive_embeddings",
+        "key": "psot15"
+      },
+      "embeddingModel": "local-feature-hash-ko-en-64",
+      "url": "/records/psot15/"
     }
   ]
 }
