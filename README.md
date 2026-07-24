@@ -12,7 +12,7 @@
 
 | 구성 | 내용 |
 |---|---|
-| 사이트 | Astro 6 정적 빌드, GitHub Pages 배포 (`https://ydnil-poh.github.io`) |
+| 사이트 | Astro 6 정적 빌드, GitHub Actions 빌드 → Cloudflare Pages 배포 (`https://ydnil-poh.pages.dev`) |
 | 백엔드 | Supabase — Postgres(이벤트·점수·히스토리), Storage(갤러리 이미지, 버킷 `img`) |
 | 런타임 | Node ≥ 22.12, 외부 빌드 의존성은 `astro`, `@astrojs/sitemap` 뿐 |
 
@@ -120,7 +120,22 @@ Runtime 점수가 아무리 높아도 위치는 움직이지 않고, semantic sc
 | `record_open` | 모달에서 기록 페이지로 진입 | +0.35 | +0.35 |
 | `page_view` | 기록 페이지 조회 | +0.25 | — |
 
-클라이언트가 anon key로 `record_archive_event` RPC를 호출한다. RPC는 **존재하는 slug만** 갱신하고(모르는 slug는 `ignored` 응답, 행 생성 없음) 개별 이벤트를 `archive_events`에 적재한다. 세션 식별은 `sessionStorage`의 무작위 id뿐, 재방문·사용자 추적은 하지 않는다. `machine_score`/`machine_access` 컬럼은 스키마에 예약되어 있으나 갱신 경로는 아직 없다(Machine Attention 미구현).
+클라이언트가 anon key로 `record_archive_event` RPC를 호출한다. RPC는 **존재하는 slug만** 갱신하고(모르는 slug는 `ignored` 응답, 행 생성 없음) 개별 이벤트를 `archive_events`에 적재한다. 세션 식별은 `sessionStorage`의 무작위 id뿐, 재방문·사용자 추적은 하지 않는다. `machine_score`/`machine_access`는 Machine Attention(아래)이 갱신한다.
+
+### Machine Attention
+
+Cloudflare Pages Functions 미들웨어([functions/_middleware.js](functions/_middleware.js))가 모든 요청의 User-Agent를 분류해 `record_machine_event` RPC로 기록한다. 기록은 `waitUntil` 비동기라 응답을 막지 않으며, 정적 자산 요청은 제외한다.
+
+| category | 의미 | 예시 | score 가중치 |
+|---|---|---|---|
+| `search` | 검색 색인 (전통·AI 검색) | Googlebot, Bingbot, OAI-SearchBot, PerplexityBot | 0 — 관측만 |
+| `crawler` | 학습·수집 크롤러 | GPTBot, ClaudeBot, CCBot | +0.10 |
+| `ai` | 사용자 질문에 의한 실시간 참조 | ChatGPT-User, Claude-User, Perplexity-User | +0.30 |
+| `unknown` | 봇 추정, 식별 불가 | 일반 봇 패턴 | 0 |
+
+가중치에는 confidence가 곱해진다 — Cloudflare가 발신 IP 대역으로 봇을 검증하면 1.0, UA 문자열만 일치하면 0.6, 일반 봇 패턴만 감지되면 0.3. 원본 UA는 `machine_events`에 그대로 남는 관찰이고 agent/category/confidence는 해석이므로, 분류 규칙이 바뀌면 재계산할 수 있다. 가중치는 RPC 안에만 존재해 저장된 관측을 건드리지 않고 조정된다. search가 0인 이유: 색인 크롤링은 작업이지 관심이 아니다 — 관측은 남기고 점수에서 제외한다.
+
+알려진 한계: 일반 브라우저 UA로 요청하는 agentic browsing은 식별할 수 없다. 누락(undercount)이지 오분류가 아니므로 데이터 순도는 유지된다. `machine_score`는 아직 렌더링에 쓰이지 않는다 — 수집이 먼저다.
 
 ### Runtime → 텍스처 LOD
 
@@ -164,7 +179,7 @@ semantic blocks (문단 / !youtube)
 - `embeddingProjection`: 영속된 투영 축 상태
 - `rebuild`: id, 모드, 변경 레코드 수
 
-**이전 매니페스트 해석 순서**: `ARCHIVE_PREVIOUS_MANIFEST_URL` → (GitHub Actions에서는) 배포본 `https://ydnil-poh.github.io/archive-manifest.json` → 로컬 파일. CI가 배포본에서 이어가므로 공간 기억은 배포를 넘어 지속되고, repo에 커밋된 매니페스트는 로컬 dev/테스트용 fixture다.
+**이전 매니페스트 해석 순서**: `ARCHIVE_PREVIOUS_MANIFEST_URL` → (GitHub Actions에서는) 배포본 `https://ydnil-poh.pages.dev/archive-manifest.json` → 로컬 파일. CI가 배포본에서 이어가므로 공간 기억은 배포를 넘어 지속되고, repo에 커밋된 매니페스트는 로컬 dev/테스트용 fixture다.
 
 `public/archive-layout-debug.json`에는 레코드별 semantic block/layout graph와 이번 rebuild의 레이아웃 이벤트가 담긴다.
 
@@ -178,6 +193,7 @@ semantic blocks (문단 / !youtube)
 |---|---|
 | `archive_records` | 레코드 메타 + 누적 attention 점수 (live source of truth); 삭제된 글은 `removed_at` tombstone |
 | `archive_events` | 개별 이벤트 로그 (append-only) |
+| `machine_events` | 기계 활동 관측 로그 (append-only, 원본 UA 포함) |
 | `archive_embeddings` | 임베딩 벡터 `vector(64)` + content hash |
 | `archive_relations` | 레코드 쌍 relation (cosine distance, weight) |
 | `archive_rebuilds` | rebuild 실행 기록 |
@@ -185,7 +201,7 @@ semantic blocks (문단 / !youtube)
 | `archive_region_snapshots` | rebuild별 Region 상태(seed/footprint/density) 스냅샷 |
 | `archive_layout_events` | rebuild별 레이아웃 이벤트 |
 
-- RLS: `archive_records`·`archive_relations` 공개 읽기, `archive_events` 공개 insert. 나머지는 service role 전용
+- RLS: `archive_records`·`archive_relations` 공개 읽기, `archive_events` 공개 insert. `machine_events`는 security definer RPC(`record_machine_event`)로만 쓰고 service role로만 읽는다. 나머지는 service role 전용
 - 히스토리 레이어 원칙: **관찰을 저장하고 해석을 저장하지 않는다.** growth role, 색, 중심성 같은 해석값은 저장하지 않고 나중에 관찰로부터 유도한다
 
 ---
@@ -200,6 +216,8 @@ semantic blocks (문단 / !youtube)
 | cron `10 18 * * *` (03:10 KST) | `sleep` (`ARCHIVE_REBUILD_MODE=sleep`) | **관찰 반영 + 정비** — 하루치 attention을 LOD에 반영, footprint 확장/축소, 삭제 tombstone. 선명도는 밤이 바꾼다 |
 
 수동 플래그: `--region-reseed`/`ARCHIVE_REGION_RESEED=1`(전체 Region 재배치 — 공간 기억·잔상 리셋, 일회성 마이그레이션용), `--recalculate-projection`(투영 축 재산출).
+
+배포는 `wrangler pages deploy`로 Cloudflare Pages(`ydnil-poh.pages.dev`)에 올리며, `functions/`의 Machine Attention 미들웨어가 함께 배포된다. 미들웨어 런타임 환경변수(`SUPABASE_URL`, `SUPABASE_ANON_KEY`)는 Pages 프로젝트 설정에 있다.
 
 빌드 후 Supabase 동기화: records/embeddings/relations upsert + rebuild·레코드/Region 스냅샷·레이아웃 이벤트 기록. sleep 빌드는 추가로 repo에서 사라진 레코드를 tombstone 처리한다(`removed_at` 마킹, 관련 relation 행 삭제; 히스토리·이벤트는 보존). 같은 slug가 돌아오면 upsert가 tombstone을 해제한다.
 
