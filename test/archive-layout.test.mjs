@@ -38,6 +38,7 @@ import {
   isSlotInFootprint,
   maintainRegionFootprint,
   nearestOpenSlotInFootprint,
+  regionBoundarySegments,
   regionDensityPolicy,
   regionIdForTag,
   repairFootprintOverlaps,
@@ -793,6 +794,59 @@ test('a full footprint expands on the spot instead of failing the build', () => 
     event.eventType === 'region.footprint_emergency_expanded' &&
     event.regionId === regionIdForTag('walk')
   ));
+});
+
+test('region boundary segments appear only where footprints touch', () => {
+  const profile = { cols: 12, rows: 6 };
+  const regions = [
+    { id: 'tag:a', footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 2, minRow: 0, maxRow: 2 } } },
+    { id: 'tag:b', footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 3, maxCol: 5, minRow: 0, maxRow: 2 } } },
+    { id: 'tag:c', footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 8, maxCol: 10, minRow: 0, maxRow: 2 } } },
+  ];
+
+  const segments = regionBoundarySegments(regions, profile);
+
+  assert.deepEqual(segments, [{ orientation: 'v', x: 3, y1: 0, y2: 3 }]);
+});
+
+test('region boundary segments merge collinear runs and split at gaps', () => {
+  const profile = { cols: 12, rows: 8 };
+  const regions = [
+    { id: 'tag:a', footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 1, minRow: 0, maxRow: 5 } } },
+    {
+      id: 'tag:b',
+      footprint: {
+        schemaVersion: 1,
+        kind: 'cells',
+        cells: [2, 14, 2 + 4 * 12, 2 + 5 * 12],
+      },
+    },
+    { id: 'tag:c', footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 0, maxCol: 1, minRow: 6, maxRow: 7 } } },
+  ];
+
+  const segments = regionBoundarySegments(regions, profile);
+
+  const vertical = segments.filter((segment) => segment.orientation === 'v');
+  const horizontal = segments.filter((segment) => segment.orientation === 'h');
+  assert.deepEqual(vertical, [
+    { orientation: 'v', x: 2, y1: 0, y2: 2 },
+    { orientation: 'v', x: 2, y1: 4, y2: 6 },
+  ]);
+  assert.deepEqual(horizontal, [{ orientation: 'h', y: 6, x1: 0, x2: 2 }]);
+});
+
+test('archive index view exposes region seams for the field overlay', () => {
+  const view = createArchiveIndexView(archiveManifest);
+
+  assert.ok(Array.isArray(view.regionSeams));
+  for (const seam of view.regionSeams) {
+    assert.ok(seam.orientation === 'v' || seam.orientation === 'h');
+    if (seam.orientation === 'v') {
+      assert.ok(seam.y2 > seam.y1);
+    } else {
+      assert.ok(seam.x2 > seam.x1);
+    }
+  }
 });
 
 test('archive manifest persists projection axes as reusable state', () => {

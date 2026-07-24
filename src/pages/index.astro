@@ -8,6 +8,7 @@ const {
   fieldRecords,
   emptyTiles,
   traces,
+  regionSeams,
   clientRecords,
   recordById,
   selected,
@@ -203,6 +204,74 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         opacity: 0.1;
       }
 
+      /* region-seam: where two Region footprints touch — a fold in the paper
+         catching light. A wide soft halo with a faint ink core, both fading
+         out toward the segment ends so the boundary reads as emerging from
+         the terrain rather than drawn onto it. Isolated Regions get nothing. */
+      .region-seams {
+        inset: 18px;
+        pointer-events: none;
+        position: absolute;
+        z-index: 2;
+      }
+      .region-seam { position: absolute; }
+      .region-seam::before,
+      .region-seam::after { content: ""; position: absolute; }
+      .region-seam--v {
+        height: calc(var(--len) / var(--rows) * 100%);
+        left: calc(var(--x) / var(--cols) * 100%);
+        top: calc(var(--y1) / var(--rows) * 100%);
+        width: 0;
+      }
+      .region-seam--v::before {
+        background: linear-gradient(to bottom,
+          rgba(255, 253, 246, 0) 0%,
+          rgba(255, 253, 246, 0.75) 30%,
+          rgba(255, 253, 246, 0.75) 70%,
+          rgba(255, 253, 246, 0) 100%);
+        filter: blur(2.2px);
+        height: 100%;
+        left: -3.5px;
+        width: 7px;
+      }
+      .region-seam--v::after {
+        background: linear-gradient(to bottom,
+          rgba(74, 66, 50, 0) 0%,
+          rgba(74, 66, 50, 0.34) 35%,
+          rgba(74, 66, 50, 0.34) 65%,
+          rgba(74, 66, 50, 0) 100%);
+        height: 100%;
+        left: -0.5px;
+        width: 1px;
+      }
+      .region-seam--h {
+        height: 0;
+        left: calc(var(--x1) / var(--cols) * 100%);
+        top: calc(var(--y) / var(--rows) * 100%);
+        width: calc(var(--len) / var(--cols) * 100%);
+      }
+      .region-seam--h::before {
+        background: linear-gradient(to right,
+          rgba(255, 253, 246, 0) 0%,
+          rgba(255, 253, 246, 0.75) 30%,
+          rgba(255, 253, 246, 0.75) 70%,
+          rgba(255, 253, 246, 0) 100%);
+        filter: blur(2.2px);
+        height: 7px;
+        top: -3.5px;
+        width: 100%;
+      }
+      .region-seam--h::after {
+        background: linear-gradient(to right,
+          rgba(74, 66, 50, 0) 0%,
+          rgba(74, 66, 50, 0.34) 35%,
+          rgba(74, 66, 50, 0.34) 65%,
+          rgba(74, 66, 50, 0) 100%);
+        height: 1px;
+        top: -0.5px;
+        width: 100%;
+      }
+
       .record-node {
         background: transparent;
         border: 1px solid rgba(92, 83, 67, 0.12);
@@ -343,6 +412,18 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
                 <span class="trace-bars" set:html={trace.textureSvg}></span>
               </span>
             ))}
+            {regionSeams.length > 0 && (
+              <div class="region-seams" aria-hidden="true">
+                {regionSeams.map((seam) => (
+                  <span
+                    class={`region-seam region-seam--${seam.orientation}`}
+                    style={seam.orientation === 'v'
+                      ? `--x:${seam.x};--y1:${seam.y1};--len:${seam.y2 - seam.y1};`
+                      : `--y:${seam.y};--x1:${seam.x1};--len:${seam.x2 - seam.x1};`}
+                  ></span>
+                ))}
+              </div>
+            )}
             {fieldRecords.map((record) => {
               const density = record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low';
               return (

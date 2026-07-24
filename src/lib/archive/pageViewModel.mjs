@@ -1,4 +1,5 @@
 import { renderTextureSet, renderTextureSvg } from '../archiveTexture.ts';
+import { regionBoundarySegments } from './regionLayout.mjs';
 
 export function createArchiveIndexView(manifest) {
   const fieldView = manifest.archiveView.field;
@@ -49,6 +50,8 @@ export function createArchiveIndexView(manifest) {
   }
   const traces = [...latestTraceBySlot.values()];
 
+  const regionSeams = regionBoundarySegments(fieldView.regions ?? [], { cols, rows });
+
   const clientRecords = fieldRecords.map(({ textureSvg, texture, ...record }) => ({
     ...record,
     textureSvg: {
@@ -64,6 +67,7 @@ export function createArchiveIndexView(manifest) {
     fieldRecords,
     emptyTiles,
     traces,
+    regionSeams,
     clientRecords,
     recordById: new Map(fieldRecords.map((record) => [record.id, record])),
     selected: fieldRecords[0],
