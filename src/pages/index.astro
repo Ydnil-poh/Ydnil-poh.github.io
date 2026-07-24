@@ -214,7 +214,7 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         position: absolute;
         z-index: 2;
       }
-      .region-seam { position: absolute; }
+      .region-seam { position: absolute; --fade-in: 30%; --fade-out: 70%; }
       .region-seam::before,
       .region-seam::after { content: ""; position: absolute; }
       .region-seam--v {
@@ -226,8 +226,8 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .region-seam--v::before {
         background: linear-gradient(to bottom,
           rgba(255, 253, 246, 0) 0%,
-          rgba(255, 253, 246, 0.75) 30%,
-          rgba(255, 253, 246, 0.75) 70%,
+          rgba(255, 253, 246, 0.75) var(--fade-in),
+          rgba(255, 253, 246, 0.75) var(--fade-out),
           rgba(255, 253, 246, 0) 100%);
         filter: blur(2.2px);
         height: 100%;
@@ -237,8 +237,8 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .region-seam--v::after {
         background: linear-gradient(to bottom,
           rgba(74, 66, 50, 0) 0%,
-          rgba(74, 66, 50, 0.34) 35%,
-          rgba(74, 66, 50, 0.34) 65%,
+          rgba(74, 66, 50, 0.34) var(--fade-in),
+          rgba(74, 66, 50, 0.34) var(--fade-out),
           rgba(74, 66, 50, 0) 100%);
         height: 100%;
         left: -0.5px;
@@ -253,8 +253,8 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .region-seam--h::before {
         background: linear-gradient(to right,
           rgba(255, 253, 246, 0) 0%,
-          rgba(255, 253, 246, 0.75) 30%,
-          rgba(255, 253, 246, 0.75) 70%,
+          rgba(255, 253, 246, 0.75) var(--fade-in),
+          rgba(255, 253, 246, 0.75) var(--fade-out),
           rgba(255, 253, 246, 0) 100%);
         filter: blur(2.2px);
         height: 7px;
@@ -264,8 +264,8 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .region-seam--h::after {
         background: linear-gradient(to right,
           rgba(74, 66, 50, 0) 0%,
-          rgba(74, 66, 50, 0.34) 35%,
-          rgba(74, 66, 50, 0.34) 65%,
+          rgba(74, 66, 50, 0.34) var(--fade-in),
+          rgba(74, 66, 50, 0.34) var(--fade-out),
           rgba(74, 66, 50, 0) 100%);
         height: 1px;
         top: -0.5px;
@@ -414,14 +414,18 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
             ))}
             {regionSeams.length > 0 && (
               <div class="region-seams" aria-hidden="true">
-                {regionSeams.map((seam) => (
-                  <span
-                    class={`region-seam region-seam--${seam.orientation}`}
-                    style={seam.orientation === 'v'
-                      ? `--x:${seam.x};--y1:${seam.y1};--len:${seam.y2 - seam.y1};`
-                      : `--y:${seam.y};--x1:${seam.x1};--len:${seam.x2 - seam.x1};`}
-                  ></span>
-                ))}
+                {regionSeams.map((seam) => {
+                  const position = seam.orientation === 'v'
+                    ? `--x:${seam.x};--y1:${seam.y1};--len:${seam.y2 - seam.y1};`
+                    : `--y:${seam.y};--x1:${seam.x1};--len:${seam.x2 - seam.x1};`;
+                  const fade = `--fade-in:${seam.joinStart ? '0%' : '30%'};--fade-out:${seam.joinEnd ? '100%' : '70%'};`;
+                  return (
+                    <span
+                      class={`region-seam region-seam--${seam.orientation}`}
+                      style={position + fade}
+                    ></span>
+                  );
+                })}
               </div>
             )}
             {fieldRecords.map((record) => {

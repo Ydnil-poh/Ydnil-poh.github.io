@@ -806,7 +806,7 @@ test('region boundary segments appear only where footprints touch', () => {
 
   const segments = regionBoundarySegments(regions, profile);
 
-  assert.deepEqual(segments, [{ orientation: 'v', x: 3, y1: 0, y2: 3 }]);
+  assert.deepEqual(segments, [{ orientation: 'v', x: 3, y1: 0, y2: 3, joinStart: false, joinEnd: false }]);
 });
 
 test('region boundary segments merge collinear runs and split at gaps', () => {
@@ -829,10 +829,32 @@ test('region boundary segments merge collinear runs and split at gaps', () => {
   const vertical = segments.filter((segment) => segment.orientation === 'v');
   const horizontal = segments.filter((segment) => segment.orientation === 'h');
   assert.deepEqual(vertical, [
-    { orientation: 'v', x: 2, y1: 0, y2: 2 },
-    { orientation: 'v', x: 2, y1: 4, y2: 6 },
+    { orientation: 'v', x: 2, y1: 0, y2: 2, joinStart: false, joinEnd: false },
+    { orientation: 'v', x: 2, y1: 4, y2: 6, joinStart: false, joinEnd: true },
   ]);
-  assert.deepEqual(horizontal, [{ orientation: 'h', y: 6, x1: 0, x2: 2 }]);
+  assert.deepEqual(horizontal, [{ orientation: 'h', y: 6, x1: 0, x2: 2, joinStart: false, joinEnd: true }]);
+});
+
+test('an L-shaped contact keeps its corner joined and fades only the free ends', () => {
+  const profile = { cols: 12, rows: 8 };
+  const regions = [
+    {
+      id: 'tag:a',
+      footprint: {
+        schemaVersion: 1,
+        kind: 'cells',
+        cells: [0, 1, 12, 13, 24, 25, 36, 37, 26, 27, 38, 39],
+      },
+    },
+    { id: 'tag:b', footprint: { schemaVersion: 1, kind: 'rect', rect: { minCol: 2, maxCol: 3, minRow: 0, maxRow: 1 } } },
+  ];
+
+  const segments = regionBoundarySegments(regions, profile);
+
+  assert.deepEqual(segments, [
+    { orientation: 'v', x: 2, y1: 0, y2: 2, joinStart: false, joinEnd: true },
+    { orientation: 'h', y: 2, x1: 2, x2: 4, joinStart: true, joinEnd: false },
+  ]);
 });
 
 test('archive index view exposes region seams for the field overlay', () => {

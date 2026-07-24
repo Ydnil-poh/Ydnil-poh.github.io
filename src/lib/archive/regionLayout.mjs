@@ -147,6 +147,22 @@ export function regionBoundarySegments(regions, profile = fieldLayoutProfile) {
       segments.push({ orientation: 'h', y, x1: run.start, x2: run.end + 1 });
     }
   }
+
+  // A segment end that touches another segment (corner or T-junction) is a
+  // joint where the boundary continues; only free ends terminate the boundary.
+  // The rendering fades free ends and keeps joints at full strength so bent
+  // boundaries read as one continuous seam.
+  const pointOnSegment = (px, py, segment) => (segment.orientation === 'v'
+    ? px === segment.x && py >= segment.y1 && py <= segment.y2
+    : py === segment.y && px >= segment.x1 && px <= segment.x2);
+  for (const segment of segments) {
+    const [sx, sy, ex, ey] = segment.orientation === 'v'
+      ? [segment.x, segment.y1, segment.x, segment.y2]
+      : [segment.x1, segment.y, segment.x2, segment.y];
+    segment.joinStart = segments.some((other) => other !== segment && pointOnSegment(sx, sy, other));
+    segment.joinEnd = segments.some((other) => other !== segment && pointOnSegment(ex, ey, other));
+  }
+
   return segments.sort((a, b) =>
     (a.orientation === b.orientation)
       ? ((a.x ?? a.y) - (b.x ?? b.y)) || ((a.y1 ?? a.x1) - (b.y1 ?? b.x1))
