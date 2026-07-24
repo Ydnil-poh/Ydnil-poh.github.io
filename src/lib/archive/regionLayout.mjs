@@ -92,6 +92,83 @@ export function nearestOpenSlotInFootprint(preferred, occupied, footprint, profi
   return best;
 }
 
+function mergeIndexRuns(indices) {
+  const sorted = [...indices].sort((a, b) => a - b);
+  const runs = [];
+  for (const value of sorted) {
+    const last = runs[runs.length - 1];
+    if (last && value === last.end + 1) last.end = value;
+    else runs.push({ start: value, end: value });
+  }
+  return runs;
+}
+
+// Shared-edge boundary segments between adjacent Region footprints, in cell
+// units. A segment exists only where two different Regions touch; the outer
+// border of an isolated footprint produces nothing. Vertical segments run
+// along x = column boundary, horizontal along y = row boundary, and collinear
+// unit edges merge into one segment per contiguous run.
+export function regionBoundarySegments(regions, profile = fieldLayoutProfile) {
+  const slotRegion = new Map();
+  for (const region of regions ?? []) {
+    for (const slot of slotsInFootprint(region.footprint, profile)) {
+      slotRegion.set(slot, region.id);
+    }
+  }
+
+  const verticalEdges = new Map();
+  const horizontalEdges = new Map();
+  for (const [slot, regionId] of slotRegion) {
+    const { col, row } = slotToCell(slot, profile);
+    if (col + 1 < profile.cols) {
+      const rightId = slotRegion.get(cellToSlot(col + 1, row, profile));
+      if (rightId !== undefined && rightId !== regionId) {
+        if (!verticalEdges.has(col + 1)) verticalEdges.set(col + 1, new Set());
+        verticalEdges.get(col + 1).add(row);
+      }
+    }
+    if (row + 1 < profile.rows) {
+      const belowId = slotRegion.get(cellToSlot(col, row + 1, profile));
+      if (belowId !== undefined && belowId !== regionId) {
+        if (!horizontalEdges.has(row + 1)) horizontalEdges.set(row + 1, new Set());
+        horizontalEdges.get(row + 1).add(col);
+      }
+    }
+  }
+
+  const segments = [];
+  for (const [x, edgeRows] of verticalEdges) {
+    for (const run of mergeIndexRuns(edgeRows)) {
+      segments.push({ orientation: 'v', x, y1: run.start, y2: run.end + 1 });
+    }
+  }
+  for (const [y, edgeCols] of horizontalEdges) {
+    for (const run of mergeIndexRuns(edgeCols)) {
+      segments.push({ orientation: 'h', y, x1: run.start, x2: run.end + 1 });
+    }
+  }
+
+  // A segment end that touches another segment (corner or T-junction) is a
+  // joint where the boundary continues; only free ends terminate the boundary.
+  // The rendering fades free ends and keeps joints at full strength so bent
+  // boundaries read as one continuous seam.
+  const pointOnSegment = (px, py, segment) => (segment.orientation === 'v'
+    ? px === segment.x && py >= segment.y1 && py <= segment.y2
+    : py === segment.y && px >= segment.x1 && px <= segment.x2);
+  for (const segment of segments) {
+    const [sx, sy, ex, ey] = segment.orientation === 'v'
+      ? [segment.x, segment.y1, segment.x, segment.y2]
+      : [segment.x1, segment.y, segment.x2, segment.y];
+    segment.joinStart = segments.some((other) => other !== segment && pointOnSegment(sx, sy, other));
+    segment.joinEnd = segments.some((other) => other !== segment && pointOnSegment(ex, ey, other));
+  }
+
+  return segments.sort((a, b) =>
+    (a.orientation === b.orientation)
+      ? ((a.x ?? a.y) - (b.x ?? b.y)) || ((a.y1 ?? a.x1) - (b.y1 ?? b.x1))
+      : (a.orientation === 'h' ? 1 : -1));
+}
+
 function squareishDimensions(area) {
   const width = Math.max(1, Math.ceil(Math.sqrt(area)));
   return { width, height: Math.max(1, Math.ceil(area / width)) };
