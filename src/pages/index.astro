@@ -130,6 +130,7 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .field {
         --field-gap: 1px;
         --field-padding: 18px;
+        --tile-inset: 0.5px;
         background: rgba(247, 243, 235, 0.52);
         display: grid;
         gap: var(--field-gap);
@@ -175,6 +176,7 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         display: block;
         grid-column: calc(var(--col) + 1);
         grid-row: calc(var(--row) + 1);
+        margin: var(--tile-inset);
         position: relative;
       }
 
