@@ -41,7 +41,9 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         --warm: rgba(197, 112, 67, 0.7);
       }
 
-      * { box-sizing: border-box; }
+      *,
+      *::before,
+      *::after { box-sizing: border-box; }
 
       body {
         background: var(--paper);
@@ -126,9 +128,12 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       }
 
       .field {
+        --field-gap: 1px;
+        --field-padding: 18px;
+        --tile-inset: 0.5px;
         background: rgba(247, 243, 235, 0.52);
         display: grid;
-        gap: 1px;
+        gap: var(--field-gap);
         grid-template-columns: repeat(var(--cols), minmax(16px, 1fr));
         grid-template-rows: repeat(var(--rows), minmax(16px, 1fr));
         height: 100%;
@@ -140,10 +145,16 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
           linear-gradient(90deg, rgba(92, 83, 67, 0.055) 1px, transparent 1px),
           linear-gradient(rgba(255, 255, 255, 0.34) 1px, transparent 1px),
           linear-gradient(90deg, rgba(255, 255, 255, 0.34) 1px, transparent 1px);
-        background-size: calc((100% - 36px) / var(--cols)) calc((100% - 36px) / var(--rows));
-        background-position: 18px 18px, 18px 18px, 18px 19px, 19px 18px;
+        background-size:
+          calc((100% - var(--field-padding) - var(--field-padding) + var(--field-gap)) / var(--cols))
+          calc((100% - var(--field-padding) - var(--field-padding) + var(--field-gap)) / var(--rows));
+        background-position:
+          var(--field-padding) var(--field-padding),
+          var(--field-padding) var(--field-padding),
+          var(--field-padding) calc(var(--field-padding) + var(--field-gap)),
+          calc(var(--field-padding) + var(--field-gap)) var(--field-padding);
         overflow: hidden;
-        padding: 18px;
+        padding: var(--field-padding);
         position: relative;
       }
 
@@ -161,9 +172,11 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .empty-tile,
       .record-node {
         align-self: stretch;
+        box-sizing: border-box;
         display: block;
         grid-column: calc(var(--col) + 1);
         grid-row: calc(var(--row) + 1);
+        margin: var(--tile-inset);
         position: relative;
       }
 
@@ -212,7 +225,7 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
          out toward the segment ends so the boundary reads as emerging from
          the terrain rather than drawn onto it. Isolated Regions get nothing. */
       .region-seams {
-        inset: 18px;
+        inset: var(--field-padding);
         pointer-events: none;
         position: absolute;
         z-index: 2;
@@ -277,7 +290,7 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
 
       .record-node {
         background: transparent;
-        border: 1px solid rgba(92, 83, 67, 0.12);
+        border: 0;
         color: var(--olive);
         mix-blend-mode: multiply;
         opacity: calc(0.58 + var(--score) * 0.36);
