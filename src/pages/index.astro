@@ -41,7 +41,9 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         --warm: rgba(197, 112, 67, 0.7);
       }
 
-      * { box-sizing: border-box; }
+      *,
+      *::before,
+      *::after { box-sizing: border-box; }
 
       body {
         background: var(--paper);
@@ -161,6 +163,7 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .empty-tile,
       .record-node {
         align-self: stretch;
+        box-sizing: border-box;
         display: block;
         grid-column: calc(var(--col) + 1);
         grid-row: calc(var(--row) + 1);
