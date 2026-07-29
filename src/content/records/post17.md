@@ -8,7 +8,7 @@ type: standard
 visibility: public
 galleryFolder: '""'
 ---
-https://youtu.be/Lux9mrGCWT4?si=NdFSj56dNQT3Al7n
+!youtube https://youtu.be/Lux9mrGCWT4?si=NdFSj56dNQT3Al7n
 
 당진에 다녀왔다는 날에는, 아그로랜드의 수레국화를 보는게 목표였다. 완연한 여름날씨는 아니었는데 야외활동 가능할지는 확신이 안선다. 카페부터 들러보기로 한다. 
 
