@@ -58,12 +58,20 @@ create table if not exists public.machine_events (
   record_slug text references public.archive_records(slug) on delete set null,
   path text,
   agent text not null,
-  category text not null check (category in ('search', 'crawler', 'ai', 'unknown')),
+  category text not null check (category in ('search', 'crawler', 'ai', 'preview', 'unknown')),
   confidence double precision not null default 0,
   user_agent text,
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
+
+-- Existing deployments predate the preview category; refresh the check
+-- constraint so link-unfurler observations are accepted.
+alter table public.machine_events
+drop constraint if exists machine_events_category_check;
+alter table public.machine_events
+add constraint machine_events_category_check
+check (category in ('search', 'crawler', 'ai', 'preview', 'unknown'));
 
 create index if not exists machine_events_record_idx
 on public.machine_events (record_slug, created_at);
@@ -317,11 +325,14 @@ set search_path = public
 as $$
 declare
   normalized_category text := case
-    when agent_category in ('search', 'crawler', 'ai') then agent_category
+    when agent_category in ('search', 'crawler', 'ai', 'preview') then agent_category
     else 'unknown'
   end;
   clamped_confidence double precision := greatest(least(coalesce(agent_confidence, 0), 1), 0);
   -- search indexing is bookkeeping, not attention; it is observed but not scored.
+  -- preview is the mechanical echo of a human share (someone pasted a link) —
+  -- a human-adjacent signal, not machine interest. Observed but not scored
+  -- until external shares accumulate enough to decide how to interpret them.
   score_delta double precision := case normalized_category
     when 'ai' then 0.30
     when 'crawler' then 0.10
