@@ -18,6 +18,20 @@ const KNOWN_AGENTS = [
   { pattern: /Meta-ExternalFetcher/i, agent: 'Meta-ExternalFetcher', category: 'ai' },
   { pattern: /DuckAssistBot/i, agent: 'DuckAssistBot', category: 'ai' },
 
+  // preview — link unfurlers acting on a human paste. Not machine interest in
+  // the content but the mechanical echo of a human share; observed, not scored.
+  // Ordering: kakaotalk-scrap precedes facebookexternalhit (KakaoTalk's UA
+  // contains both) and TelegramBot precedes Twitterbot (Telegram's UA is
+  // literally "TelegramBot (like TwitterBot)").
+  { pattern: /kakaotalk-scrap/i, agent: 'KakaoTalk-Scrap', category: 'preview' },
+  { pattern: /facebookexternalhit/i, agent: 'FacebookExternalHit', category: 'preview' },
+  { pattern: /TelegramBot/i, agent: 'TelegramBot', category: 'preview' },
+  { pattern: /Twitterbot/i, agent: 'Twitterbot', category: 'preview' },
+  { pattern: /Slackbot/i, agent: 'Slackbot', category: 'preview' },
+  { pattern: /Discordbot/i, agent: 'Discordbot', category: 'preview' },
+  { pattern: /LinkedInBot/i, agent: 'LinkedInBot', category: 'preview' },
+  { pattern: /WhatsApp/i, agent: 'WhatsApp', category: 'preview' },
+
   // search — index crawlers, classical and AI search alike.
   { pattern: /OAI-SearchBot/i, agent: 'OAI-SearchBot', category: 'search' },
   { pattern: /Claude-SearchBot/i, agent: 'Claude-SearchBot', category: 'search' },
@@ -46,7 +60,7 @@ const GENERIC_BOT = /bot|crawl|spider|slurp|fetch|scrape/i;
 // machine_events readable and Supabase writes low.
 const ASSET_EXTENSIONS = /\.(css|js|mjs|png|jpe?g|webp|avif|gif|svg|ico|woff2?|ttf|otf|map|mp4|webm)$/i;
 
-function classify(userAgent) {
+export function classify(userAgent) {
   if (!userAgent) return null;
   for (const entry of KNOWN_AGENTS) {
     if (entry.pattern.test(userAgent)) {

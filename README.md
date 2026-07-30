@@ -131,9 +131,10 @@ Cloudflare Pages Functions 미들웨어([functions/_middleware.js](functions/_mi
 | `search` | 검색 색인 (전통·AI 검색) | Googlebot, Bingbot, OAI-SearchBot, PerplexityBot | 0 — 관측만 |
 | `crawler` | 학습·수집 크롤러 | GPTBot, ClaudeBot, CCBot | +0.10 |
 | `ai` | 사용자 질문에 의한 실시간 참조 | ChatGPT-User, Claude-User, Perplexity-User | +0.30 |
+| `preview` | 링크 미리보기 언퍼러 (사람이 링크를 붙여넣음) | Twitterbot, kakaotalk-scrap, Slackbot, Discordbot | 0 — 관측만 |
 | `unknown` | 봇 추정, 식별 불가 | 일반 봇 패턴 | 0 |
 
-가중치에는 confidence가 곱해진다 — Cloudflare가 발신 IP 대역으로 봇을 검증하면 1.0, UA 문자열만 일치하면 0.6, 일반 봇 패턴만 감지되면 0.3. 원본 UA는 `machine_events`에 그대로 남는 관찰이고 agent/category/confidence는 해석이므로, 분류 규칙이 바뀌면 재계산할 수 있다. 가중치는 RPC 안에만 존재해 저장된 관측을 건드리지 않고 조정된다. search가 0인 이유: 색인 크롤링은 작업이지 관심이 아니다 — 관측은 남기고 점수에서 제외한다.
+가중치에는 confidence가 곱해진다 — Cloudflare가 발신 IP 대역으로 봇을 검증하면 1.0, UA 문자열만 일치하면 0.6, 일반 봇 패턴만 감지되면 0.3. 원본 UA는 `machine_events`에 그대로 남는 관찰이고 agent/category/confidence는 해석이므로, 분류 규칙이 바뀌면 재계산할 수 있다. 가중치는 RPC 안에만 존재해 저장된 관측을 건드리지 않고 조정된다. search가 0인 이유: 색인 크롤링은 작업이지 관심이 아니다 — 관측은 남기고 점수에서 제외한다. preview가 0인 이유: 미리보기 봇은 기계의 관심이 아니라 사람의 공유 행위의 기계적 메아리다 — machine이 아닌 human-adjacent 신호이므로, 외부 공유가 충분히 관측된 뒤 해석(점수화 여부와 방향)을 결정한다.
 
 알려진 한계: 일반 브라우저 UA로 요청하는 agentic browsing은 식별할 수 없다. 누락(undercount)이지 오분류가 아니므로 데이터 순도는 유지된다. `machine_score`는 아직 렌더링에 쓰이지 않는다 — 수집이 먼저다.
 
