@@ -2,7 +2,7 @@
 title: 게임을 떠올리게 하는 영화 혹은 드라마
 date: 2026-08-05
 location: 서울
-excerpt: 동궁을 시청하며 데스 스트랜딩의 해변과 소울라이크의 전투를 떠올린다. 비슷한 것은 화면일까, 설계일까.
+excerpt: 동궁을 시청한 후, 관객으로서 자신의 독법이 어떻게 형성되었는가를 고민해본다.
 tags: [데굴데굴]
 type: standard
 visibility: public
