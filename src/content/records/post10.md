@@ -3,7 +3,7 @@ title: 디지털 네이티브
 date: 2026-07-06
 location: 서울
 excerpt: 인터넷은 더 이상 매체가 아니다. 사회가 형성되는 환경이다. 그렇다면 우리는 무엇을 보여줄 것인가보다, 어떤 사회를 설계하고 있는가를 먼저 물어야 한다.
-tags: [데굴데굴]
+tags: [중얼중얼]
 type: standard
 visibility: public
 ---
