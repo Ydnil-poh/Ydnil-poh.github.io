@@ -1,8 +1,8 @@
 ---
 title: 솔이의 첫돌
-date: 2026-07-25
+date: 2026-08-05
 location: 성남
-excerpt: ""
+excerpt: 기록이 없으면 기억도 어렵다.
 tags: [인벤토리]
 type: standard
 visibility: public
