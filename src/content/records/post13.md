@@ -3,7 +3,7 @@ title: 조망의 이동
 date: 2026-07-16
 location: 서울
 excerpt: 13층이 아쉽다는 동생의 말을 이해하지 못했다. 신축 아파트의 조경을 떠올리고 나서야, 무엇을 조망하는지가 바뀌었다는 사실을 깨달았다.
-tags: [데굴데굴]
+tags: [중얼중얼]
 type: standard
 visibility: public
 galleryFolder: '""'
