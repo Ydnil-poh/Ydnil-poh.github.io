@@ -3,7 +3,7 @@ title: 익명성 분해
 date: 2026-07-21
 location: 서울
 excerpt: 익명성은 하나가 아니라 두 축에서 다른 방식으로 작동한다.
-tags: [데굴데굴]
+tags: [중얼중얼]
 type: standard
 visibility: public
 galleryFolder: '""'
