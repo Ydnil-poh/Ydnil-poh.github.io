@@ -3,7 +3,7 @@ title: 솔이의 첫돌
 date: 2026-08-05
 location: 성남
 excerpt: 기록이 없으면 기억도 어렵다.
-tags: [인벤토리]
+tags: [뚝딱뚝딱]
 type: standard
 visibility: public
 galleryFolder: '""'
