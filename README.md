@@ -58,8 +58,8 @@ npm run upload:image <파일> [저장이름]   # Supabase Storage 업로드 → 
 
 | 계층 | 담당 | 입력 | 출력 |
 |---|---|---|---|
-| **Semantic** | "어디에 있는가" | 임베딩, relation, 태그 | Region 기하학, 슬롯 배치, 삽입 밀어내기, 타일 색(density) |
-| **Runtime** | "얼마나 선명한가" | 열람 이벤트 누적(runtime score) | 텍스처 LOD(해상도+톤 팔레트) |
+| **Semantic** | "어디에 있는가" | 임베딩, relation, 태그 | Region 기하학, 슬롯 배치, 삽입 밀어내기, 타일 잉크 농도(불투명도) |
+| **Runtime** | "누가·얼마나 읽는가" | 인간 열람(runtime score) + AI 대리 열람(machine score) | 텍스처 LOD(선명도) + 타일 색상(관심 출처) |
 
 Runtime 점수가 아무리 높아도 위치는 움직이지 않고, semantic score가 아무리 높아도 텍스처가 선명해지지 않는다.
 
@@ -83,7 +83,7 @@ Runtime 점수가 아무리 높아도 위치는 움직이지 않고, semantic sc
 
 ### Semantic Score
 
-`semanticScore` 프론트매터가 있으면 그 값. 없으면 `relation 밀도 × 0.72 + 키워드 재출현성 × 0.28`을 코퍼스 내 min-max 정규화한 값. **텍스처 LOD와 무관**하며 타일 색(`data-density`: low/medium/high, 임계 0.38/0.72)과 표시 불투명도에만 쓰인다.
+`semanticScore` 프론트매터가 있으면 그 값. 없으면 `relation 밀도 × 0.72 + 키워드 재출현성 × 0.28`을 코퍼스 내 min-max 정규화한 값. **텍스처 LOD·색상과 무관**하며 타일의 잉크 농도(표시 불투명도)에만 쓰인다.
 
 ### 투영 축은 상태다
 
@@ -129,18 +129,20 @@ Cloudflare Pages Functions 미들웨어([functions/_middleware.js](functions/_mi
 | category | 의미 | 예시 | score 가중치 |
 |---|---|---|---|
 | `search` | 검색 색인 (전통·AI 검색) | Googlebot, Bingbot, OAI-SearchBot, PerplexityBot | 0 — 관측만 |
-| `crawler` | 학습·수집 크롤러 | GPTBot, ClaudeBot, CCBot | +0.10 |
+| `crawler` | 학습·수집 크롤러 | GPTBot, ClaudeBot, CCBot | 0 — 관측만 |
 | `ai` | 사용자 질문에 의한 실시간 참조 | ChatGPT-User, Claude-User, Perplexity-User | +0.30 |
 | `preview` | 링크 미리보기 언퍼러 (사람이 링크를 붙여넣음) | Twitterbot, kakaotalk-scrap, Slackbot, Discordbot | 0 — 관측만 |
 | `unknown` | 봇 추정, 식별 불가 | 일반 봇 패턴 | 0 |
 
-가중치에는 confidence가 곱해진다 — Cloudflare가 발신 IP 대역으로 봇을 검증하면 1.0, UA 문자열만 일치하면 0.6, 일반 봇 패턴만 감지되면 0.3. 원본 UA는 `machine_events`에 그대로 남는 관찰이고 agent/category/confidence는 해석이므로, 분류 규칙이 바뀌면 재계산할 수 있다. 가중치는 RPC 안에만 존재해 저장된 관측을 건드리지 않고 조정된다. search가 0인 이유: 색인 크롤링은 작업이지 관심이 아니다 — 관측은 남기고 점수에서 제외한다. preview가 0인 이유: 미리보기 봇은 기계의 관심이 아니라 사람의 공유 행위의 기계적 메아리다 — machine이 아닌 human-adjacent 신호이므로, 외부 공유가 충분히 관측된 뒤 해석(점수화 여부와 방향)을 결정한다.
+**점수는 `ai`만 받는다.** 가중치에는 confidence가 곱해지고(Cloudflare가 발신 IP 대역으로 봇을 검증하면 1.0, UA 문자열만 일치하면 0.6, 일반 봇 패턴만 감지되면 0.3), 200 응답만 점수화된다(리다이렉트 제외). search·crawler가 0인 이유: 색인·수집 크롤링은 작업이지 관심이 아니고, 벌크 크롤 한 번이 전체 레코드를 훑으므로 가중하면 진짜 열람 신호를 압도한다 (실측: Meta-ExternalAgent가 1분에 아카이브 전체를 완주). preview가 0인 이유: 미리보기 봇은 기계의 관심이 아니라 사람의 공유 행위의 기계적 메아리다 — machine이 아닌 human-adjacent 신호이므로, 외부 공유가 충분히 관측된 뒤 해석(점수화 여부와 방향)을 결정한다.
 
-알려진 한계: 일반 브라우저 UA로 요청하는 agentic browsing은 식별할 수 없다. 누락(undercount)이지 오분류가 아니므로 데이터 순도는 유지된다. `machine_score`는 아직 렌더링에 쓰이지 않는다 — 수집이 먼저다.
+원본 UA는 `machine_events`에 그대로 남는 관찰이고 agent/category/confidence/점수는 해석이므로, 가중치 정책이 바뀌면 `recompute_machine_scores()`(service role 전용)로 관측에서 점수를 전면 재계산한다 — 누적 델타를 패치하지 않는다.
 
-### Runtime → 텍스처 LOD
+알려진 한계: 일반 브라우저 UA로 요청하는 agentic browsing은 식별할 수 없다. 누락(undercount)이지 오분류가 아니므로 데이터 순도는 유지된다.
 
-빌드 시 각 레코드의 `runtimeScore`를 `log1p(score) / max(log1p(전체))`로 rebuild-국소 정규화하고, 임계 0.38/0.72로 LOD를 고른다:
+### Attention → 텍스처 LOD
+
+빌드 시 각 레코드의 `runtimeScore + machineScore`(인간 열람 + AI 대리 열람)를 `log1p(score) / max(log1p(전체))`로 rebuild-국소 정규화하고, 임계 0.38/0.72로 LOD를 고른다:
 
 | LOD | 필드 해상도 | 톤 팔레트 | 인상 |
 |---|---|---|---|
@@ -149,6 +151,19 @@ Cloudflare Pages Functions 미들웨어([functions/_middleware.js](functions/_mi
 | 2 | 40×30 | `[1, 2, 3]` 전체 | 조밀하고 결이 풍부 |
 
 관찰이 쌓일수록 타일이 선명해진다. 위치는 변하지 않는다.
+
+### Attention → 타일 색상
+
+타일 색상(hue)은 **관심의 출처**를 표현한다 (`attentionSourceFor`, 인간측 = runtime score / 기계측 = machine score 비율, 임계 0.65/0.35):
+
+| 출처 | 조건 | 색 |
+|---|---|---|
+| `human` | 인간 비중 ≥ 65% | 테라코타 |
+| `machine` | 기계 비중 ≥ 65% | 올리브 |
+| `mixed` | 그 사이 | 혼합톤 |
+| `none` | 아직 아무도 읽지 않음 | 중립 |
+
+시각 채널 정리: **색상 = 누가 읽는가**(runtime), **잉크 농도 = 의미 밀도**(semantic), **선명도 = 얼마나 읽히는가**(runtime LOD). "인간은 안 읽지만 AI가 참조하는 기록"은 올리브색의 선명한 타일로 나타난다.
 
 ---
 

@@ -110,12 +110,37 @@ export function runtimeLodForNormalizedScore(normalizedRuntime) {
   return 0;
 }
 
+// LOD listens to both observation channels: human runtime score and machine
+// score (user-delegated AI reads). Both are attention, neither moves geometry.
+export function attentionScoreFor(record) {
+  const runtimeScore = Math.max(0, Number(record?.runtimeScore ?? record?.attentionSnapshot?.runtimeScore ?? 0) || 0);
+  const machineScore = Math.max(0, Number(record?.machineScore ?? record?.attentionSnapshot?.machineScore ?? 0) || 0);
+  return runtimeScore + machineScore;
+}
+
 export function normalizedRuntimeScore(record, runtimeScale = 0) {
   const scale = Number(runtimeScale);
   if (!Number.isFinite(scale) || scale <= 0) return 0;
-  const runtimeScore = Math.max(0, Number(record?.runtimeScore ?? record?.attentionSnapshot?.runtimeScore ?? 0));
-  if (!Number.isFinite(runtimeScore)) return 0;
-  return Math.log1p(runtimeScore) / scale;
+  const attentionScore = attentionScoreFor(record);
+  if (!Number.isFinite(attentionScore)) return 0;
+  return Math.log1p(attentionScore) / scale;
+}
+
+// Tile hue encodes who reads a record: terracotta when human attention
+// dominates, olive when machine attention (user-delegated AI reads) does, a
+// blend when balanced, neutral when nobody has read it yet. Hue is
+// appearance, not geometry — the runtime layer's second visual channel next
+// to LOD. The human channel is runtimeScore (every human-triggered event,
+// page views included), not the narrower humanScore.
+export function attentionSourceFor(record) {
+  const human = Math.max(0, Number(record?.runtimeScore ?? record?.attentionSnapshot?.runtimeScore ?? 0) || 0);
+  const machine = Math.max(0, Number(record?.machineScore ?? record?.attentionSnapshot?.machineScore ?? 0) || 0);
+  const total = human + machine;
+  if (total <= 0) return 'none';
+  const humanShare = human / total;
+  if (humanShare >= 0.65) return 'human';
+  if (humanShare <= 0.35) return 'machine';
+  return 'mixed';
 }
 
 export function encodeRle4(values) {

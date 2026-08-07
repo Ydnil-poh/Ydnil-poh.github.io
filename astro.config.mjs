@@ -7,7 +7,9 @@ export default defineConfig({
   site: 'https://ydnil-poh.pages.dev',
 
   integrations: [
-    sitemap()
+    // /posts/ pages are legacy redirects to /records/; listing them doubles
+    // every crawler's pass over the archive for no benefit.
+    sitemap({ filter: (page) => !page.includes('/posts/') })
   ],
 
   markdown: {
