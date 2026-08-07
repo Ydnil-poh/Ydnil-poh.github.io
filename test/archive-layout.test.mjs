@@ -16,6 +16,8 @@ import {
   generateTextureViewModel,
   quantizeTextureOpacity,
   rasterizeTextureLayoutGraph,
+  attentionScoreFor,
+  attentionSourceFor,
   normalizedRuntimeScore,
   runtimeLodForNormalizedScore,
   textureLodPolicies,
@@ -180,6 +182,24 @@ test('runtime score selects an LOD policy after rebuild-local log normalization'
   assert.deepEqual(textureLodRenderResolutions[0], { width: 12, height: 9 });
   assert.deepEqual(textureLodRenderResolutions[1], { width: 24, height: 18 });
   assert.deepEqual(textureLodRenderResolutions[2], { width: 40, height: 30 });
+});
+
+test('tile hue classifies the attention source by human/machine share', () => {
+  assert.equal(attentionSourceFor({ runtimeScore: 0, machineScore: 0 }), 'none');
+  assert.equal(attentionSourceFor({ runtimeScore: 1, machineScore: 0 }), 'human');
+  assert.equal(attentionSourceFor({ runtimeScore: 0, machineScore: 0.3 }), 'machine');
+  assert.equal(attentionSourceFor({ runtimeScore: 0.5, machineScore: 0.5 }), 'mixed');
+  assert.equal(attentionSourceFor({ runtimeScore: 0.66, machineScore: 0.34 }), 'human');
+  assert.equal(attentionSourceFor({ attentionSnapshot: { runtimeScore: 0.2, machineScore: 0.6 } }), 'machine');
+});
+
+test('machine attention joins human runtime in the LOD input', () => {
+  assert.equal(attentionScoreFor({ runtimeScore: 4, machineScore: 5 }), 9);
+  assert.equal(attentionScoreFor({ attentionSnapshot: { runtimeScore: 1, machineScore: 0.6 } }), 1.6);
+  assert.equal(attentionScoreFor({ machineScore: -3 }), 0);
+  assert.equal(normalizedRuntimeScore({ runtimeScore: 4, machineScore: 5 }, Math.log1p(9)), 1);
+  // a record read only by AI assistants still sharpens
+  assert.ok(normalizedRuntimeScore({ runtimeScore: 0, machineScore: 9 }, Math.log1p(9)) === 1);
 });
 
 test('runtime LOD is applied only to field render payloads', () => {

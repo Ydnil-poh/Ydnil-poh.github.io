@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { projectEmbeddingsToPositions, resolveEmbeddingProjection } from '../src/lib/archive/embeddingProjection.mjs';
 import { deriveFieldTraces, generateFieldViewModel, mergeFieldTraces } from '../src/lib/archive/fieldViewModel.mjs';
 import { incrementalRegionLayout } from '../src/lib/archive/regionLayout.mjs';
-import { generateTextureViewModel, normalizedRuntimeScore } from '../src/lib/archive/texturePipeline.mjs';
+import { attentionScoreFor, generateTextureViewModel, normalizedRuntimeScore } from '../src/lib/archive/texturePipeline.mjs';
 import { textureOpacityByValue } from '../src/lib/archive/textureRenderContract.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -522,7 +522,7 @@ const recordsWithAttention = publicRecords.map((record) => ({
   ...record,
   attentionSnapshot: attentionSnapshots.get(record.id) ?? emptyAttentionSnapshot(),
 }));
-const recordsRuntimeLodScale = Math.max(...recordsWithAttention.map((record) => Math.log1p(record.attentionSnapshot.runtimeScore)), 0);
+const recordsRuntimeLodScale = Math.max(...recordsWithAttention.map((record) => Math.log1p(attentionScoreFor(record))), 0);
 const recordsWithRelations = recordsWithAttention.map((record) => ({ ...record, relations: relationRows(recordsWithAttention, record) }));
 const densityValues = recordsWithRelations.map(semanticDensityFor);
 const densityMin = Math.min(...densityValues, 0);

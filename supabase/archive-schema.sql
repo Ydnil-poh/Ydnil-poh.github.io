@@ -329,13 +329,15 @@ declare
     else 'unknown'
   end;
   clamped_confidence double precision := greatest(least(coalesce(agent_confidence, 0), 1), 0);
-  -- search indexing is bookkeeping, not attention; it is observed but not scored.
-  -- preview is the mechanical echo of a human share (someone pasted a link) —
-  -- a human-adjacent signal, not machine interest. Observed but not scored
-  -- until external shares accumulate enough to decide how to interpret them.
-  score_delta double precision := case normalized_category
-    when 'ai' then 0.30
-    when 'crawler' then 0.10
+  -- Only user-delegated AI reads score. search indexing and corpus crawling
+  -- are infrastructure passing by, not attention — one bulk crawl would hit
+  -- every record at once and drown a single genuine read (Meta-ExternalAgent
+  -- covered the whole archive in a minute). preview is the mechanical echo of
+  -- a human share (someone pasted a link) — a human-adjacent signal, not
+  -- machine interest. All are observed in machine_access / machine_events;
+  -- none are scored. Non-200 responses (redirects) never score.
+  score_delta double precision := case
+    when normalized_category = 'ai' and coalesce(event_metadata->>'status', '200') = '200' then 0.30
     else 0
   end * clamped_confidence;
   updated_record public.archive_records%rowtype;
@@ -372,3 +374,29 @@ end;
 $$;
 
 grant execute on function public.record_machine_event(text, text, text, double precision, text, text, jsonb) to anon, authenticated;
+
+-- Scores are interpretations derived from machine_events observations; when
+-- the weight policy changes, rebuild them from the raw log instead of trying
+-- to patch accumulated deltas. Service-role only (no grants) — run manually
+-- from the SQL editor after a policy change: select public.recompute_machine_scores();
+create or replace function public.recompute_machine_scores()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  affected integer;
+begin
+  update public.archive_records r
+  set machine_score = coalesce((
+    select sum(0.30 * greatest(least(coalesce(e.confidence, 0), 1), 0))
+    from public.machine_events e
+    where e.record_slug = r.slug
+      and e.category = 'ai'
+      and coalesce(e.metadata->>'status', '200') = '200'
+  ), 0);
+  get diagnostics affected = row_count;
+  return affected;
+end;
+$$;

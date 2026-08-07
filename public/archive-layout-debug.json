@@ -1,8 +1,38 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-23T07:16:54.699Z",
+  "generatedAt": "2026-08-07T02:01:17.775Z",
   "source": "src/content/records",
   "layoutEvents": [
+    {
+      "eventType": "region.footprint_overlap_repaired",
+      "recordId": null,
+      "regionId": "tag:데굴데굴",
+      "fromSlot": null,
+      "toSlot": null,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "keeperRegionId": "tag:뚝딱뚝딱",
+        "contestedSlots": [936, 937],
+        "footprintKindBefore": "rect",
+        "footprintKindAfter": "rect"
+      }
+    },
+    {
+      "eventType": "region.footprint_overlap_repaired",
+      "recordId": null,
+      "regionId": "tag:쳐묵쳐묵",
+      "fromSlot": null,
+      "toSlot": null,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "keeperRegionId": "tag:흥얼흥얼",
+        "contestedSlots": [760, 761],
+        "footprintKindBefore": "rect",
+        "footprintKindAfter": "rect"
+      }
+    },
     {
       "eventType": "layout.slot_preserved",
       "recordId": "post1",
@@ -19,13 +49,13 @@
     {
       "eventType": "layout.slot_preserved",
       "recordId": "post10",
-      "regionId": "tag:데굴데굴",
-      "fromSlot": 898,
-      "toSlot": 898,
+      "regionId": "tag:중얼중얼",
+      "fromSlot": 740,
+      "toSlot": 740,
       "anchorId": null,
       "anchorKind": null,
       "metadata": {
-        "previousSlot": 898,
+        "previousSlot": 740,
         "footprintKind": "rect"
       }
     },
@@ -58,26 +88,26 @@
     {
       "eventType": "layout.slot_preserved",
       "recordId": "post13",
-      "regionId": "tag:데굴데굴",
-      "fromSlot": 858,
-      "toSlot": 858,
+      "regionId": "tag:중얼중얼",
+      "fromSlot": 700,
+      "toSlot": 700,
       "anchorId": null,
       "anchorKind": null,
       "metadata": {
-        "previousSlot": 858,
+        "previousSlot": 700,
         "footprintKind": "rect"
       }
     },
     {
       "eventType": "layout.slot_preserved",
       "recordId": "post14",
-      "regionId": "tag:데굴데굴",
-      "fromSlot": 818,
-      "toSlot": 818,
+      "regionId": "tag:중얼중얼",
+      "fromSlot": 741,
+      "toSlot": 741,
       "anchorId": null,
       "anchorKind": null,
       "metadata": {
-        "previousSlot": 818,
+        "previousSlot": 741,
         "footprintKind": "rect"
       }
     },
@@ -96,7 +126,33 @@
     },
     {
       "eventType": "layout.slot_preserved",
-      "recordId": "post3",
+      "recordId": "post16",
+      "regionId": "tag:데굴데굴",
+      "fromSlot": 858,
+      "toSlot": 858,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "previousSlot": 858,
+        "footprintKind": "rect"
+      }
+    },
+    {
+      "eventType": "layout.slot_preserved",
+      "recordId": "post17",
+      "regionId": "tag:뚜벅뚜벅",
+      "fromSlot": 10,
+      "toSlot": 10,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "previousSlot": 10,
+        "footprintKind": "rect"
+      }
+    },
+    {
+      "eventType": "layout.slot_preserved",
+      "recordId": "post18",
       "regionId": "tag:뚝딱뚝딱",
       "fromSlot": 937,
       "toSlot": 937,
@@ -104,6 +160,32 @@
       "anchorKind": null,
       "metadata": {
         "previousSlot": 937,
+        "footprintKind": "rect"
+      }
+    },
+    {
+      "eventType": "layout.slot_preserved",
+      "recordId": "post19",
+      "regionId": "tag:데굴데굴",
+      "fromSlot": 898,
+      "toSlot": 898,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "previousSlot": 898,
+        "footprintKind": "rect"
+      }
+    },
+    {
+      "eventType": "layout.slot_preserved",
+      "recordId": "post3",
+      "regionId": "tag:뚝딱뚝딱",
+      "fromSlot": 936,
+      "toSlot": 936,
+      "anchorId": null,
+      "anchorKind": null,
+      "metadata": {
+        "previousSlot": 936,
         "footprintKind": "rect"
       }
     },
@@ -208,7 +290,7 @@
         {
           "id": "block-3",
           "kind": "paragraph",
-          "text": "함께 굴려나가는 감각을 받아들여야겠다는 생각이 든다. 그외 몇가지 이유가 더 있어 토이프로젝트를 구축해 놓은 게 있다. 하나 만들어보고 나니 웹사이트까지는 어찌저찌 되겠다는 마음이 생겼다. 여기는 그렇게 만들어진 공간이다."
+          "text": "함께 굴려나가는 감각을 받아들여야겠다는 생각이 든다. 그외 몇가지 이유가 더 있어 토이프로젝트를 구축해 놓은 게 있다. 하나 만들어보고 나니 웹사이트까지는 어찌저찌 되겠다는 마음이 생겼다. 여기는 그로부터 시작된 공간이다."
         },
         {
           "id": "block-4",
@@ -1626,6 +1708,684 @@
               },
               {
                 "fillWidth": 12
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "post16",
+      "semanticBlocks": [
+        {
+          "id": "block-0",
+          "kind": "paragraph",
+          "text": "나홍진 감독의 신작 호프를 보고 왔다. 사람들의 자와자와가 붉은사막 출시 때의 분위기와 비슷하기에 내심 기대를 하고 있었다. 나로서는 극호였고, 다소 떨떠름해하며 함께 본 짝꿍의 반응도 결과적으로 반전이다. 이 영화에 대한 불호 이유는 꽤 명확하다. \"이게 뭐임?\" 나에게는 그 불만이 거의 작동하지 않는다. 관람 초반부터 해석의 단서를 발견했기 때문이다."
+        },
+        {
+          "id": "block-1",
+          "kind": "paragraph",
+          "text": "처음 범석이 성기와 합류해 차량으로 이동하는 장면에서 왠지 게임 컷신을 보는 것 같다는 생각이 들었다. 혹시나 싶어 영화 대신 게임 플레이 영상을 본다는 관점으로 보기 시작했는데, 별다른 저항선 없이 거의 모든 장면과 흐름을 따라갈 수 있었다. 단순하게 컷의 구도뿐 아니라, 사건이 배치된 구조나 인물의 대사, 세트의 구성까지 영화 작법보다는 게임의 연출 문법에 더 가깝다는 인상을 받는다."
+        },
+        {
+          "id": "block-2",
+          "kind": "paragraph",
+          "text": "전반부 바미기르 격퇴 편에서 파괴된 마을은 현실성 있는 공간이라기보다 게임 스테이지에 더 가까워 보인다. 뚫린 벽과 좁은 골목은 플레이어가 보스를 유도하거나 동선을 제약할 수 있는 구조를 만든다. 널브러진 시장 좌판이나 쓰러진 주민들, 가축들은 스테이지의 무드를 형성할 뿐 주요 이동경로를 방해하지 않는 위치에 놓인다. 공간은 현실을 재현하기 위해서가 아니라, 플레이가 성립하도록 구성된다."
+        },
+        {
+          "id": "block-3",
+          "kind": "paragraph",
+          "text": "바미기르와 마베이요는 격퇴되지 않게끔 설계된 보스몹처럼 행동한다. 이런 기믹에서 보스몹은 정해진 공격 패턴을 반복하며 추격을 하고, 플레이어는 회피와 유인으로 그들을 특정 공간으로 유도해야 한다. 공격의 목적은 보스를 쓰러뜨리는 것이 아니라, 보스의 주의를 끌고 유지해 원하는 장소까지 유도하는데 있다. 조우는 인물의 운명을 결정하지 않으며, 플레이어를 다음 스테이지로 옮기기 위한 장치로 기능한다."
+        },
+        {
+          "id": "block-4",
+          "kind": "paragraph",
+          "text": "후반부에 숲에 진입한 성기 무리 중 한명이 왜 이 말들은 해치지 않았을까 하고 질문하는 장면이 있다. 단순한 개그씬이거나, 관객의 의문을 미리 해소하기 위한 알리바이일 수도 있으나, 지금까지의 흐름처럼 기능으로 해석해보고 싶다. 말은 플레이어에게 귀속되는 이동수단이고, 귀속된 이동수단은 보통 피해를 입지 않는다."
+        },
+        {
+          "id": "block-5",
+          "kind": "paragraph",
+          "text": "성애가 준비해둔 경찰차나 자경단 트럭은 다른 방식으로 기능적이다. 필요한 순간에 필요한 자리에 등장해서, 세이브포인트나 보급소처럼 기능하고 퇴장한다. 장치는 개연성을 위해서가 아니라 플레이의 지속을 위해 놓이거나 치워진다."
+        },
+        {
+          "id": "block-6",
+          "kind": "paragraph",
+          "text": "성애의 대사 톤에 대한 불만들이 적지 않았다. 하지만 플레이어블 캐릭터에 동행하는 NPC 스크립트라고 생각하면 크게 어색하지도 않다. 상황을 짚어주거나 반응하는 정도로만 동작한다. 성애 뿐 아니라 대부분 인물이 짧은 욕설과 간단한 반응을 반복하는 것처럼 보인다."
+        },
+        {
+          "id": "block-7",
+          "kind": "paragraph",
+          "text": "그나마 이질적인 건 해솔아저씨다. 모든 등장인물들이 그를 언급하고, 또 그의 발언을 의심의 여지 없는 것으로 받아들인다. 그는 메인 퀘스트를 전달하는 NPC로 보인다. 세계의 규칙을 설명하기 위한 존재이므로 그가 제시하는 사실은 그저 받아들이게끔 되어있다."
+        },
+        {
+          "id": "block-8",
+          "kind": "paragraph",
+          "text": "인물들은 성격이 아니라 역할로 존재한다."
+        },
+        {
+          "id": "block-9",
+          "kind": "paragraph",
+          "text": "여기까지 타고오면, 하나의 공통점이 보인다. 이 영화에서 공간과 이벤트, 장치와 인물은 서사를 위해 존재하지 않는다. 플레이를 성립시키기 위한 존재일 뿐이다."
+        },
+        {
+          "id": "block-10",
+          "kind": "paragraph",
+          "text": "그래서 \"이게 뭐임?\"이 나에게는 발생하지 않았다. 그 질문은 모든 요소가 서사에 봉사한다고 전제할 때 생기는 질문이다. 봉사 대상이 기능이라면 답은 매번 같다. 그래야 다음 구간으로 넘어가니까. 덕분에 나는 보는 내내 즐거웠다. 남들이 \"이게 뭐임?\"이라고 물었을 자리마다 나는 \"역시 그렇게 되는거지\"를 확인한다."
+        },
+        {
+          "id": "block-11",
+          "kind": "paragraph",
+          "text": "게임은 오래전부터 영화의 문법을 적극적으로 받아들여 왔다. 그래서 우리는 게임이 영화를 닮았다는 말에는 익숙하다. 하지만 호프에서 반대의 가능성을 본다."
+        }
+      ],
+      "layoutGraph": {
+        "schemaVersion": 1,
+        "canvas": {
+          "width": 64,
+          "height": 48,
+          "unit": "cell"
+        },
+        "nodes": [
+          {
+            "id": "node-0",
+            "kind": "textBlock",
+            "sourceBlockId": "block-0",
+            "x": 4,
+            "y": 0,
+            "width": 56,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 31
+              }
+            ]
+          },
+          {
+            "id": "node-1",
+            "kind": "textBlock",
+            "sourceBlockId": "block-1",
+            "x": 4,
+            "y": 5,
+            "width": 56,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 50
+              }
+            ]
+          },
+          {
+            "id": "node-2",
+            "kind": "textBlock",
+            "sourceBlockId": "block-2",
+            "x": 4,
+            "y": 10,
+            "width": 56,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 50
+              }
+            ]
+          },
+          {
+            "id": "node-3",
+            "kind": "textBlock",
+            "sourceBlockId": "block-3",
+            "x": 4,
+            "y": 15,
+            "width": 56,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 55
+              }
+            ]
+          },
+          {
+            "id": "node-4",
+            "kind": "textBlock",
+            "sourceBlockId": "block-4",
+            "x": 4,
+            "y": 20,
+            "width": 56,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 7
+              }
+            ]
+          },
+          {
+            "id": "node-5",
+            "kind": "textBlock",
+            "sourceBlockId": "block-5",
+            "x": 4,
+            "y": 25,
+            "width": 56,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 12
+              }
+            ]
+          },
+          {
+            "id": "node-6",
+            "kind": "textBlock",
+            "sourceBlockId": "block-6",
+            "x": 4,
+            "y": 29,
+            "width": 56,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 34
+              }
+            ]
+          },
+          {
+            "id": "node-7",
+            "kind": "textBlock",
+            "sourceBlockId": "block-7",
+            "x": 4,
+            "y": 33,
+            "width": 56,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 31
+              }
+            ]
+          },
+          {
+            "id": "node-8",
+            "kind": "textBlock",
+            "sourceBlockId": "block-8",
+            "x": 4,
+            "y": 37,
+            "width": 56,
+            "height": 1,
+            "lines": [
+              {
+                "fillWidth": 22
+              }
+            ]
+          },
+          {
+            "id": "node-9",
+            "kind": "textBlock",
+            "sourceBlockId": "block-9",
+            "x": 4,
+            "y": 39,
+            "width": 56,
+            "height": 2,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 32
+              }
+            ]
+          },
+          {
+            "id": "node-10",
+            "kind": "textBlock",
+            "sourceBlockId": "block-10",
+            "x": 4,
+            "y": 42,
+            "width": 56,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 9
+              }
+            ]
+          },
+          {
+            "id": "node-11",
+            "kind": "textBlock",
+            "sourceBlockId": "block-11",
+            "x": 4,
+            "y": 47,
+            "width": 56,
+            "height": 1,
+            "lines": [
+              {
+                "fillWidth": 56
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "post17",
+      "semanticBlocks": [
+        {
+          "id": "block-0",
+          "kind": "youtube",
+          "url": "https://youtu.be/Lux9mrGCWT4?si=NdFSj56dNQT3Al7n"
+        },
+        {
+          "id": "block-1",
+          "kind": "paragraph",
+          "text": "당진에 다녀왔다는 날에는, 아그로랜드의 수레국화를 보는게 목표였다. 완연한 여름날씨는 아니었는데 야외활동 가능할지는 확신이 안선다. 카페부터 들러보기로 한다."
+        },
+        {
+          "id": "block-2",
+          "kind": "paragraph",
+          "text": "청보리밭으로 유명한 곳이다. 한차례 수확을 마친 시기지만 산등성이에는 푸른 밑동이 새로 올라오는 중이다. 커피를 마시고 보리밭 주변을 한바퀴 걸어본다. 더 움직이는 건 역시 무리. 수레국화는 다음을 기약하며 집으로 돌아온다."
+        },
+        {
+          "id": "block-3",
+          "kind": "paragraph",
+          "text": "수레국화도, 물결치는 청보리도 놓쳤지만, 대신이랄까. 한창 피고있던 푸른 수국이 기억에 남았다. 들고 간 양산 색과 잘 어울렸기 때문일까. 잠깐의 드라이브였음에도 충분히 좋다."
+        }
+      ],
+      "layoutGraph": {
+        "schemaVersion": 1,
+        "canvas": {
+          "width": 64,
+          "height": 48,
+          "unit": "cell"
+        },
+        "nodes": [
+          {
+            "id": "node-0",
+            "kind": "mediaBlock",
+            "mediaType": "youtube",
+            "sourceBlockId": "block-0",
+            "x": 4,
+            "y": 0,
+            "width": 56,
+            "height": 20,
+            "frame": true,
+            "playMarker": true
+          },
+          {
+            "id": "node-1",
+            "kind": "textBlock",
+            "sourceBlockId": "block-1",
+            "x": 4,
+            "y": 21,
+            "width": 56,
+            "height": 2,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 32
+              }
+            ]
+          },
+          {
+            "id": "node-2",
+            "kind": "textBlock",
+            "sourceBlockId": "block-2",
+            "x": 4,
+            "y": 24,
+            "width": 56,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 13
+              }
+            ]
+          },
+          {
+            "id": "node-3",
+            "kind": "textBlock",
+            "sourceBlockId": "block-3",
+            "x": 4,
+            "y": 28,
+            "width": 56,
+            "height": 2,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 42
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "post18",
+      "semanticBlocks": [
+        {
+          "id": "block-0",
+          "kind": "youtube",
+          "url": "https://youtu.be/g2PmrMytO28?si=2BuOHei4o0tGT_AD"
+        },
+        {
+          "id": "block-1",
+          "kind": "paragraph",
+          "text": "동생네 셋째, 솔이의 첫돌 행사를 다녀왔다. 직계가족끼리 모여 조촐하게 진행했다. 성남의 파티하우스로 초대 받았는데, 어딘가 했더니 아주 예전 페밀리레스토랑 있던 자리다. 아웃백이던가 TGIF던가 기억은 가물가물하다. 지도로 확인해보려 해도 너무 오래전이라 기록에 없다. 기록이 없으면 기억도 어렵다."
+        },
+        {
+          "id": "block-2",
+          "kind": "paragraph",
+          "text": "따로 부탁받은 건 아니지만 기록영상을 만들었다. 녹화를 잘못해서 놓친 장면들이 많긴 한데, 그래도 어찌어찌 편집을 마쳤다. 나 혼자는 아쉬운데, 가족반응은 이전에 공유했을 때보다 되려 좋다. 자기만족용 멋부리기의 여유가 없었기 때문이었을까. 현장 사운드도 집어 넣고, 효과도 집어넣고. 그랬더니 보는 재미는 더 있었나보다."
+        }
+      ],
+      "layoutGraph": {
+        "schemaVersion": 1,
+        "canvas": {
+          "width": 64,
+          "height": 48,
+          "unit": "cell"
+        },
+        "nodes": [
+          {
+            "id": "node-0",
+            "kind": "mediaBlock",
+            "mediaType": "youtube",
+            "sourceBlockId": "block-0",
+            "x": 4,
+            "y": 0,
+            "width": 56,
+            "height": 20,
+            "frame": true,
+            "playMarker": true
+          },
+          {
+            "id": "node-1",
+            "kind": "textBlock",
+            "sourceBlockId": "block-1",
+            "x": 4,
+            "y": 21,
+            "width": 56,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              }
+            ]
+          },
+          {
+            "id": "node-2",
+            "kind": "textBlock",
+            "sourceBlockId": "block-2",
+            "x": 4,
+            "y": 25,
+            "width": 56,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 12
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "post19",
+      "semanticBlocks": [
+        {
+          "id": "block-0",
+          "kind": "paragraph",
+          "text": "한여름 날씨는 점점 혹독해진다. 실내에서 미디어를 소비하는 것이 외의 마땅한 주말 패턴이랄게 없다. 그런고로 지난 주말에는 집에서 동궁을 시청했다. 최근의 호프 감상이 남았던 탓인지, 이 시리즈를 보면서도 게임 연출과 닮은 부분이 눈에 밟힌다. 구천이 귀의 세계에 진입하는 부분에서는 데스스트렌딩을, 진입한 후 악귀나 귀매와 싸우는 장면은 여느 소울라이크 게임을 떠올렸다."
+        },
+        {
+          "id": "block-1",
+          "kind": "paragraph",
+          "text": "귀의 세계로 진입하는 장면에 관해서는, 또 다른 넷플릭스 시리즈를 주로 언급하는 것으로 안다. 기묘한 이야기 중 뒤집힌 세계 편이다. 내 경우에는 해당 시리즈를 보지 않았는데, 그래서 먼저 연상된 건 데스스트렌딩의 해변이었다. 삶과 죽음의 경계, 물을 통한 연결과 진입, 이면세계의 존재에게 위협받는 현실공간. 고립감과 황량감."
+        },
+        {
+          "id": "block-2",
+          "kind": "paragraph",
+          "text": "한편 악귀나 귀매와의 전투 장면에 대한 부분은, 화면의 연출보다는 구성 때문인 것 같다. 대적하는 상대마다의 고유 패턴 혹은 기믹이 있고 그걸 파훼해 나가는 방식이 게임 디자인인 듯 느껴진다. 이 부분이 호프를 보면서 느낀 감상과 좀 더 가까운지 모르겠다."
+        },
+        {
+          "id": "block-3",
+          "kind": "paragraph",
+          "text": "영화와 게임의 닮아감에 대해서 생각할 때 곤란해지는 부분은, 어느 쪽으로도 내가 그다지 꾸준한 향유자는 아니란 점이다. 그렇다보니 비교적 최근의 경험들 몇 가지로 이야기 하는 수밖에 없고, 어쩌면 이미 철지난 이야기를 뒤늦게 하고 있는게 아닌가 하는 걱정이 든다."
+        },
+        {
+          "id": "block-4",
+          "kind": "paragraph",
+          "text": "영상 제작자들이 게임매체로부터의 영향에 대해 직접 언급해준다면 쉽사리 풀릴 의문이겠으나, 관련 코멘트를 확인하긴 쉽지 않다. 내가 영향의 방향을 잘못 해석하고 있는건 아닐까. 그러니까 내가 경험한 인상적인 게임 연출들은 오히려 오래전에 영화 문법을 수용한 결과물인 게 아닐까. 애초에 시네마틱한 컷신이라고 상찬하는 경우가 일반적이다."
+        },
+        {
+          "id": "block-5",
+          "kind": "paragraph",
+          "text": "그럼에도 나는 게임 연출 문법이 영상 쪽으로 흘러들어온다는 생각을 지우지 못한다. 인물의 심리나 인과를 차근차근 설명하기보다, 장면과 챕터의 경험을 더 우선한다. 세계관에 대한 단서들은 로어처럼 이곳저곳 흩뿌려지고, 관객들은 그것들을 스스로 이어 붙여야 한다."
+        }
+      ],
+      "layoutGraph": {
+        "schemaVersion": 1,
+        "canvas": {
+          "width": 64,
+          "height": 48,
+          "unit": "cell"
+        },
+        "nodes": [
+          {
+            "id": "node-0",
+            "kind": "textBlock",
+            "sourceBlockId": "block-0",
+            "x": 4,
+            "y": 0,
+            "width": 56,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 40
+              }
+            ]
+          },
+          {
+            "id": "node-1",
+            "kind": "textBlock",
+            "sourceBlockId": "block-1",
+            "x": 4,
+            "y": 5,
+            "width": 56,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 15
+              }
+            ]
+          },
+          {
+            "id": "node-2",
+            "kind": "textBlock",
+            "sourceBlockId": "block-2",
+            "x": 4,
+            "y": 10,
+            "width": 56,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 31
+              }
+            ]
+          },
+          {
+            "id": "node-3",
+            "kind": "textBlock",
+            "sourceBlockId": "block-3",
+            "x": 4,
+            "y": 14,
+            "width": 56,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 35
+              }
+            ]
+          },
+          {
+            "id": "node-4",
+            "kind": "textBlock",
+            "sourceBlockId": "block-4",
+            "x": 4,
+            "y": 18,
+            "width": 56,
+            "height": 4,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 18
+              }
+            ]
+          },
+          {
+            "id": "node-5",
+            "kind": "textBlock",
+            "sourceBlockId": "block-5",
+            "x": 4,
+            "y": 23,
+            "width": 56,
+            "height": 3,
+            "lines": [
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 56
+              },
+              {
+                "fillWidth": 33
               }
             ]
           }

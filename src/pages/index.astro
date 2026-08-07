@@ -1,6 +1,7 @@
 ---
 import manifest from '../../public/archive-manifest.json';
 import { createArchiveIndexView } from '../lib/archive/pageViewModel.mjs';
+import { attentionSourceFor } from '../lib/archive/texturePipeline.mjs';
 
 const {
   cols: COLS,
@@ -39,6 +40,7 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
         --soft: rgba(107, 105, 83, 0.34);
         --olive: rgba(91, 95, 63, 0.62);
         --warm: rgba(197, 112, 67, 0.7);
+        --mixed: rgba(144, 104, 65, 0.66);
       }
 
       *,
@@ -319,9 +321,12 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
       .record-node:hover,
       .record-node.is-selected { outline: 1px solid rgba(37, 35, 29, 0.45); outline-offset: 4px; }
 
-      .record-node[data-density="high"] { color: var(--warm); }
-      .record-node[data-density="medium"] { color: var(--olive); }
-      .record-node[data-density="low"] { color: var(--soft); }
+      /* hue = who reads this record (runtime layer); ink weight stays semantic
+         via --score opacity, sharpness stays attention volume via LOD */
+      .record-node[data-attention="human"] { color: var(--warm); }
+      .record-node[data-attention="machine"] { color: var(--olive); }
+      .record-node[data-attention="mixed"] { color: var(--mixed); }
+      .record-node[data-attention="none"] { color: var(--soft); }
       .record-node .texture-mount,
       .record-node .archive-texture { display: block; height: 100%; width: 100%; }
       .record-node .archive-texture--field { filter: saturate(0.82) contrast(0.92); }
@@ -445,12 +450,11 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
               </div>
             )}
             {fieldRecords.map((record) => {
-              const density = record.score > 0.72 ? 'high' : record.score > 0.38 ? 'medium' : 'low';
               return (
                 <a
                   class={`record-node ${record.field.isLatest ? 'is-latest' : ''}`}
                   data-record-id={record.id}
-                  data-density={density}
+                  data-attention={attentionSourceFor(record.attentionSnapshot)}
                   href={record.url}
                   style={`--col:${record.field.col};--row:${record.field.row};--score:${record.score};`}
                   aria-label={record.title}
@@ -465,6 +469,7 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
           <span><b>{fieldRecords.length}</b> records</span>
           <span><b>{emptyTiles.length}</b> waiting cells</span>
           <span>score = semantic density</span>
+          <span>terracotta = human · olive = machine</span>
           <span class="sleep-note">sleep rebuild: nightly</span>
         </div>
       </section>
