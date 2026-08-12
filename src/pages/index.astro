@@ -20,6 +20,8 @@ const backendConfig = {
   key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '',
 };
 const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(new Date(manifest.generatedAt));
+const siteDescription = '개인 기록을 의미 기반 지형 위에 배치하는 아카이브 필드. 기록의 위치는 의미적 유사성이, 질감은 본문 구조가, 선명도는 관심이 결정한다.';
+const canonicalUrl = new URL('/', Astro.site).href;
 ---
 
 <html lang="ko">
@@ -27,6 +29,14 @@ const archiveDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).fo
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ydnil-poh Archive Field</title>
+    <meta name="description" content={siteDescription} />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ydnil-poh Archive Field" />
+    <meta property="og:description" content={siteDescription} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content="Ydnil-poh Archive Field" />
+    <meta name="twitter:card" content="summary" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />

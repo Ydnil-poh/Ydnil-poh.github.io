@@ -11,13 +11,14 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.props;
 const target = `/records/${slug}/`;
+const canonicalUrl = new URL(target, Astro.site).href;
 ---
 
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="refresh" content={`0; url=${target}`} />
-    <link rel="canonical" href={target} />
+    <link rel="canonical" href={canonicalUrl} />
     <title>Redirecting to archive record</title>
   </head>
   <body>
