@@ -1,0 +1,50 @@
+---
+// A real 404 page. Without one, Cloudflare Pages falls back to serving
+// index.html with a 200 for every unmatched path (soft-404), which wastes
+// crawl budget and pollutes machine_events with phantom successes.
+---
+
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>기록 없음 | Ydnil-poh Archive</title>
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        --paper: #ede8de;
+        --ink: #25231d;
+        --muted: #6f6b60;
+        --line: rgba(92, 83, 67, 0.2);
+      }
+      * { box-sizing: border-box; }
+      body {
+        align-items: center;
+        background: var(--paper);
+        color: var(--ink);
+        display: flex;
+        font-family: "Inter", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+        justify-content: center;
+        margin: 0;
+        min-height: 100vh;
+      }
+      .empty-cell {
+        border: 1px solid var(--line);
+        max-width: 420px;
+        padding: 44px 48px;
+        text-align: center;
+      }
+      h1 { font-size: 16px; font-weight: 500; margin: 0 0 10px; }
+      p { color: var(--muted); font-size: 13px; line-height: 1.7; margin: 0 0 24px; }
+      a { color: var(--ink); font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <main class="empty-cell">
+      <h1>이 자리에는 기록이 없다</h1>
+      <p>주소가 바뀌었거나, 아직 쓰이지 않았거나, 지워진 자리다.</p>
+      <a href="/">필드로 돌아가기</a>
+    </main>
+  </body>
+</html>

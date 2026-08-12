@@ -33,6 +33,7 @@ const previewImageUrl = galleryImageUrls[0] ?? null;
     <meta property="article:published_time" content={date.toISOString()} />
     {previewImageUrl && <meta property="og:image" content={previewImageUrl} />}
     <meta name="twitter:card" content={previewImageUrl ? 'summary_large_image' : 'summary'} />
+    <link rel="alternate" type="application/rss+xml" title="Ydnil-poh Archive Field" href="/rss.xml" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
