@@ -136,11 +136,21 @@ Cloudflare Pages Functions 미들웨어([functions/_middleware.js](functions/_mi
 
 **점수는 `ai`만 받는다.** 가중치에는 confidence가 곱해지고(Cloudflare가 발신 IP 대역으로 봇을 검증하면 1.0, UA 문자열만 일치하면 0.6, 일반 봇 패턴만 감지되면 0.3), 200 응답만 점수화된다(리다이렉트 제외). search·crawler가 0인 이유: 색인·수집 크롤링은 작업이지 관심이 아니고, 벌크 크롤 한 번이 전체 레코드를 훑으므로 가중하면 진짜 열람 신호를 압도한다 (실측: Meta-ExternalAgent가 1분에 아카이브 전체를 완주). preview가 0인 이유: 미리보기 봇은 기계의 관심이 아니라 사람의 공유 행위의 기계적 메아리다 — machine이 아닌 human-adjacent 신호이므로, 외부 공유가 충분히 관측된 뒤 해석(점수화 여부와 방향)을 결정한다.
 
-원본 UA는 `machine_events`에 그대로 남는 관찰이고 agent/category/confidence/점수는 해석이므로, 가중치 정책이 바뀌면 `recompute_machine_scores()`(service role 전용)로 관측에서 점수를 전면 재계산한다 — 누적 델타를 패치하지 않는다.
+데이터는 세 층으로 나뉜다:
+
+| 층 | 의미 | 갱신 |
+|---|---|---|
+| `machine_events` | 관찰 원본 — 모든 fetch 보존 (append-only) | 요청 즉시 |
+| `machine_access` | 실측 fetch 횟수 | 요청 즉시 누적 |
+| `machine_score` | AI attention **해석** — (agent, record, UTC일) 중복 제거, 그룹 최고 confidence × 0.30 | 낮에는 잠정 누적, **밤 sleep rebuild가 원본에서 재계산해 정본화** |
+
+한 대화에서 같은 글을 4번 fetch하면 access는 +4, score는 +0.30 — "가져간 횟수"와 "독립적인 관심"을 분리해 보존한다. 가중치 정책이 바뀌어도 `recompute_machine_scores()`(service role 전용, PUBLIC EXECUTE revoke됨)가 관측에서 점수를 전면 재계산한다 — 누적 델타를 패치하지 않는다.
 
 UA 목록에 없는 봇이라도 Cloudflare가 발신 IP 대역으로 봇임을 검증한 요청(`verifiedBotCategory`)은 unknown으로 기록된다 — 새로 등장한 AI fetcher가 분류기 갱신을 기다리지 않고 관측에 잡히는 안전망이다.
 
-알려진 한계 둘: (1) 일반 브라우저 UA로 요청하는 agentic browsing은 식별할 수 없다 — 누락(undercount)이지 오분류가 아니므로 데이터 순도는 유지된다. (2) 소비자 Gemini 앱처럼 라이브 fetch 대신 검색 색인/캐시로 답하는 AI는 요청 자체가 도달하지 않아 관측될 수 없다 — 이건 측정의 한계가 아니라 실제로 접근이 없었던 것이다.
+**이 층은 성과 지표가 아니다.** 로그가 증명하는 것은 "이 URL에 HTTP 요청이 있었다"까지이고, AI가 직접 fetch하지 않고 색인·캐시·제3자 중간층으로 답하는 경로가 존재하므로 — 로그 없음은 미참조의 증거가 아니고, 로그 있음은 답변 사용의 증거가 아니다. `machine_score`는 AI 참조 전체가 아니라 **직접 fetch로 도달한 좁은 표본**(하한)이며 서비스 간 비교에 쓸 수 없다. 측정 범위와 대안적 평가 방법(출처 등장 테스트)은 [docs/MACHINE_ATTENTION_SEMANTICS.md](docs/MACHINE_ATTENTION_SEMANTICS.md)에 정리했다.
+
+알려진 한계 둘: (1) 일반 브라우저 UA로 요청하는 agentic browsing은 식별할 수 없다 — 누락(undercount)이지 오분류가 아니므로 데이터 순도는 유지된다. (2) 색인 기반으로 답하는 AI는 요청 자체가 도달하지 않는다 — 관측 장치의 결함이 아니라 그 경로가 원래 로그에 안 남는 것이다.
 
 ### Attention → 텍스처 LOD
 
@@ -231,7 +241,7 @@ semantic blocks (문단 / !youtube)
 | 트리거 | 모드 | 역할 |
 |---|---|---|
 | `main` push / dispatch | `general` | **콘텐츠 반영** — 신규 배치·삽입 밀어내기·비상 확장. 위치는 콘텐츠가 바꾼다 |
-| cron `10 18 * * *` (03:10 KST) | `sleep` (`ARCHIVE_REBUILD_MODE=sleep`) | **관찰 반영 + 정비** — 하루치 attention을 LOD에 반영, footprint 확장/축소, 삭제 tombstone. 선명도는 밤이 바꾼다 |
+| cron `10 18 * * *` (03:10 KST) | `sleep` (`ARCHIVE_REBUILD_MODE=sleep`) | **관찰 반영 + 정비** — machine score 정본화(중복 제거 재계산) 후 하루치 attention을 LOD에 반영, footprint 확장/축소, 삭제 tombstone. 선명도는 밤이 바꾼다 |
 
 수동 플래그: `--region-reseed`/`ARCHIVE_REGION_RESEED=1`(전체 Region 재배치 — 공간 기억·잔상 리셋, 일회성 마이그레이션용), `--recalculate-projection`(투영 축 재산출).
 

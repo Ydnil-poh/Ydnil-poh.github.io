@@ -941,3 +941,15 @@ test('history layer schema stores observations rather than growth interpretation
   assert.doesNotMatch(schema, /growth_color\s/);
   assert.doesNotMatch(schema, /centrality_algorithm\s/);
 });
+
+test('machine score recompute dedups by agent, record, and UTC day at max confidence', () => {
+  const schema = readFileSync(new URL('../supabase/archive-schema.sql', import.meta.url), 'utf8');
+
+  // one (agent, record, day) group scores once, at its highest confidence
+  assert.match(schema, /group by e\.agent, \(e\.created_at at time zone 'utc'\)::date/);
+  assert.match(schema, /max\(greatest\(least\(coalesce\(e\.confidence, 0\), 1\), 0\)\) as confidence/);
+  // machine_access stays a raw cumulative count — recompute must not touch it
+  assert.doesNotMatch(schema, /recompute[\s\S]*?set machine_access/);
+  // service-role only for real: Postgres grants PUBLIC execute by default
+  assert.match(schema, /revoke execute on function public\.recompute_machine_scores\(\) from public, anon, authenticated/);
+});

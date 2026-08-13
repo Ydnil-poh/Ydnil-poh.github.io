@@ -517,6 +517,22 @@ const initial = await Promise.all(files.map(async (file) => {
 }));
 
 const publicRecords = initial.filter((record) => record.visibility !== 'private');
+
+// Daytime machine_score increments are provisional (a repeated fetch within
+// one conversation inflates them); the sleep rebuild canonicalizes the score
+// from raw machine_events with (agent, record, day) dedup — before the
+// attention snapshot is read, so tonight's LOD and hue use the canonical
+// values. Runs before layout, so a failure here must not fail the build.
+if (isSleepRebuild && supabaseUrl && supabaseServiceKey) {
+  try {
+    const response = await supabaseRest('rpc/recompute_machine_scores', { method: 'POST', body: '{}' });
+    const affected = await response.json();
+    console.log(`machine scores canonicalized (agent/record/day dedup): ${affected} records`);
+  } catch (error) {
+    console.warn(`machine score recompute skipped: ${error.message}`);
+  }
+}
+
 const attentionSnapshots = await fetchAttentionSnapshots(publicRecords.map((record) => record.id));
 const recordsWithAttention = publicRecords.map((record) => ({
   ...record,

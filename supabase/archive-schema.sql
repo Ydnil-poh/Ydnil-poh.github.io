@@ -379,6 +379,14 @@ grant execute on function public.record_machine_event(text, text, text, double p
 -- the weight policy changes, rebuild them from the raw log instead of trying
 -- to patch accumulated deltas. Service-role only (no grants) — run manually
 -- from the SQL editor after a policy change: select public.recompute_machine_scores();
+-- machine_score is the deduplicated interpretation: one (agent, record, UTC
+-- day) group counts once regardless of how many times the fetch repeated
+-- within a conversation, scored at the group's highest confidence ("that day
+-- this agent showed interest in this record, and this is how sure we are of
+-- the classification"). machine_access stays the raw cumulative fetch count —
+-- the two deliberately diverge (a 4-fetch burst is access +4, score +0.30).
+-- Daytime RPC increments are provisional; the nightly sleep rebuild calls
+-- this to canonicalize the score from raw machine_events.
 create or replace function public.recompute_machine_scores()
 returns integer
 language plpgsql
@@ -390,13 +398,21 @@ declare
 begin
   update public.archive_records r
   set machine_score = coalesce((
-    select sum(0.30 * greatest(least(coalesce(e.confidence, 0), 1), 0))
-    from public.machine_events e
-    where e.record_slug = r.slug
-      and e.category = 'ai'
-      and coalesce(e.metadata->>'status', '200') = '200'
+    select sum(0.30 * grp.confidence)
+    from (
+      select max(greatest(least(coalesce(e.confidence, 0), 1), 0)) as confidence
+      from public.machine_events e
+      where e.record_slug = r.slug
+        and e.category = 'ai'
+        and coalesce(e.metadata->>'status', '200') = '200'
+      group by e.agent, (e.created_at at time zone 'utc')::date
+    ) grp
   ), 0);
   get diagnostics affected = row_count;
   return affected;
 end;
 $$;
+
+-- Postgres grants EXECUTE to PUBLIC on new functions by default; revoke so
+-- this really is service-role only, as intended.
+revoke execute on function public.recompute_machine_scores() from public, anon, authenticated;
