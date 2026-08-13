@@ -128,7 +128,7 @@ Cloudflare Pages Functions 미들웨어([functions/_middleware.js](functions/_mi
 
 | category | 의미 | 예시 | score 가중치 |
 |---|---|---|---|
-| `search` | 검색 색인 (전통·AI 검색) | Googlebot, Bingbot, OAI-SearchBot, PerplexityBot | 0 — 관측만 |
+| `search` | 검색 색인 (전통·AI 검색) | Googlebot, Bingbot, Yeti(네이버), OAI-SearchBot, PerplexityBot | 0 — 관측만 |
 | `crawler` | 학습·수집 크롤러 | GPTBot, ClaudeBot, CCBot | 0 — 관측만 |
 | `ai` | 사용자 질문에 의한 실시간 참조 | ChatGPT-User, Claude-User, Perplexity-User, Gemini-Deep-Research | +0.30 |
 | `preview` | 링크 미리보기 언퍼러 (사람이 링크를 붙여넣음) | Twitterbot, kakaotalk-scrap, Slackbot, Discordbot | 0 — 관측만 |
