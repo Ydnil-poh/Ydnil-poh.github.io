@@ -34,3 +34,13 @@ test('generic bots and plain browsers keep their fallback behavior', () => {
   assert.equal(classify('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'), null);
   assert.equal(classify(''), null);
 });
+
+test('Gemini-side fetchers classify as ai, GoogleOther as crawler', () => {
+  assert.equal(classify('Mozilla/5.0 (compatible; Gemini-Deep-Research; +https://gemini.google.com)').category, 'ai');
+  assert.equal(classify('Mozilla/5.0 (compatible; Google-NotebookLM; +https://notebooklm.google.com)').category, 'ai');
+  assert.equal(classify('Mozilla/5.0 (compatible; GoogleAgent-Mariner; +https://google.com)').category, 'ai');
+  assert.equal(classify('GoogleOther').category, 'crawler');
+  // Googlebot stays search — the new Google entries must not shadow it
+  assert.equal(classify('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)').category, 'search');
+  assert.equal(classify('Google-CloudVertexBot').category, 'crawler');
+});
