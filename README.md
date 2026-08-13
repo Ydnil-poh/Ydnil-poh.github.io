@@ -130,7 +130,7 @@ Cloudflare Pages Functions 미들웨어([functions/_middleware.js](functions/_mi
 |---|---|---|---|
 | `search` | 검색 색인 (전통·AI 검색) | Googlebot, Bingbot, OAI-SearchBot, PerplexityBot | 0 — 관측만 |
 | `crawler` | 학습·수집 크롤러 | GPTBot, ClaudeBot, CCBot | 0 — 관측만 |
-| `ai` | 사용자 질문에 의한 실시간 참조 | ChatGPT-User, Claude-User, Perplexity-User | +0.30 |
+| `ai` | 사용자 질문에 의한 실시간 참조 | ChatGPT-User, Claude-User, Perplexity-User, Gemini-Deep-Research | +0.30 |
 | `preview` | 링크 미리보기 언퍼러 (사람이 링크를 붙여넣음) | Twitterbot, kakaotalk-scrap, Slackbot, Discordbot | 0 — 관측만 |
 | `unknown` | 봇 추정, 식별 불가 | 일반 봇 패턴 | 0 |
 
@@ -138,7 +138,9 @@ Cloudflare Pages Functions 미들웨어([functions/_middleware.js](functions/_mi
 
 원본 UA는 `machine_events`에 그대로 남는 관찰이고 agent/category/confidence/점수는 해석이므로, 가중치 정책이 바뀌면 `recompute_machine_scores()`(service role 전용)로 관측에서 점수를 전면 재계산한다 — 누적 델타를 패치하지 않는다.
 
-알려진 한계: 일반 브라우저 UA로 요청하는 agentic browsing은 식별할 수 없다. 누락(undercount)이지 오분류가 아니므로 데이터 순도는 유지된다.
+UA 목록에 없는 봇이라도 Cloudflare가 발신 IP 대역으로 봇임을 검증한 요청(`verifiedBotCategory`)은 unknown으로 기록된다 — 새로 등장한 AI fetcher가 분류기 갱신을 기다리지 않고 관측에 잡히는 안전망이다.
+
+알려진 한계 둘: (1) 일반 브라우저 UA로 요청하는 agentic browsing은 식별할 수 없다 — 누락(undercount)이지 오분류가 아니므로 데이터 순도는 유지된다. (2) 소비자 Gemini 앱처럼 라이브 fetch 대신 검색 색인/캐시로 답하는 AI는 요청 자체가 도달하지 않아 관측될 수 없다 — 이건 측정의 한계가 아니라 실제로 접근이 없었던 것이다.
 
 ### Attention → 텍스처 LOD
 

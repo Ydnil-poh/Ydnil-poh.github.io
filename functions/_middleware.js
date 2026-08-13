@@ -17,6 +17,9 @@ const KNOWN_AGENTS = [
   { pattern: /Perplexity-User/i, agent: 'Perplexity-User', category: 'ai' },
   { pattern: /Meta-ExternalFetcher/i, agent: 'Meta-ExternalFetcher', category: 'ai' },
   { pattern: /DuckAssistBot/i, agent: 'DuckAssistBot', category: 'ai' },
+  { pattern: /Gemini-Deep-Research/i, agent: 'Gemini-Deep-Research', category: 'ai' },
+  { pattern: /Google-NotebookLM/i, agent: 'Google-NotebookLM', category: 'ai' },
+  { pattern: /GoogleAgent-Mariner/i, agent: 'GoogleAgent-Mariner', category: 'ai' },
 
   // preview — link unfurlers acting on a human paste. Not machine interest in
   // the content but the mechanical echo of a human share; observed, not scored.
@@ -52,6 +55,10 @@ const KNOWN_AGENTS = [
   { pattern: /Bytespider/i, agent: 'Bytespider', category: 'crawler' },
   { pattern: /Meta-ExternalAgent/i, agent: 'Meta-ExternalAgent', category: 'crawler' },
   { pattern: /Google-CloudVertexBot/i, agent: 'Google-CloudVertexBot', category: 'crawler' },
+  // GoogleOther is Google's shared crawler for non-Search product teams,
+  // including AI corpus collection. No "bot" token, so the generic fallback
+  // never catches it — it needs an explicit entry.
+  { pattern: /GoogleOther/i, agent: 'GoogleOther', category: 'crawler' },
 ];
 
 const GENERIC_BOT = /bot|crawl|spider|slurp|fetch|scrape/i;
@@ -129,7 +136,15 @@ export async function onRequest(context) {
   try {
     const pathname = new URL(request.url).pathname;
     if (!ASSET_EXTENSIONS.test(pathname)) {
-      const hit = classify(request.headers.get('user-agent'));
+      let hit = classify(request.headers.get('user-agent'));
+      // Safety net for fetchers we have never heard of: Cloudflare verifies
+      // well-known bots against published IP ranges independently of the UA
+      // string. A verified bot whose UA matches no pattern is still a bot —
+      // observe it rather than dropping it, so brand-new AI fetchers appear
+      // in machine_events without waiting for a classifier update.
+      if (!hit && request.cf?.verifiedBotCategory) {
+        hit = { agent: 'Unknown Bot', category: 'unknown', confidence: 0.3 };
+      }
       if (hit) {
         waitUntil(logMachineEvent(env, request, hit, response.status).catch(() => {}));
       }
