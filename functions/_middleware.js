@@ -20,13 +20,17 @@ const KNOWN_AGENTS = [
   { pattern: /Gemini-Deep-Research/i, agent: 'Gemini-Deep-Research', category: 'ai' },
   { pattern: /Google-NotebookLM/i, agent: 'Google-NotebookLM', category: 'ai' },
   { pattern: /GoogleAgent-Mariner/i, agent: 'GoogleAgent-Mariner', category: 'ai' },
+  { pattern: /MistralAI-User/i, agent: 'MistralAI-User', category: 'ai' },
 
   // preview — link unfurlers acting on a human paste. Not machine interest in
   // the content but the mechanical echo of a human share; observed, not scored.
-  // Ordering: kakaotalk-scrap precedes facebookexternalhit (KakaoTalk's UA
-  // contains both) and TelegramBot precedes Twitterbot (Telegram's UA is
-  // literally "TelegramBot (like TwitterBot)").
+  // Ordering: kakaotalk-scrap and Blueno (Naver's scraper, observed in
+  // machine_events as "facebookexternalhit/1.1 (compatible; Blueno/1.0)")
+  // must precede facebookexternalhit, whose token their UAs also carry.
+  // TelegramBot precedes Twitterbot (Telegram's UA is literally
+  // "TelegramBot (like TwitterBot)").
   { pattern: /kakaotalk-scrap/i, agent: 'KakaoTalk-Scrap', category: 'preview' },
+  { pattern: /Blueno/i, agent: 'Naver-Blueno', category: 'preview' },
   { pattern: /facebookexternalhit/i, agent: 'FacebookExternalHit', category: 'preview' },
   { pattern: /TelegramBot/i, agent: 'TelegramBot', category: 'preview' },
   { pattern: /Twitterbot/i, agent: 'Twitterbot', category: 'preview' },
@@ -44,6 +48,14 @@ const KNOWN_AGENTS = [
   { pattern: /DuckDuckBot/i, agent: 'DuckDuckBot', category: 'search' },
   { pattern: /YandexBot/i, agent: 'YandexBot', category: 'search' },
   { pattern: /Baiduspider/i, agent: 'Baiduspider', category: 'search' },
+  // Korean engines: Yeti is Naver Search (registered in Search Advisor, so
+  // expected imminently), Daumoa is Kakao's Daum. Neither UA carries a
+  // bot/crawl token in its name, so without entries they land in unknown.
+  { pattern: /Yeti/i, agent: 'Yeti', category: 'search' },
+  { pattern: /Daumoa/i, agent: 'Daumoa', category: 'search' },
+  // BingPreview renders page snapshots for Bing results (and Copilot rides
+  // Bing's index); no bot token, so it needs an explicit entry.
+  { pattern: /BingPreview/i, agent: 'BingPreview', category: 'search' },
   { pattern: /Applebot-Extended/i, agent: 'Applebot-Extended', category: 'crawler' },
   { pattern: /Applebot/i, agent: 'Applebot', category: 'search' },
 
@@ -55,6 +67,7 @@ const KNOWN_AGENTS = [
   { pattern: /Bytespider/i, agent: 'Bytespider', category: 'crawler' },
   { pattern: /Meta-ExternalAgent/i, agent: 'Meta-ExternalAgent', category: 'crawler' },
   { pattern: /Google-CloudVertexBot/i, agent: 'Google-CloudVertexBot', category: 'crawler' },
+  { pattern: /cohere-training-data-crawler/i, agent: 'Cohere-Training-Data-Crawler', category: 'crawler' },
   // GoogleOther is Google's shared crawler for non-Search product teams,
   // including AI corpus collection. No "bot" token, so the generic fallback
   // never catches it — it needs an explicit entry.
