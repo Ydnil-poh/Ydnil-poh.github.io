@@ -184,6 +184,10 @@ const previewImageUrl = galleryImageUrls[0] ?? null;
             event_type: 'page_view',
             event_metadata: {
               path: window.location.pathname,
+              // AI chat UIs often strip the referrer but tag cited links with
+              // utm_source (e.g. ?utm_source=chatgpt.com) — keep the query
+              // string as an observation so AI-referred arrivals stay traceable
+              search: window.location.search || '',
               referrer: document.referrer || '',
               sessionId: sessionId(),
               surface: 'record_page',

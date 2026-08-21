@@ -18,6 +18,8 @@ import {
   rasterizeTextureLayoutGraph,
   attentionScoreFor,
   attentionSourceFor,
+  hasMachineAttention,
+  machineAttentionThreshold,
   normalizedRuntimeScore,
   runtimeLodForNormalizedScore,
   textureLodPolicies,
@@ -184,13 +186,21 @@ test('runtime score selects an LOD policy after rebuild-local log normalization'
   assert.deepEqual(textureLodRenderResolutions[2], { width: 40, height: 30 });
 });
 
-test('tile hue classifies the attention source by human/machine share', () => {
+test('tile hue encodes human attention presence; machine renders as an existence marker', () => {
+  // hue: human presence only — the ratio scheme could never surface machine
+  // (measured against real logs, every record rendered 'human')
   assert.equal(attentionSourceFor({ runtimeScore: 0, machineScore: 0 }), 'none');
   assert.equal(attentionSourceFor({ runtimeScore: 1, machineScore: 0 }), 'human');
-  assert.equal(attentionSourceFor({ runtimeScore: 0, machineScore: 0.3 }), 'machine');
-  assert.equal(attentionSourceFor({ runtimeScore: 0.5, machineScore: 0.5 }), 'mixed');
-  assert.equal(attentionSourceFor({ runtimeScore: 0.66, machineScore: 0.34 }), 'human');
-  assert.equal(attentionSourceFor({ attentionSnapshot: { runtimeScore: 0.2, machineScore: 0.6 } }), 'machine');
+  assert.equal(attentionSourceFor({ runtimeScore: 0, machineScore: 5 }), 'none');
+  assert.equal(attentionSourceFor({ attentionSnapshot: { runtimeScore: 0.15 } }), 'human');
+
+  // marker: one canonical AI read (full-confidence agent-day) earns it;
+  // a lone unverified UA match (0.18) does not
+  assert.equal(machineAttentionThreshold, 0.3);
+  assert.equal(hasMachineAttention({ machineScore: 0.3 }), true);
+  assert.equal(hasMachineAttention({ machineScore: 0.18 }), false);
+  assert.equal(hasMachineAttention({ machineScore: 0 }), false);
+  assert.equal(hasMachineAttention({ attentionSnapshot: { machineScore: 0.6 } }), true);
 });
 
 test('machine attention joins human runtime in the LOD input', () => {
@@ -952,4 +962,31 @@ test('machine score recompute dedups by agent, record, and UTC day at max confid
   assert.doesNotMatch(schema, /recompute[\s\S]*?set machine_access/);
   // service-role only for real: Postgres grants PUBLIC execute by default
   assert.match(schema, /revoke execute on function public\.recompute_machine_scores\(\) from public, anon, authenticated/);
+
+  // AI-referred human arrivals count as machine evidence: page_view only
+  // (landing, not later browsing), one unit per session, detected by AI
+  // referrer domains or utm_source
+  assert.match(schema, /and e\.event_type = 'page_view'\s+and \(\s+e\.referrer ~\* '\(chatgpt\\\.com/);
+  assert.match(schema, /utm_source=\(chatgpt\|openai\|perplexity\|gemini\|copilot\|claude\)/);
+  assert.match(schema, /select distinct e\.session_id\s+from public\.archive_events e/);
+});
+
+test('clients capture the query string so utm-tagged AI referrals stay observable', () => {
+  const recordLayout = readFileSync(new URL('../src/layouts/RecordLayout.astro', import.meta.url), 'utf8');
+  const indexPage = readFileSync(new URL('../src/pages/index.astro', import.meta.url), 'utf8');
+
+  assert.match(recordLayout, /search: window\.location\.search \|\| ''/);
+  assert.match(indexPage, /search: window\.location\.search \|\| ''/);
+});
+
+test('human score recompute dedups by session, record, and event type', () => {
+  const schema = readFileSync(new URL('../supabase/archive-schema.sql', import.meta.url), 'utf8');
+
+  // one (session, record, event_type) group counts once — the session is
+  // both the actor and the time unit, so no day axis
+  assert.match(schema, /create or replace function public\.recompute_human_scores/);
+  assert.match(schema, /select distinct e\.session_id, e\.event_type\s+from public\.archive_events e/);
+  // human_score excludes page_view, matching the write-time RPC weights
+  assert.match(schema, /human_score = coalesce\(\((?:(?!page_view)[\s\S])*?\), 0\);/);
+  assert.match(schema, /revoke execute on function public\.recompute_human_scores\(\) from public, anon, authenticated/);
 });

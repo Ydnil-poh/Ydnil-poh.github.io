@@ -126,21 +126,26 @@ export function normalizedRuntimeScore(record, runtimeScale = 0) {
   return Math.log1p(attentionScore) / scale;
 }
 
-// Tile hue encodes who reads a record: terracotta when human attention
-// dominates, olive when machine attention (user-delegated AI reads) does, a
-// blend when balanced, neutral when nobody has read it yet. Hue is
-// appearance, not geometry — the runtime layer's second visual channel next
-// to LOD. The human channel is runtimeScore (every human-triggered event,
-// page views included), not the narrower humanScore.
+// Human and machine attention render through separate channels, because
+// they live on incompatible scales: human events accumulate per visitor
+// (2–25 per record in practice) while a machine (user-delegated AI) read is
+// one canonical unit of 0.30 per agent-day. A ratio-based hue could never
+// surface the machine side — measured against real logs, every record
+// rendered 'human'. So hue encodes only human attention presence, and
+// machine attention is a discrete existence marker: sparse signals are
+// rendered as presence, not magnitude.
 export function attentionSourceFor(record) {
   const human = Math.max(0, Number(record?.runtimeScore ?? record?.attentionSnapshot?.runtimeScore ?? 0) || 0);
+  return human > 0 ? 'human' : 'none';
+}
+
+// One canonical AI read (a full-confidence agent-day) earns the marker; a
+// lone unverified UA match (0.18) does not.
+export const machineAttentionThreshold = 0.3;
+
+export function hasMachineAttention(record) {
   const machine = Math.max(0, Number(record?.machineScore ?? record?.attentionSnapshot?.machineScore ?? 0) || 0);
-  const total = human + machine;
-  if (total <= 0) return 'none';
-  const humanShare = human / total;
-  if (humanShare >= 0.65) return 'human';
-  if (humanShare <= 0.35) return 'machine';
-  return 'mixed';
+  return machine >= machineAttentionThreshold;
 }
 
 export function encodeRle4(values) {
