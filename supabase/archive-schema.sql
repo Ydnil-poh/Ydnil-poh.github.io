@@ -396,6 +396,14 @@ as $$
 declare
   affected integer;
 begin
+  -- machine_score carries two evidence classes:
+  --   1) direct user-delegated AI reads (path ①): machine_events 'ai' rows,
+  --      one unit per (agent, record, UTC day) at the group's best confidence.
+  --   2) AI-referred human arrivals — the moment path-② demand becomes
+  --      observable: a page_view whose referrer or utm_source names an AI
+  --      service means the AI cited this record and a human followed. One
+  --      unit per (session, record); the session is already the time unit.
+  --      Hard to fake: the AI has to cite the record first.
   update public.archive_records r
   set machine_score = coalesce((
     select sum(0.30 * grp.confidence)
@@ -407,6 +415,18 @@ begin
         and coalesce(e.metadata->>'status', '200') = '200'
       group by e.agent, (e.created_at at time zone 'utc')::date
     ) grp
+  ), 0) + coalesce((
+    select count(*) * 0.30
+    from (
+      select distinct e.session_id
+      from public.archive_events e
+      where e.record_slug = r.slug
+        and e.event_type = 'page_view'
+        and (
+          e.referrer ~* '(chatgpt\.com|chat\.openai\.com|perplexity\.ai|gemini\.google\.com|copilot\.microsoft\.com|claude\.ai)'
+          or coalesce(e.metadata->>'search', '') ~* 'utm_source=(chatgpt|openai|perplexity|gemini|copilot|claude)'
+        )
+    ) ref
   ), 0);
   get diagnostics affected = row_count;
   return affected;
@@ -416,3 +436,54 @@ $$;
 -- Postgres grants EXECUTE to PUBLIC on new functions by default; revoke so
 -- this really is service-role only, as intended.
 revoke execute on function public.recompute_machine_scores() from public, anon, authenticated;
+
+-- Human scores get the symmetric treatment: repeated events within one visit
+-- are access, not repeated interest. One (session, record, event_type) group
+-- counts once. The session is both the actor and the time unit — it is an
+-- ephemeral sessionStorage id that dies with the tab, so unlike the machine
+-- side no day axis is needed: a returning visitor is a new session and a new
+-- act of interest. Raw counters (views, tile_clicks, opens, page_views)
+-- stay cumulative; only the score interpretations are rebuilt. Measured
+-- before introduction, within-visit repeats were 13.5% of the total score.
+create or replace function public.recompute_human_scores()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  affected integer;
+begin
+  update public.archive_records r
+  set
+    runtime_score = coalesce((
+      select sum(case grp.event_type
+        when 'tile_click' then 0.15
+        when 'record_open' then 0.35
+        when 'page_view' then 0.25
+        else 0
+      end)
+      from (
+        select distinct e.session_id, e.event_type
+        from public.archive_events e
+        where e.record_slug = r.slug
+      ) grp
+    ), 0),
+    human_score = coalesce((
+      select sum(case grp.event_type
+        when 'tile_click' then 0.15
+        when 'record_open' then 0.35
+        else 0
+      end)
+      from (
+        select distinct e.session_id, e.event_type
+        from public.archive_events e
+        where e.record_slug = r.slug
+      ) grp
+    ), 0);
+  get diagnostics affected = row_count;
+  return affected;
+end;
+$$;
+
+revoke execute on function public.recompute_human_scores() from public, anon, authenticated;

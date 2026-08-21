@@ -518,18 +518,21 @@ const initial = await Promise.all(files.map(async (file) => {
 
 const publicRecords = initial.filter((record) => record.visibility !== 'private');
 
-// Daytime machine_score increments are provisional (a repeated fetch within
-// one conversation inflates them); the sleep rebuild canonicalizes the score
-// from raw machine_events with (agent, record, day) dedup — before the
-// attention snapshot is read, so tonight's LOD and hue use the canonical
-// values. Runs before layout, so a failure here must not fail the build.
+// Daytime score increments are provisional (repeated fetches or clicks
+// within one visit inflate them); the sleep rebuild canonicalizes both
+// channels from their raw event logs — machine with (agent, record, day)
+// dedup, human with (session, record, event_type) dedup — before the
+// attention snapshot is read, so tonight's rendering uses canonical values.
+// Runs before layout, so a failure here must not fail the build.
 if (isSleepRebuild && supabaseUrl && supabaseServiceKey) {
-  try {
-    const response = await supabaseRest('rpc/recompute_machine_scores', { method: 'POST', body: '{}' });
-    const affected = await response.json();
-    console.log(`machine scores canonicalized (agent/record/day dedup): ${affected} records`);
-  } catch (error) {
-    console.warn(`machine score recompute skipped: ${error.message}`);
+  for (const fn of ['recompute_machine_scores', 'recompute_human_scores']) {
+    try {
+      const response = await supabaseRest(`rpc/${fn}`, { method: 'POST', body: '{}' });
+      const affected = await response.json();
+      console.log(`${fn}: ${affected} records canonicalized`);
+    } catch (error) {
+      console.warn(`${fn} skipped: ${error.message}`);
+    }
   }
 }
 

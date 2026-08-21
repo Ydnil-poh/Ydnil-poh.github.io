@@ -122,6 +122,8 @@ Runtime 점수가 아무리 높아도 위치는 움직이지 않고, semantic sc
 
 클라이언트가 anon key로 `record_archive_event` RPC를 호출한다. RPC는 **존재하는 slug만** 갱신하고(모르는 slug는 `ignored` 응답, 행 생성 없음) 개별 이벤트를 `archive_events`에 적재한다. 세션 식별은 `sessionStorage`의 무작위 id뿐, 재방문·사용자 추적은 하지 않는다. `machine_score`/`machine_access`는 Machine Attention(아래)이 갱신한다.
 
+human 점수도 machine과 대칭으로 정본화된다: 낮의 가산은 잠정값이고, 밤의 sleep rebuild가 `recompute_human_scores()`로 `archive_events` 원본에서 **(session, record, event_type)당 1회**로 재계산한다 — 한 방문에서 같은 타일을 네 번 클릭해도 관심은 1회다(도입 전 실측: 방문 내 반복 가산이 전체 점수의 13.5%). 세션은 탭과 함께 소멸하는 임시 id라 행위자이자 시간 단위를 겸하므로, machine과 달리 일(day) 축이 필요 없다. 원시 카운터(views, tile_clicks 등)는 실측 누적 그대로 둔다.
+
 ### Machine Attention
 
 Cloudflare Pages Functions 미들웨어([functions/_middleware.js](functions/_middleware.js))가 모든 요청의 User-Agent를 분류해 `record_machine_event` RPC로 기록한다. 기록은 `waitUntil` 비동기라 응답을 막지 않으며, 정적 자산 요청은 제외한다.
@@ -134,7 +136,7 @@ Cloudflare Pages Functions 미들웨어([functions/_middleware.js](functions/_mi
 | `preview` | 링크 미리보기 언퍼러 (사람이 링크를 붙여넣음) | Twitterbot, kakaotalk-scrap, Slackbot, Discordbot | 0 — 관측만 |
 | `unknown` | 봇 추정, 식별 불가 | 일반 봇 패턴 | 0 |
 
-**점수는 `ai`만 받는다.** 가중치에는 confidence가 곱해지고(Cloudflare가 발신 IP 대역으로 봇을 검증하면 1.0, UA 문자열만 일치하면 0.6, 일반 봇 패턴만 감지되면 0.3), 200 응답만 점수화된다(리다이렉트 제외). search·crawler가 0인 이유: 색인·수집 크롤링은 작업이지 관심이 아니고, 벌크 크롤 한 번이 전체 레코드를 훑으므로 가중하면 진짜 열람 신호를 압도한다 (실측: Meta-ExternalAgent가 1분에 아카이브 전체를 완주). preview가 0인 이유: 미리보기 봇은 기계의 관심이 아니라 사람의 공유 행위의 기계적 메아리다 — machine이 아닌 human-adjacent 신호이므로, 외부 공유가 충분히 관측된 뒤 해석(점수화 여부와 방향)을 결정한다.
+**점수는 두 종류의 증거만 받는다.** ① 직접 열람 — `ai` 카테고리, confidence 곱(Cloudflare가 발신 IP 대역으로 봇을 검증하면 1.0, UA 문자열만 일치하면 0.6), 200 응답만(리다이렉트 제외). ② **AI 레퍼럴 유입** — referrer나 `utm_source`가 AI 서비스(chatgpt.com, perplexity.ai, gemini.google.com 등)인 인간의 `page_view`. AI가 그 글을 인용했고 사람이 따라왔다는 이중 증거로, 경로 ②(색인 기반 응답)의 수요가 서버에서 관측 가능해지는 유일한 순간이다. (session, record)당 1회 +0.30, 정본화 시 `archive_events`의 관찰에서 유도되므로 소급 적용된다. 조작이 어렵다 — AI가 먼저 인용해야 하니까. search·crawler가 0인 이유: 색인·수집 크롤링은 작업이지 관심이 아니고, 벌크 크롤 한 번이 전체 레코드를 훑으므로 가중하면 진짜 열람 신호를 압도한다 (실측: Meta-ExternalAgent가 1분에 아카이브 전체를 완주). preview가 0인 이유: 미리보기 봇은 기계의 관심이 아니라 사람의 공유 행위의 기계적 메아리다 — machine이 아닌 human-adjacent 신호이므로, 외부 공유가 충분히 관측된 뒤 해석(점수화 여부와 방향)을 결정한다.
 
 데이터는 세 층으로 나뉜다:
 
@@ -148,7 +150,7 @@ Cloudflare Pages Functions 미들웨어([functions/_middleware.js](functions/_mi
 
 UA 목록에 없는 봇이라도 Cloudflare가 발신 IP 대역으로 봇임을 검증한 요청(`verifiedBotCategory`)은 unknown으로 기록된다 — 새로 등장한 AI fetcher가 분류기 갱신을 기다리지 않고 관측에 잡히는 안전망이다.
 
-**이 층은 성과 지표가 아니다.** 로그가 증명하는 것은 "이 URL에 HTTP 요청이 있었다"까지이고, AI가 직접 fetch하지 않고 색인·캐시·제3자 중간층으로 답하는 경로가 존재하므로 — 로그 없음은 미참조의 증거가 아니고, 로그 있음은 답변 사용의 증거가 아니다. `machine_score`는 AI 참조 전체가 아니라 **직접 fetch로 도달한 좁은 표본**(하한)이며 서비스 간 비교에 쓸 수 없다. 측정 범위와 대안적 평가 방법(출처 등장 테스트)은 [docs/MACHINE_ATTENTION_SEMANTICS.md](docs/MACHINE_ATTENTION_SEMANTICS.md)에 정리했다.
+**이 층은 성과 지표가 아니다.** 로그가 증명하는 것은 "이 URL에 HTTP 요청이 있었다"까지이고, AI가 직접 fetch하지 않고 색인·캐시·제3자 중간층으로 답하거나 **같은 콘텐츠의 다른 공개 표면(GitHub 저장소)을 읽는** 경로가 존재하므로 — 로그 없음은 미참조의 증거가 아니고, 로그 있음은 답변 사용의 증거가 아니다. `machine_score`는 AI 참조 전체가 아니라 **직접 fetch로 도달한 좁은 표본**(하한)이며 서비스 간 비교에 쓸 수 없다. 측정 범위와 대안적 평가 방법(출처 등장 테스트)은 [docs/MACHINE_ATTENTION_SEMANTICS.md](docs/MACHINE_ATTENTION_SEMANTICS.md)에 정리했다.
 
 알려진 한계 둘: (1) 일반 브라우저 UA로 요청하는 agentic browsing은 식별할 수 없다 — 누락(undercount)이지 오분류가 아니므로 데이터 순도는 유지된다. (2) 색인 기반으로 답하는 AI는 요청 자체가 도달하지 않는다 — 관측 장치의 결함이 아니라 그 경로가 원래 로그에 안 남는 것이다.
 
@@ -164,18 +166,16 @@ UA 목록에 없는 봇이라도 Cloudflare가 발신 IP 대역으로 봇임을 
 
 관찰이 쌓일수록 타일이 선명해진다. 위치는 변하지 않는다.
 
-### Attention → 타일 색상
+### Attention → 타일 색상과 AI 마커
 
-타일 색상(hue)은 **관심의 출처**를 표현한다 (`attentionSourceFor`, 인간측 = runtime score / 기계측 = machine score 비율, 임계 0.65/0.35):
+인간과 기계는 **분리된 시각 채널**로 렌더된다. 두 채널의 스케일이 호환 불가능하기 때문이다 — 인간 이벤트는 방문자마다 누적(실측 레코드당 2~25점)되고 기계 열람은 agent-일당 0.30이라, 비율 기반 hue는 실제 로그 시뮬레이션에서 전 레코드가 'human'으로 렌더됐다(기계 신호 영구 도달 불가). 희소 신호는 크기가 아니라 **존재**로 렌더한다:
 
-| 출처 | 조건 | 색 |
+| 채널 | 표현 | 조건 |
 |---|---|---|
-| `human` | 인간 비중 ≥ 65% | 테라코타 |
-| `machine` | 기계 비중 ≥ 65% | 올리브 |
-| `mixed` | 그 사이 | 혼합톤 |
-| `none` | 아직 아무도 읽지 않음 | 중립 |
+| 타일 색상(hue) | 인간 관심 존재 — 테라코타(읽힘) / 중립(안 읽힘) | `runtimeScore > 0` |
+| **AI 마커** | 타일 우하단 올리브 점 — "AI가 읽었거나, 인용해서 사람을 보낸 기록" | `machineScore ≥ 0.3` (정본 AI-일 1회 또는 AI 레퍼럴 유입 1회; 미검증 UA 단독 매치 0.18은 미달) |
 
-시각 채널 정리: **색상 = 누가 읽는가**(runtime), **잉크 농도 = 의미 밀도**(semantic), **선명도 = 얼마나 읽히는가**(runtime LOD). "인간은 안 읽지만 AI가 참조하는 기록"은 올리브색의 선명한 타일로 나타난다.
+시각 채널 정리: **색상 = 인간이 읽는가**, **마커 = AI가 읽었는가**, **잉크 농도 = 의미 밀도**(semantic), **선명도 = 얼마나 읽히는가**(runtime LOD). "인간은 안 읽지만 AI가 참조하는 기록"은 중립색 타일에 올리브 점으로 나타난다.
 
 ---
 
@@ -241,7 +241,7 @@ semantic blocks (문단 / !youtube)
 | 트리거 | 모드 | 역할 |
 |---|---|---|
 | `main` push / dispatch | `general` | **콘텐츠 반영** — 신규 배치·삽입 밀어내기·비상 확장. 위치는 콘텐츠가 바꾼다 |
-| cron `10 18 * * *` (03:10 KST) | `sleep` (`ARCHIVE_REBUILD_MODE=sleep`) | **관찰 반영 + 정비** — machine score 정본화(중복 제거 재계산) 후 하루치 attention을 LOD에 반영, footprint 확장/축소, 삭제 tombstone. 선명도는 밤이 바꾼다 |
+| cron `10 18 * * *` (03:10 KST) | `sleep` (`ARCHIVE_REBUILD_MODE=sleep`) | **관찰 반영 + 정비** — attention score 정본화(human·machine 양 채널 중복 제거 재계산) 후 하루치 attention을 LOD에 반영, footprint 확장/축소, 삭제 tombstone. 선명도는 밤이 바꾼다 |
 
 수동 플래그: `--region-reseed`/`ARCHIVE_REGION_RESEED=1`(전체 Region 재배치 — 공간 기억·잔상 리셋, 일회성 마이그레이션용), `--recalculate-projection`(투영 축 재산출).
 
