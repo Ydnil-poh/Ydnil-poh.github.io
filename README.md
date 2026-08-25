@@ -148,7 +148,7 @@ Cloudflare Pages Functions 미들웨어([functions/_middleware.js](functions/_mi
 
 한 대화에서 같은 글을 4번 fetch하면 access는 +4, score는 +0.30 — "가져간 횟수"와 "독립적인 관심"을 분리해 보존한다. 가중치 정책이 바뀌어도 `recompute_machine_scores()`(service role 전용, PUBLIC EXECUTE revoke됨)가 관측에서 점수를 전면 재계산한다 — 누적 델타를 패치하지 않는다.
 
-UA 목록에 없는 봇이라도 Cloudflare가 발신 IP 대역으로 봇임을 검증한 요청(`verifiedBotCategory`)은 unknown으로 기록된다 — 새로 등장한 AI fetcher가 분류기 갱신을 기다리지 않고 관측에 잡히는 안전망이다.
+UA 목록에 없는 봇이라도 Cloudflare가 발신 IP 대역으로 봇임을 검증한 요청(`verifiedBotCategory`)은 unknown으로 기록된다 — 새로 등장한 AI fetcher가 분류기 갱신을 기다리지 않고 관측에 잡히는 안전망이다. 두 필터를 모두 통과하는 범용 HTTP 라이브러리 UA(python-httpx, curl 등 — 실측: 네이버 AI의 fetcher가 이 형태였다)는 Record 경로에 한해 도구 이름 그대로 unknown으로 관측한다. 도구는 운영자가 아니므로 점수화하지 않고, 운영자 귀속의 증거(`asOrganization`, `x-caller`)는 metadata에 남겨 해석은 분석 시점에 내린다.
 
 **이 층은 성과 지표가 아니다.** 로그가 증명하는 것은 "이 URL에 HTTP 요청이 있었다"까지이고, AI가 직접 fetch하지 않고 색인·캐시·제3자 중간층으로 답하거나 **같은 콘텐츠의 다른 공개 표면(GitHub 저장소)을 읽는** 경로가 존재하므로 — 로그 없음은 미참조의 증거가 아니고, 로그 있음은 답변 사용의 증거가 아니다. `machine_score`는 AI 참조 전체가 아니라 **직접 fetch로 도달한 좁은 표본**(하한)이며 서비스 간 비교에 쓸 수 없다. 측정 범위와 대안적 평가 방법(출처 등장 테스트)은 [docs/MACHINE_ATTENTION_SEMANTICS.md](docs/MACHINE_ATTENTION_SEMANTICS.md)에 정리했다.
 
