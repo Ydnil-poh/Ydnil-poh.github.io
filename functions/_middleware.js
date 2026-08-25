@@ -160,6 +160,19 @@ export async function onRequest(context) {
       }
       if (hit) {
         waitUntil(logMachineEvent(env, request, hit, response.status).catch(() => {}));
+      } else if (recordSlugFromPath(pathname)) {
+        // Temporary diagnostic for the unidentified-fetcher experiment:
+        // record-page requests that classify() misses and Cloudflare does not
+        // verify are the observation blind spot. Emit them to the Workers log
+        // stream only (never stored) so the fetcher's UA can be identified.
+        // Remove once the experiment concludes.
+        console.log(JSON.stringify({
+          diag: 'unclassified',
+          path: pathname,
+          ua: request.headers.get('user-agent') ?? '',
+          country: request.cf?.country ?? null,
+          asn: request.cf?.asn ?? null,
+        }));
       }
     }
   } catch {
