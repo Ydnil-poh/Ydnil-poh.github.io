@@ -990,3 +990,30 @@ test('human score recompute dedups by session, record, and event type', () => {
   assert.match(schema, /human_score = coalesce\(\((?:(?!page_view)[\s\S])*?\), 0\);/);
   assert.match(schema, /revoke execute on function public\.recompute_human_scores\(\) from public, anon, authenticated/);
 });
+
+test('generic HTTP-library clients are observed on record paths but stay out of bot classification', async () => {
+  const { classify, classifyGenericClient } = await import('../functions/_middleware.js');
+
+  // The Naver AI fetcher signature from the 2026-08-25 controlled experiment:
+  // no bot token, no CF verification, so classify() must keep missing it...
+  assert.equal(classify('python-httpx/0.28.1'), null);
+  // ...while the record-path tier observes it as tool-named, unscored evidence.
+  assert.deepEqual(classifyGenericClient('python-httpx/0.28.1'), {
+    agent: 'python-httpx',
+    category: 'unknown',
+    confidence: 0.3,
+  });
+  assert.equal(classifyGenericClient('curl/8.5.0').agent, 'curl');
+
+  // Human browsers and self-identifying bots never fall into the generic tier.
+  assert.equal(
+    classifyGenericClient('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36'),
+    null,
+  );
+  assert.equal(classify('Yeti/1.1; +https://naver.me/spd')?.category, 'search');
+
+  // Operator attribution lives in metadata, not in the classifier.
+  const middleware = readFileSync(new URL('../functions/_middleware.js', import.meta.url), 'utf8');
+  assert.match(middleware, /asOrganization: cf\.asOrganization \?\? null/);
+  assert.match(middleware, /xCaller: request\.headers\.get\('x-caller'\) \?\? null/);
+});

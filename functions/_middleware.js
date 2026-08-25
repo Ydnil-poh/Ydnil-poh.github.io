@@ -76,6 +76,36 @@ const KNOWN_AGENTS = [
 
 const GENERIC_BOT = /bot|crawl|spider|slurp|fetch|scrape/i;
 
+// Bare HTTP-library UAs identify the tool, not the operator — and they are
+// exactly how AI fetchers without a self-identifying UA reach records unseen
+// (2026-08-25 experiment: Naver AI read post19 as "python-httpx/0.28.1" from
+// NAVER Cloud ASN, invisible to every filter above, Cloudflare bot score 99).
+// Observed on record paths only, category unknown, never scored; operator
+// attribution stays in metadata (asOrganization / x-caller) for post-hoc
+// analysis rather than being baked into the classifier.
+const GENERIC_CLIENTS = [
+  { pattern: /python-httpx/i, agent: 'python-httpx' },
+  { pattern: /python-requests/i, agent: 'python-requests' },
+  { pattern: /aiohttp/i, agent: 'aiohttp' },
+  { pattern: /Go-http-client/i, agent: 'Go-http-client' },
+  { pattern: /node-fetch/i, agent: 'node-fetch' },
+  { pattern: /axios/i, agent: 'axios' },
+  { pattern: /okhttp/i, agent: 'okhttp' },
+  { pattern: /^curl\//i, agent: 'curl' },
+  { pattern: /^Wget\//i, agent: 'wget' },
+  { pattern: /libwww/i, agent: 'libwww' },
+];
+
+export function classifyGenericClient(userAgent) {
+  if (!userAgent) return null;
+  for (const entry of GENERIC_CLIENTS) {
+    if (entry.pattern.test(userAgent)) {
+      return { agent: entry.agent, category: 'unknown', confidence: 0.3 };
+    }
+  }
+  return null;
+}
+
 // Static assets carry no per-record attention signal; skip them to keep
 // machine_events readable and Supabase writes low.
 const ASSET_EXTENSIONS = /\.(css|js|mjs|png|jpe?g|webp|avif|gif|svg|ico|woff2?|ttf|otf|map|mp4|webm)$/i;
@@ -137,6 +167,12 @@ async function logMachineEvent(env, request, hit, status) {
         verifiedBotCategory: verifiedCategory,
         country: cf.country ?? null,
         asn: cf.asn ?? null,
+        // Operator-attribution evidence for generic-client observations:
+        // the network organization cannot be spoofed, and service-specific
+        // headers (Naver's fetcher sends "x-caller: toolbox") survive here
+        // even if the service later changes its UA.
+        asOrganization: cf.asOrganization ?? null,
+        xCaller: request.headers.get('x-caller') ?? null,
       },
     }),
   });
@@ -158,21 +194,14 @@ export async function onRequest(context) {
       if (!hit && request.cf?.verifiedBotCategory) {
         hit = { agent: 'Unknown Bot', category: 'unknown', confidence: 0.3 };
       }
+      // Record paths only: bare HTTP-library clients (monitors, scripts,
+      // unidentified AI fetchers) carry a per-record reading signal but would
+      // be noise on /, feeds, and sitemaps.
+      if (!hit && recordSlugFromPath(pathname)) {
+        hit = classifyGenericClient(request.headers.get('user-agent'));
+      }
       if (hit) {
         waitUntil(logMachineEvent(env, request, hit, response.status).catch(() => {}));
-      } else if (recordSlugFromPath(pathname)) {
-        // Temporary diagnostic for the unidentified-fetcher experiment:
-        // record-page requests that classify() misses and Cloudflare does not
-        // verify are the observation blind spot. Emit them to the Workers log
-        // stream only (never stored) so the fetcher's UA can be identified.
-        // Remove once the experiment concludes.
-        console.log(JSON.stringify({
-          diag: 'unclassified',
-          path: pathname,
-          ua: request.headers.get('user-agent') ?? '',
-          country: request.cf?.country ?? null,
-          asn: request.cf?.asn ?? null,
-        }));
       }
     }
   } catch {
