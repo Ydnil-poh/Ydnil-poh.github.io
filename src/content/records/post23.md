@@ -2,7 +2,7 @@
 title: 공허를 채우는 게임, 증명의 무대
 date: 2026-08-26
 location: 서울
-excerpt: 파이트클럽의 연출과 질문은 현재까지 이어진다.
+excerpt: 파이트클럽의 연출과 질문은 현재까지 유효하다.
 tags: [데굴데굴]
 type: standard
 visibility: public
