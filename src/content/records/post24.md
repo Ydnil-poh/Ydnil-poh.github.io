@@ -6,7 +6,7 @@ excerpt: 서핀보이에 기대했다가, 실망했다가, 그러나 다시 듣�
 tags: [흥얼흥얼]
 type: standard
 visibility: public
-galleryFolder: ""
+galleryFolder: '""'
 ---
 !youtube https://youtu.be/NZP153MUpHY?si=wfonb4_RGKPdEoJj
 
