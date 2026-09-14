@@ -350,20 +350,20 @@ const ogImageUrl = new URL('/og-field.png', Astro.site).href;
       .record-node[data-attention="human"] { color: var(--warm); }
       .record-node[data-attention="none"] { color: var(--soft); }
 
-      /* machine wash: the tile's own texture mirrored (scaleX) and overlaid
-         in translucent olive. Where the mirrored ink crosses the original it
-         deepens into a blot; where it misses, olive lines settle on the
-         ground — a stain, not a chip. Strength (--machine, 0..1) is agent
+      /* machine wash: the tile's own texture mirrored and laid in translucent
+         olive BENEATH the ink (negative z-index), so overlaps read as ink
+         resting on a stain — layered transparency — rather than a blended
+         third color. The node-level multiply still presses the whole
+         composite into the paper. Strength (--machine, 0..1) is agent
          breadth, normalized rebuild-locally; zero renders no overlay. */
       .record-node .machine-wash {
         color: #5b5f3f;
         inset: 0;
-        mix-blend-mode: multiply;
         opacity: calc(var(--machine, 0) * 0.55);
         pointer-events: none;
         position: absolute;
         transform: scaleX(-1);
-        z-index: 1;
+        z-index: -1;
       }
       .record-node .machine-wash svg { display: block; height: 100%; width: 100%; }
       .record-node .texture-mount,
