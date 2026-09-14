@@ -2,6 +2,7 @@
 import manifest from '../../public/archive-manifest.json';
 import { createArchiveIndexView } from '../lib/archive/pageViewModel.mjs';
 import { attentionSourceFor, machineTint, machineTintScale } from '../lib/archive/texturePipeline.mjs';
+import { renderTextureInverseSvg } from '../lib/archiveTexture.ts';
 
 const {
   cols: COLS,
@@ -350,19 +351,21 @@ const ogImageUrl = new URL('/og-field.png', Astro.site).href;
       .record-node[data-attention="human"] { color: var(--warm); }
       .record-node[data-attention="none"] { color: var(--soft); }
 
-      /* machine tint: a graded olive wash over the render. Strength is the
-         rebuild-locally log-normalized machine score (--machine, 0..1);
-         zero paints nothing. Multiply keeps it a wash in the paper, not a
-         veil over it. */
-      .record-node::before {
-        background: rgba(91, 95, 63, calc(var(--machine, 0) * 0.45));
-        content: "";
+      /* machine wash: the texture's negative space rendered in olive — the
+         gaps between the ink carry the machine channel, so the pattern stays
+         a weave instead of a solid chip and never touches the (human-hued)
+         ink itself. Strength is the rebuild-locally log-normalized machine
+         score (--machine, 0..1); zero renders no overlay at all. */
+      .record-node .machine-wash {
+        color: #5b5f3f;
         inset: 0;
         mix-blend-mode: multiply;
+        opacity: calc(var(--machine, 0) * 0.5);
         pointer-events: none;
         position: absolute;
         z-index: 1;
       }
+      .record-node .machine-wash svg { display: block; height: 100%; width: 100%; }
       .record-node .texture-mount,
       .record-node .archive-texture { display: block; height: 100%; width: 100%; }
       .record-node .archive-texture--field { filter: saturate(0.82) contrast(0.92); }
@@ -502,6 +505,9 @@ const ogImageUrl = new URL('/og-field.png', Astro.site).href;
                   aria-label={record.title}
                 >
                   <span class="texture-mount" set:html={record.textureSvg.field}></span>
+                  {tint > 0 && record.texture?.renders?.field && (
+                    <span class="machine-wash" set:html={renderTextureInverseSvg(record.texture.renders.field)}></span>
+                  )}
                 </a>
               );
             })}

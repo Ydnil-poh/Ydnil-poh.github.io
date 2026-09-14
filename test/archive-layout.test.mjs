@@ -5,7 +5,7 @@ import test from 'node:test';
 import archiveManifest from '../public/archive-manifest.json' with { type: 'json' };
 
 import { deriveFieldTraces, generateFieldViewModel, mergeFieldTraces } from '../src/lib/archive/fieldViewModel.mjs';
-import { renderTextureSet, renderTextureSvg } from '../src/lib/archiveTexture.ts';
+import { renderTextureInverseSvg, renderTextureSet, renderTextureSvg } from '../src/lib/archiveTexture.ts';
 import { createArchiveIndexView } from '../src/lib/archive/pageViewModel.mjs';
 import {
   downsampleQuantizedTexture,
@@ -203,6 +203,30 @@ test('tile hue encodes human attention presence; machine renders as a graded tin
   assert.equal(hasMachineAttention({ machineScore: 0.18 }), false);
   assert.equal(hasMachineAttention({ machineScore: 0 }), false);
   assert.equal(hasMachineAttention({ attentionSnapshot: { machineScore: 0.6 } }), true);
+});
+
+test('inverse renderer covers exactly the zero cells, full-strength fill', () => {
+  const payload = {
+    schemaVersion: textureRenderPayloadSchemaVersion,
+    role: 'field',
+    lod: 0,
+    width: 3,
+    height: 2,
+    color: 'currentColor',
+    className: 'archive-texture archive-texture--field',
+    encoding: 'rle4',
+    rle: [[3, 2], [0, 2], [1, 2]],
+  };
+  // cells: [3,3,0 / 0,1,1] — inverse = the two zero cells
+  const svg = renderTextureInverseSvg(payload);
+  const rects = svg.match(/<rect/g) ?? [];
+
+  assert.equal(rects.length, 2);
+  assert.match(svg, /x="2" y="0" width="1"/);
+  assert.match(svg, /x="0" y="1" width="1"/);
+  assert.match(svg, /archive-texture--inverse/);
+  assert.doesNotMatch(svg, /opacity=/);
+  assert.equal(renderTextureInverseSvg(undefined), '');
 });
 
 test('machine tint is a gated, rebuild-locally normalized ratio', () => {
