@@ -153,9 +153,9 @@ function machineAgentsOf(record) {
 
 // Machine attention is a ratio channel, not a marker: a discrete existence
 // badge saturates once crawler sweeps reach every record. The tint measures
-// breadth, not volume — how many distinct verified agents have read the
-// record — so one crawler rereading a hundred times counts once, and the
-// only way to deepen the wash is to be read by more kinds of machine.
+// breadth, not volume — how many distinct verified USER-PROXY agents
+// (category 'ai') have read the record. Crawlers are excluded: they sweep
+// the whole field mechanically, which would paint a baseline on every tile.
 // Normalized rebuild-locally against the widest-read record.
 export function machineTintScale(records = []) {
   let scale = 0;
