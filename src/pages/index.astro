@@ -533,7 +533,7 @@ const ogImageUrl = new URL('/og-field.png', Astro.site).href;
         <div class="inspector-meta">
           <p class="inspector-excerpt" id="detail-excerpt">{selected?.excerpt ?? ''}</p>
           <p class="inspector-machine" id="detail-machine" hidden={!(Number(selected?.attentionSnapshot?.machineAccess ?? 0) > 0)}>
-            AI reads <b id="detail-machine-count">{Number(selected?.attentionSnapshot?.machineAccess ?? 0)}</b>
+            AI reads <b id="detail-machine-count">{Number(selected?.attentionSnapshot?.machineAccess ?? 0)}</b> · <b id="detail-machine-agents">{Number(selected?.attentionSnapshot?.machineAgents ?? 0)}</b> agents
           </p>
         </div>
         <div class="related" aria-label="nearby records">
@@ -577,6 +577,7 @@ const ogImageUrl = new URL('/og-field.png', Astro.site).href;
       const excerpt = document.getElementById('detail-excerpt');
       const machineRow = document.getElementById('detail-machine');
       const machineCount = document.getElementById('detail-machine-count');
+      const machineAgents = document.getElementById('detail-machine-agents');
       const open = document.getElementById('detail-open');
       const texture = document.getElementById('detail-texture');
       const related = document.getElementById('detail-related');
@@ -678,6 +679,7 @@ const ogImageUrl = new URL('/og-field.png', Astro.site).href;
         const machineReads = Number(record.machineAccess ?? (record.attentionSnapshot && record.attentionSnapshot.machineAccess) ?? 0);
         machineRow.hidden = !(machineReads > 0);
         machineCount.textContent = String(machineReads);
+        machineAgents.textContent = String(Number((record.attentionSnapshot && record.attentionSnapshot.machineAgents) ?? 0));
         open.href = record.url;
         texture.setAttribute('aria-label', `${record.title} texture`);
         texture.replaceChildren();

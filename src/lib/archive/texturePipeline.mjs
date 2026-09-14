@@ -147,19 +147,20 @@ export function hasMachineAttention(record) {
   return machine >= machineAttentionThreshold;
 }
 
-function machineScoreOf(record) {
-  return Math.max(0, Number(record?.machineScore ?? record?.attentionSnapshot?.machineScore ?? 0) || 0);
+function machineAgentsOf(record) {
+  return Math.max(0, Math.floor(Number(record?.machineAgents ?? record?.attentionSnapshot?.machineAgents ?? 0) || 0));
 }
 
 // Machine attention is a ratio channel, not a marker: a discrete existence
-// badge saturates once crawler sweeps reach every record. The tint is
-// log-normalized rebuild-locally (like runtime LOD) so relative differences
-// stay legible at any volume; the threshold still gates out UA-match noise.
+// badge saturates once crawler sweeps reach every record. The tint measures
+// breadth, not volume — how many distinct verified agents have read the
+// record — so one crawler rereading a hundred times counts once, and the
+// only way to deepen the wash is to be read by more kinds of machine.
+// Normalized rebuild-locally against the widest-read record.
 export function machineTintScale(records = []) {
   let scale = 0;
   for (const record of records) {
-    const machine = machineScoreOf(record);
-    if (machine >= machineAttentionThreshold) scale = Math.max(scale, Math.log1p(machine));
+    scale = Math.max(scale, machineAgentsOf(record));
   }
   return scale;
 }
@@ -167,9 +168,9 @@ export function machineTintScale(records = []) {
 export function machineTint(record, scale) {
   const numericScale = Number(scale);
   if (!Number.isFinite(numericScale) || numericScale <= 0) return 0;
-  const machine = machineScoreOf(record);
-  if (machine < machineAttentionThreshold) return 0;
-  return Number(Math.min(1, Math.log1p(machine) / numericScale).toFixed(4));
+  const agents = machineAgentsOf(record);
+  if (agents < 1) return 0;
+  return Number(Math.min(1, agents / numericScale).toFixed(4));
 }
 
 export function encodeRle4(values) {

@@ -229,27 +229,25 @@ test('inverse renderer covers exactly the zero cells, full-strength fill', () =>
   assert.equal(renderTextureInverseSvg(undefined), '');
 });
 
-test('machine tint is a gated, rebuild-locally normalized ratio', () => {
+test('machine tint measures agent breadth, normalized rebuild-locally', () => {
   const records = [
-    { machineScore: 0 },
-    { machineScore: 0.18 },
-    { attentionSnapshot: { machineScore: 0.3 } },
-    { machineScore: 6.3 },
+    { machineAgents: 0 },
+    { attentionSnapshot: { machineAgents: 1 } },
+    { machineAgents: 2 },
+    { machineAgents: 4 },
   ];
   const scale = machineTintScale(records);
 
-  assert.equal(scale, Math.log1p(6.3));
+  assert.equal(scale, 4);
   assert.equal(machineTint(records[0], scale), 0);
-  assert.equal(machineTint(records[1], scale), 0);
+  assert.equal(machineTint(records[1], scale), 0.25);
+  assert.equal(machineTint(records[2], scale), 0.5);
   assert.equal(machineTint(records[3], scale), 1);
 
-  const mid = machineTint(records[2], scale);
-  assert.ok(mid > 0 && mid < 1);
-
-  // sub-threshold records contribute nothing to the scale either
-  assert.equal(machineTintScale([{ machineScore: 0.18 }]), 0);
+  // volume without breadth adds nothing: hit counts are not the input
+  assert.equal(machineTint({ machineScore: 99, machineAccess: 400 }, scale), 0);
   // and without a scale, nothing tints
-  assert.equal(machineTint({ machineScore: 5 }, 0), 0);
+  assert.equal(machineTint({ machineAgents: 3 }, 0), 0);
 });
 
 test('machine attention joins human runtime in the LOD input', () => {
