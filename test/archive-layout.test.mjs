@@ -20,6 +20,8 @@ import {
   attentionSourceFor,
   hasMachineAttention,
   machineAttentionThreshold,
+  machineTint,
+  machineTintScale,
   normalizedRuntimeScore,
   runtimeLodForNormalizedScore,
   textureLodPolicies,
@@ -186,7 +188,7 @@ test('runtime score selects an LOD policy after rebuild-local log normalization'
   assert.deepEqual(textureLodRenderResolutions[2], { width: 40, height: 30 });
 });
 
-test('tile hue encodes human attention presence; machine renders as an existence marker', () => {
+test('tile hue encodes human attention presence; machine renders as a graded tint', () => {
   // hue: human presence only — the ratio scheme could never surface machine
   // (measured against real logs, every record rendered 'human')
   assert.equal(attentionSourceFor({ runtimeScore: 0, machineScore: 0 }), 'none');
@@ -194,13 +196,36 @@ test('tile hue encodes human attention presence; machine renders as an existence
   assert.equal(attentionSourceFor({ runtimeScore: 0, machineScore: 5 }), 'none');
   assert.equal(attentionSourceFor({ attentionSnapshot: { runtimeScore: 0.15 } }), 'human');
 
-  // marker: one canonical AI read (full-confidence agent-day) earns it;
+  // gate: one canonical AI read (full-confidence agent-day) earns visibility;
   // a lone unverified UA match (0.18) does not
   assert.equal(machineAttentionThreshold, 0.3);
   assert.equal(hasMachineAttention({ machineScore: 0.3 }), true);
   assert.equal(hasMachineAttention({ machineScore: 0.18 }), false);
   assert.equal(hasMachineAttention({ machineScore: 0 }), false);
   assert.equal(hasMachineAttention({ attentionSnapshot: { machineScore: 0.6 } }), true);
+});
+
+test('machine tint is a gated, rebuild-locally normalized ratio', () => {
+  const records = [
+    { machineScore: 0 },
+    { machineScore: 0.18 },
+    { attentionSnapshot: { machineScore: 0.3 } },
+    { machineScore: 6.3 },
+  ];
+  const scale = machineTintScale(records);
+
+  assert.equal(scale, Math.log1p(6.3));
+  assert.equal(machineTint(records[0], scale), 0);
+  assert.equal(machineTint(records[1], scale), 0);
+  assert.equal(machineTint(records[3], scale), 1);
+
+  const mid = machineTint(records[2], scale);
+  assert.ok(mid > 0 && mid < 1);
+
+  // sub-threshold records contribute nothing to the scale either
+  assert.equal(machineTintScale([{ machineScore: 0.18 }]), 0);
+  // and without a scale, nothing tints
+  assert.equal(machineTint({ machineScore: 5 }, 0), 0);
 });
 
 test('machine attention joins human runtime in the LOD input', () => {
