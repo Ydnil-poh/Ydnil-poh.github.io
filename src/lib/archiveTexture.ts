@@ -66,6 +66,47 @@ export function renderTextureSvg(payload: TextureRenderPayload | undefined) {
   return `<svg class="${payload.className}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">${rects.join('')}</svg>`;
 }
 
+// The texture's negative space: rects covering exactly the cells the render
+// leaves empty (margins, line gaps, paragraph gaps). Overlaying it in another
+// color patterns the ground between the ink without touching the ink itself —
+// the two attention channels share one tile in complementary space. Fill is
+// full-strength currentColor; the overlay element grades the strength.
+export function renderTextureInverseSvg(payload: TextureRenderPayload | undefined) {
+  if (!payload) {
+    return '';
+  }
+
+  assertTextureRenderPayload(payload);
+
+  const width = Math.max(1, Math.floor(payload.width));
+  const height = Math.max(1, Math.floor(payload.height));
+
+  const cells = decodeTextureRenderPayload(payload);
+  const rects: string[] = [];
+
+  for (let y = 0; y < height; y += 1) {
+    let x = 0;
+
+    while (x < width) {
+      if ((cells[y * width + x] ?? 0) !== 0) {
+        x += 1;
+        continue;
+      }
+
+      let runEnd = x + 1;
+      while (runEnd < width && (cells[y * width + runEnd] ?? 0) === 0) {
+        runEnd += 1;
+      }
+
+      rects.push(`<rect x="${x}" y="${y}" width="${runEnd - x}" height="1" fill="${payload.color}"/>`);
+
+      x = runEnd;
+    }
+  }
+
+  return `<svg class="${payload.className} archive-texture--inverse" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">${rects.join('')}</svg>`;
+}
+
 export function renderTextureSet(renders: TextureRenderSet | undefined) {
   return {
     field: renderTextureSvg(renders?.field),

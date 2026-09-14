@@ -5,7 +5,7 @@ import test from 'node:test';
 import archiveManifest from '../public/archive-manifest.json' with { type: 'json' };
 
 import { deriveFieldTraces, generateFieldViewModel, mergeFieldTraces } from '../src/lib/archive/fieldViewModel.mjs';
-import { renderTextureSet, renderTextureSvg } from '../src/lib/archiveTexture.ts';
+import { renderTextureInverseSvg, renderTextureSet, renderTextureSvg } from '../src/lib/archiveTexture.ts';
 import { createArchiveIndexView } from '../src/lib/archive/pageViewModel.mjs';
 import {
   downsampleQuantizedTexture,
@@ -20,6 +20,8 @@ import {
   attentionSourceFor,
   hasMachineAttention,
   machineAttentionThreshold,
+  machineTint,
+  machineTintScale,
   normalizedRuntimeScore,
   runtimeLodForNormalizedScore,
   textureLodPolicies,
@@ -186,7 +188,7 @@ test('runtime score selects an LOD policy after rebuild-local log normalization'
   assert.deepEqual(textureLodRenderResolutions[2], { width: 40, height: 30 });
 });
 
-test('tile hue encodes human attention presence; machine renders as an existence marker', () => {
+test('tile hue encodes human attention presence; machine renders as a graded tint', () => {
   // hue: human presence only — the ratio scheme could never surface machine
   // (measured against real logs, every record rendered 'human')
   assert.equal(attentionSourceFor({ runtimeScore: 0, machineScore: 0 }), 'none');
@@ -194,13 +196,58 @@ test('tile hue encodes human attention presence; machine renders as an existence
   assert.equal(attentionSourceFor({ runtimeScore: 0, machineScore: 5 }), 'none');
   assert.equal(attentionSourceFor({ attentionSnapshot: { runtimeScore: 0.15 } }), 'human');
 
-  // marker: one canonical AI read (full-confidence agent-day) earns it;
+  // gate: one canonical AI read (full-confidence agent-day) earns visibility;
   // a lone unverified UA match (0.18) does not
   assert.equal(machineAttentionThreshold, 0.3);
   assert.equal(hasMachineAttention({ machineScore: 0.3 }), true);
   assert.equal(hasMachineAttention({ machineScore: 0.18 }), false);
   assert.equal(hasMachineAttention({ machineScore: 0 }), false);
   assert.equal(hasMachineAttention({ attentionSnapshot: { machineScore: 0.6 } }), true);
+});
+
+test('inverse renderer covers exactly the zero cells, full-strength fill', () => {
+  const payload = {
+    schemaVersion: textureRenderPayloadSchemaVersion,
+    role: 'field',
+    lod: 0,
+    width: 3,
+    height: 2,
+    color: 'currentColor',
+    className: 'archive-texture archive-texture--field',
+    encoding: 'rle4',
+    rle: [[3, 2], [0, 2], [1, 2]],
+  };
+  // cells: [3,3,0 / 0,1,1] — inverse = the two zero cells
+  const svg = renderTextureInverseSvg(payload);
+  const rects = svg.match(/<rect/g) ?? [];
+
+  assert.equal(rects.length, 2);
+  assert.match(svg, /x="2" y="0" width="1"/);
+  assert.match(svg, /x="0" y="1" width="1"/);
+  assert.match(svg, /archive-texture--inverse/);
+  assert.doesNotMatch(svg, /opacity=/);
+  assert.equal(renderTextureInverseSvg(undefined), '');
+});
+
+test('machine tint measures agent breadth, normalized rebuild-locally', () => {
+  const records = [
+    { machineAgents: 0 },
+    { attentionSnapshot: { machineAgents: 1 } },
+    { machineAgents: 2 },
+    { machineAgents: 4 },
+  ];
+  const scale = machineTintScale(records);
+
+  assert.equal(scale, 4);
+  assert.equal(machineTint(records[0], scale), 0);
+  assert.equal(machineTint(records[1], scale), 0.25);
+  assert.equal(machineTint(records[2], scale), 0.5);
+  assert.equal(machineTint(records[3], scale), 1);
+
+  // volume without breadth adds nothing: hit counts are not the input
+  assert.equal(machineTint({ machineScore: 99, machineAccess: 400 }, scale), 0);
+  // and without a scale, nothing tints
+  assert.equal(machineTint({ machineAgents: 3 }, 0), 0);
 });
 
 test('machine attention joins human runtime in the LOD input', () => {

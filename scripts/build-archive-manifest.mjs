@@ -253,6 +253,7 @@ function emptyAttentionSnapshot() {
     humanScore: 0,
     machineAccess: 0,
     machineScore: 0,
+    machineAgents: 0,
     lastEventAt: null,
   };
 }
@@ -311,6 +312,41 @@ async function fetchAttentionSnapshots(ids) {
     machineScore: Number(row.machine_score ?? 0),
     lastEventAt: row.last_event_at ?? null,
   }]));
+}
+
+// Breadth of machine attention: how many distinct agents have read each
+// record. Counted from machine_events (ai + crawler categories, verified
+// hits only, so a spoofed UA never adds a species) rather than stored as a
+// counter — the set semantics can't be maintained incrementally in a column.
+async function fetchMachineAgentCounts() {
+  if (!supabaseUrl || !supabaseServiceKey) return new Map();
+  const agentsBySlug = new Map();
+  const pageSize = 1000;
+
+  for (let offset = 0; ; offset += pageSize) {
+    const endpoint = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/machine_events`
+      + `?select=record_slug,agent&category=in.(ai,crawler)&confidence=gte.1&record_slug=not.is.null`
+      + `&limit=${pageSize}&offset=${offset}`;
+    const response = await fetch(endpoint, {
+      headers: {
+        apikey: supabaseServiceKey,
+        Authorization: `Bearer ${supabaseServiceKey}`,
+      },
+    });
+    if (!response.ok) {
+      console.warn(`machine agent diversity fetch skipped: ${response.status} ${await response.text()}`);
+      return new Map();
+    }
+    const rows = await response.json();
+    for (const row of rows) {
+      if (!row.record_slug || !row.agent) continue;
+      if (!agentsBySlug.has(row.record_slug)) agentsBySlug.set(row.record_slug, new Set());
+      agentsBySlug.get(row.record_slug).add(row.agent);
+    }
+    if (rows.length < pageSize) break;
+  }
+
+  return new Map([...agentsBySlug].map(([slug, agents]) => [slug, agents.size]));
 }
 
 function recordSnapshotRows(records, rebuildId) {
@@ -537,9 +573,13 @@ if (isSleepRebuild && supabaseUrl && supabaseServiceKey) {
 }
 
 const attentionSnapshots = await fetchAttentionSnapshots(publicRecords.map((record) => record.id));
+const machineAgentCounts = await fetchMachineAgentCounts();
 const recordsWithAttention = publicRecords.map((record) => ({
   ...record,
-  attentionSnapshot: attentionSnapshots.get(record.id) ?? emptyAttentionSnapshot(),
+  attentionSnapshot: {
+    ...(attentionSnapshots.get(record.id) ?? emptyAttentionSnapshot()),
+    machineAgents: machineAgentCounts.get(record.id) ?? 0,
+  },
 }));
 const recordsRuntimeLodScale = Math.max(...recordsWithAttention.map((record) => Math.log1p(attentionScoreFor(record))), 0);
 const recordsWithRelations = recordsWithAttention.map((record) => ({ ...record, relations: relationRows(recordsWithAttention, record) }));

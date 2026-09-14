@@ -132,20 +132,45 @@ export function normalizedRuntimeScore(record, runtimeScale = 0) {
 // one canonical unit of 0.30 per agent-day. A ratio-based hue could never
 // surface the machine side — measured against real logs, every record
 // rendered 'human'. So hue encodes only human attention presence, and
-// machine attention is a discrete existence marker: sparse signals are
-// rendered as presence, not magnitude.
+// machine attention renders as a graded olive wash (machineTint below).
 export function attentionSourceFor(record) {
   const human = Math.max(0, Number(record?.runtimeScore ?? record?.attentionSnapshot?.runtimeScore ?? 0) || 0);
   return human > 0 ? 'human' : 'none';
 }
 
-// One canonical AI read (a full-confidence agent-day) earns the marker; a
+// One canonical AI read (a full-confidence agent-day) earns visibility; a
 // lone unverified UA match (0.18) does not.
 export const machineAttentionThreshold = 0.3;
 
 export function hasMachineAttention(record) {
   const machine = Math.max(0, Number(record?.machineScore ?? record?.attentionSnapshot?.machineScore ?? 0) || 0);
   return machine >= machineAttentionThreshold;
+}
+
+function machineAgentsOf(record) {
+  return Math.max(0, Math.floor(Number(record?.machineAgents ?? record?.attentionSnapshot?.machineAgents ?? 0) || 0));
+}
+
+// Machine attention is a ratio channel, not a marker: a discrete existence
+// badge saturates once crawler sweeps reach every record. The tint measures
+// breadth, not volume — how many distinct verified agents have read the
+// record — so one crawler rereading a hundred times counts once, and the
+// only way to deepen the wash is to be read by more kinds of machine.
+// Normalized rebuild-locally against the widest-read record.
+export function machineTintScale(records = []) {
+  let scale = 0;
+  for (const record of records) {
+    scale = Math.max(scale, machineAgentsOf(record));
+  }
+  return scale;
+}
+
+export function machineTint(record, scale) {
+  const numericScale = Number(scale);
+  if (!Number.isFinite(numericScale) || numericScale <= 0) return 0;
+  const agents = machineAgentsOf(record);
+  if (agents < 1) return 0;
+  return Number(Math.min(1, agents / numericScale).toFixed(4));
 }
 
 export function encodeRle4(values) {
