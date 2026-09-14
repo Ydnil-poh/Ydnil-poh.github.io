@@ -2,7 +2,6 @@
 import manifest from '../../public/archive-manifest.json';
 import { createArchiveIndexView } from '../lib/archive/pageViewModel.mjs';
 import { attentionSourceFor, machineTint, machineTintScale } from '../lib/archive/texturePipeline.mjs';
-import { renderTextureInverseSvg } from '../lib/archiveTexture.ts';
 
 const {
   cols: COLS,
@@ -351,18 +350,19 @@ const ogImageUrl = new URL('/og-field.png', Astro.site).href;
       .record-node[data-attention="human"] { color: var(--warm); }
       .record-node[data-attention="none"] { color: var(--soft); }
 
-      /* machine wash: the texture's negative space rendered in olive — the
-         gaps between the ink carry the machine channel, so the pattern stays
-         a weave instead of a solid chip and never touches the (human-hued)
-         ink itself. Strength is the rebuild-locally log-normalized machine
-         score (--machine, 0..1); zero renders no overlay at all. */
+      /* machine wash: the tile's own texture mirrored (scaleX) and overlaid
+         in translucent olive. Where the mirrored ink crosses the original it
+         deepens into a blot; where it misses, olive lines settle on the
+         ground — a stain, not a chip. Strength (--machine, 0..1) is agent
+         breadth, normalized rebuild-locally; zero renders no overlay. */
       .record-node .machine-wash {
         color: #5b5f3f;
         inset: 0;
         mix-blend-mode: multiply;
-        opacity: calc(var(--machine, 0) * 0.5);
+        opacity: calc(var(--machine, 0) * 0.55);
         pointer-events: none;
         position: absolute;
+        transform: scaleX(-1);
         z-index: 1;
       }
       .record-node .machine-wash svg { display: block; height: 100%; width: 100%; }
@@ -506,7 +506,7 @@ const ogImageUrl = new URL('/og-field.png', Astro.site).href;
                 >
                   <span class="texture-mount" set:html={record.textureSvg.field}></span>
                   {tint > 0 && record.texture?.renders?.field && (
-                    <span class="machine-wash" set:html={renderTextureInverseSvg(record.texture.renders.field)}></span>
+                    <span class="machine-wash" set:html={record.textureSvg.field}></span>
                   )}
                 </a>
               );
