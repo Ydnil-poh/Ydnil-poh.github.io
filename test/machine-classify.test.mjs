@@ -63,3 +63,12 @@ test('Gemini-side fetchers classify as ai, GoogleOther as crawler', () => {
   assert.equal(classify('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)').category, 'search');
   assert.equal(classify('Google-CloudVertexBot').category, 'crawler');
 });
+
+test('newly observed search and AI crawlers classify correctly without scoring', () => {
+  assert.equal(classify('Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; KeenableBot/1.0; +https://keenable.ai/bot)').category, 'search');
+  assert.equal(classify('Mozilla/5.0 (compatible; ExaSearchBot/1.0; +https://crawler.exa.ai/)').category, 'search');
+  assert.equal(classify('Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ShapBot/0.1.0').category, 'search');
+  assert.equal(classify('Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Reflectionbot/1.0; +https://reflection.ai/bot) Chrome/151.0.0.0 Safari/537.36').category, 'crawler');
+  assert.equal(classify('Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Bluesky Cardyb/1.1; +mailto:support@bsky.app) Chrome/W.X.Y.Z Safari/537.36').category, 'preview');
+  assert.equal(classify('AgentTrustBot/1.0 (id=84966d45bf44; +https://agenttru.st/crawler; purpose=AI agent directory; contact=admin@agenttru.st)').category, 'crawler');
+});

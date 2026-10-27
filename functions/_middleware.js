@@ -38,6 +38,8 @@ const KNOWN_AGENTS = [
   { pattern: /Discordbot/i, agent: 'Discordbot', category: 'preview' },
   { pattern: /LinkedInBot/i, agent: 'LinkedInBot', category: 'preview' },
   { pattern: /WhatsApp/i, agent: 'WhatsApp', category: 'preview' },
+  { pattern: /Bluesky/i, agent: 'Bluesky-Cardyb', category: 'preview' },
+  { pattern: /SkytabBot/i, agent: 'SkytabBot', category: 'preview' },
 
   // search — index crawlers, classical and AI search alike.
   { pattern: /OAI-SearchBot/i, agent: 'OAI-SearchBot', category: 'search' },
@@ -58,6 +60,12 @@ const KNOWN_AGENTS = [
   { pattern: /BingPreview/i, agent: 'BingPreview', category: 'search' },
   { pattern: /Applebot-Extended/i, agent: 'Applebot-Extended', category: 'crawler' },
   { pattern: /Applebot/i, agent: 'Applebot', category: 'search' },
+  { pattern: /ExaSearchBot/i, agent: 'ExaSearchBot', category: 'search' },
+  { pattern: /KeenableBot/i, agent: 'KeenableBot', category: 'search' },
+  { pattern: /ShapBot/i, agent: 'ShapBot', category: 'search' },
+  { pattern: /Google-InspectionTool/i, agent: 'Google-InspectionTool', category: 'search' },
+  { pattern: /Google-Site-Verification/i, agent: 'Google-Site-Verification', category: 'search' },
+  { pattern: /Google-Safety/i, agent: 'Google-Safety', category: 'search' },
 
   // crawler — corpus / training collection.
   { pattern: /GPTBot/i, agent: 'GPTBot', category: 'crawler' },
@@ -72,6 +80,10 @@ const KNOWN_AGENTS = [
   // including AI corpus collection. No "bot" token, so the generic fallback
   // never catches it — it needs an explicit entry.
   { pattern: /GoogleOther/i, agent: 'GoogleOther', category: 'crawler' },
+  { pattern: /Reflectionbot/i, agent: 'Reflectionbot', category: 'crawler' },
+  { pattern: /SERankingBacklinksBot/i, agent: 'SERankingBacklinksBot', category: 'crawler' },
+  { pattern: /AgentTrustBot/i, agent: 'AgentTrustBot', category: 'crawler' },
+  { pattern: /LivelapBot/i, agent: 'LivelapBot', category: 'crawler' },
 ];
 
 const GENERIC_BOT = /bot|crawl|spider|slurp|fetch|scrape/i;
