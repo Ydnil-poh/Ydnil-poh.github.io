@@ -487,3 +487,168 @@ end;
 $$;
 
 revoke execute on function public.recompute_human_scores() from public, anon, authenticated;
+
+-- Report layer: read-time interpretations computed on demand from the raw
+-- machine_events log. Nothing is stored — when reading rules change, the next
+-- run just reflects them. Service-role only; run from the SQL editor:
+--   select * from public.report_machine_cadence();
+--   select * from public.report_machine_record_refresh();
+-- Reading caveats (docs/MACHINE_ATTENTION_SEMANTICS.md):
+--   * This is the cadence of self-identifying fetchers only — a lower bound.
+--     Invisible fetchers (browser-UA, unverified) leave no rows at all.
+--   * Never compare cadence across services: a path-① service (live fetch)
+--     necessarily looks busier here than a path-② service (index-based).
+--     That difference is measurement surface, not visit frequency.
+--   * For 'unknown' rows the agent is a tool name (python-httpx, curl), not
+--     an operator. Operator attribution stays in metadata (asOrganization,
+--     xCaller) and is interpreted at analysis time, not aggregated here.
+--   * All response statuses count as visits — a 404 crawl attempt is still
+--     cadence evidence. Filter on metadata->>'status' ad hoc if needed.
+
+-- Per (agent, category): events grouped into visits (bursts separated by more
+-- than session_gap_minutes of silence), then visit cadence and batch shape.
+-- "Batch" answers: when this agent comes, how much does it take in one pass?
+-- "Cadence" answers: how long between passes?
+drop function if exists public.report_machine_cadence(integer);
+
+create or replace function public.report_machine_cadence(
+  session_gap_minutes integer default 30
+)
+returns table (
+  agent text,
+  category text,
+  fetches bigint,
+  records_covered bigint,
+  active_days bigint,
+  first_seen timestamptz,
+  last_seen timestamptz,
+  visits bigint,
+  median_visit_gap interval,
+  median_batch_fetches double precision,
+  max_batch_fetches bigint,
+  median_batch_span interval
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  with ordered as (
+    select e.agent, e.category, e.id, e.created_at, e.record_slug,
+      lag(e.created_at) over (partition by e.agent, e.category order by e.created_at, e.id) as prev_at
+    from public.machine_events e
+  ),
+  flagged as (
+    select *,
+      case
+        when prev_at is null
+          or created_at - prev_at > make_interval(mins => session_gap_minutes)
+        then 1 else 0
+      end as is_new_visit
+    from ordered
+  ),
+  numbered as (
+    select *,
+      sum(is_new_visit) over (partition by agent, category order by created_at, id) as visit_no
+    from flagged
+  ),
+  per_visit as (
+    select agent, category, visit_no,
+      min(created_at) as visit_start,
+      max(created_at) as visit_end,
+      count(*) as batch_fetches
+    from numbered
+    group by agent, category, visit_no
+  ),
+  with_gaps as (
+    select *,
+      visit_start - lag(visit_end) over (partition by agent, category order by visit_start) as gap
+    from per_visit
+  ),
+  totals as (
+    select e.agent, e.category,
+      count(*) as fetches,
+      count(distinct e.record_slug) as records_covered,
+      count(distinct (e.created_at at time zone 'utc')::date) as active_days,
+      min(e.created_at) as first_seen,
+      max(e.created_at) as last_seen
+    from public.machine_events e
+    group by e.agent, e.category
+  ),
+  visit_stats as (
+    select agent, category,
+      count(*) as visits,
+      percentile_cont(0.5) within group (order by gap) as median_visit_gap,
+      percentile_cont(0.5) within group (order by batch_fetches::double precision) as median_batch_fetches,
+      max(batch_fetches) as max_batch_fetches,
+      percentile_cont(0.5) within group (order by visit_end - visit_start) as median_batch_span
+    from with_gaps
+    group by agent, category
+  )
+  select
+    t.agent, t.category,
+    t.fetches, t.records_covered, t.active_days, t.first_seen, t.last_seen,
+    v.visits, v.median_visit_gap,
+    v.median_batch_fetches, v.max_batch_fetches, v.median_batch_span
+  from totals t
+  join visit_stats v using (agent, category)
+  order by t.fetches desc;
+$$;
+
+revoke execute on function public.report_machine_cadence(integer) from public, anon, authenticated;
+
+-- Per (agent, record): how often the same agent comes back for the same
+-- record, at UTC-day granularity — same-day repeats are batch behavior, not a
+-- refresh, mirroring the (agent, record, UTC day) canonicalization rule. This
+-- is the observable half of any future freshness experiment: edit a record,
+-- then read here how long the visible fetchers take to return for it.
+drop function if exists public.report_machine_record_refresh(integer);
+
+create or replace function public.report_machine_record_refresh(
+  min_fetch_days integer default 2
+)
+returns table (
+  agent text,
+  category text,
+  record_slug text,
+  fetches bigint,
+  fetch_days bigint,
+  first_fetch timestamptz,
+  last_fetch timestamptz,
+  median_refresh_days double precision,
+  max_refresh_days integer
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  with day_hits as (
+    select e.agent, e.category, e.record_slug,
+      (e.created_at at time zone 'utc')::date as day,
+      count(*) as day_fetches,
+      min(e.created_at) as first_at,
+      max(e.created_at) as last_at
+    from public.machine_events e
+    where e.record_slug is not null
+    group by e.agent, e.category, e.record_slug, (e.created_at at time zone 'utc')::date
+  ),
+  gaps as (
+    select *,
+      day - lag(day) over (partition by agent, category, record_slug order by day) as gap_days
+    from day_hits
+  )
+  select agent, category, record_slug,
+    sum(day_fetches) as fetches,
+    count(*) as fetch_days,
+    min(first_at) as first_fetch,
+    max(last_at) as last_fetch,
+    percentile_cont(0.5) within group (order by gap_days::double precision) as median_refresh_days,
+    max(gap_days) as max_refresh_days
+  from gaps
+  group by agent, category, record_slug
+  having count(*) >= min_fetch_days
+  order by fetch_days desc, fetches desc;
+$$;
+
+revoke execute on function public.report_machine_record_refresh(integer) from public, anon, authenticated;
