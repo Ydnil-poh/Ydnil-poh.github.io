@@ -3,8 +3,7 @@ title: 카더정원의 음악적 진심
 date: 2026-11-03
 location: 서울
 excerpt: 레트로한 방송 콘셉트와 엉뚱한 딴청 속에 감춰진 음악적 진지함.
-tags:
-  - 데굴데굴
+tags: [데굴데굴]
 type: standard
 visibility: public
 galleryFolder: '""'
