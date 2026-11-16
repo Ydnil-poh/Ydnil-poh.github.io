@@ -21,6 +21,8 @@ const KNOWN_AGENTS = [
   { pattern: /Google-NotebookLM/i, agent: 'Google-NotebookLM', category: 'ai' },
   { pattern: /GoogleAgent-Mariner/i, agent: 'GoogleAgent-Mariner', category: 'ai' },
   { pattern: /MistralAI-User/i, agent: 'MistralAI-User', category: 'ai' },
+  // ExaUser fetches a page live when a person or Exa API app requests it.
+  { pattern: /ExaUser/i, agent: 'ExaUser', category: 'ai' },
 
   // preview — link unfurlers acting on a human paste. Not machine interest in
   // the content but the mechanical echo of a human share; observed, not scored.
