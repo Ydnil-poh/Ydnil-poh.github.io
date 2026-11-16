@@ -49,8 +49,11 @@ test('Korean search engines and BingPreview classify as search, not unknown', ()
   assert.equal(classify('Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/534+ (KHTML, like Gecko) BingPreview/1.0b').agent, 'BingPreview');
 });
 
-test('Mistral user fetcher scores as ai, Cohere training crawler observes only', () => {
+test('Mistral and Exa user fetchers classify as ai, Cohere training crawler observes only', () => {
   assert.equal(classify('Mozilla/5.0 (compatible; MistralAI-User/1.0; +https://mistral.ai/bot)').category, 'ai');
+  assert.deepEqual(classify('Mozilla/5.0 (compatible; ExaUser/1.0; +https://crawler.exa.ai/exauser)'), {
+    agent: 'ExaUser', category: 'ai', confidence: 0.6,
+  });
   assert.equal(classify('Mozilla/5.0 (compatible; cohere-training-data-crawler/1.0; +https://cohere.com)').category, 'crawler');
 });
 
