@@ -1,0 +1,135 @@
+---
+// A plain, newest-first feed for people who just want to read — the Field
+// stays the canonical entry point, so this page is noindex and shares no
+// layout or global CSS with the desktop views. Each row borrows the record's
+// Field tile chip as its thumbnail, drawn with the same ink rules.
+import manifest from '../../../public/archive-manifest.json';
+import { getPublicRecordsNewestFirst } from '../../lib/publicRecords.js';
+import { createArchiveIndexView } from '../../lib/archive/pageViewModel.mjs';
+import { attentionSourceFor, machineTint, machineTintScale } from '../../lib/archive/texturePipeline.mjs';
+
+const records = await getPublicRecordsNewestFirst();
+const { fieldRecords } = createArchiveIndexView(manifest);
+const machineScale = machineTintScale(fieldRecords.map((record) => record.attentionSnapshot));
+const chipBySlug = new Map(
+  fieldRecords
+    .filter((record) => record.texture?.renders?.field)
+    .map((record) => [record.slug, {
+      svg: record.textureSvg.field,
+      attention: attentionSourceFor(record.attentionSnapshot),
+      score: record.score,
+      tint: machineTint(record.attentionSnapshot, machineScale),
+    }]),
+);
+
+const fmtMonth = new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long', timeZone: 'Asia/Seoul' });
+const fmtDay = new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', timeZone: 'Asia/Seoul' });
+
+const groups = [];
+for (const record of records) {
+  const label = fmtMonth.format(record.date);
+  const last = groups[groups.length - 1];
+  const item = { ...record, chip: chipBySlug.get(record.slug) };
+  if (last && last.label === label) last.items.push(item);
+  else groups.push({ label, items: [item] });
+}
+---
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, follow" />
+    <link rel="alternate" type="application/rss+xml" title="Ydnil-poh Archive Field" href="/rss.xml" />
+    <title>기록 · Archive Field</title>
+  </head>
+  <body>
+    <main>
+      <h1>기록</h1>
+      {groups.map((group) => (
+        <section>
+          <h2>{group.label}</h2>
+          <ul>
+            {group.items.map((record) => (
+              <li>
+                <a href={`/records/${record.slug}/`}>
+                  <span class="chip" aria-hidden="true">
+                    {record.chip && (
+                      <span
+                        class="chip-ink"
+                        data-attention={record.chip.attention}
+                        style={`--score:${record.chip.score};${record.chip.tint > 0 ? `--machine:${record.chip.tint};` : ''}`}
+                      >
+                        <span class="chip-texture" set:html={record.chip.svg}></span>
+                        {record.chip.tint > 0 && <span class="chip-wash" set:html={record.chip.svg}></span>}
+                      </span>
+                    )}
+                  </span>
+                  <span class="body">
+                    <span class="title">{record.title}</span>
+                    {record.excerpt && <span class="excerpt">{record.excerpt}</span>}
+                    <time datetime={record.date.toISOString()}>{fmtDay.format(record.date)}</time>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+      <footer>
+        <a class="field-link" href="/?view=field">필드 보기</a>
+      </footer>
+    </main>
+  </body>
+</html>
+
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.5; }
+  main { max-width: 36rem; margin: 0 auto; padding: 1rem; }
+  h1 { font-size: 1.25rem; }
+  h2 { font-size: 0.85rem; opacity: 0.6; margin: 1.5rem 0 0.5rem; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li + li { border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent); }
+  a { display: flex; gap: 0.9rem; align-items: flex-start; padding: 0.8rem 0; color: inherit; text-decoration: none; }
+  .body { flex: 1; min-width: 0; }
+  .title { display: block; font-weight: 600; }
+  .excerpt { display: block; opacity: 0.7; font-size: 0.9rem; margin-top: 0.15rem; }
+  time { display: block; opacity: 0.5; font-size: 0.8rem; margin-top: 0.3rem; }
+  footer { border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent); margin-top: 1.5rem; padding: 1rem 0 2rem; }
+  .field-link { display: inline; padding: 0; opacity: 0.6; font-size: 0.85rem; text-decoration: underline; }
+
+  /* The chip sits on its own scrap of Field paper so the multiply ink reads
+     the same in dark mode as on the desktop field. Ink rules mirror
+     .record-node on the index page. */
+  .chip {
+    aspect-ratio: 4 / 3;
+    background: #f7f3eb;
+    border: 1px solid rgba(92, 83, 67, 0.2);
+    flex: none;
+    margin-top: 0.2rem;
+    overflow: hidden;
+    width: 4.5rem;
+  }
+  .chip-ink {
+    color: rgba(91, 95, 63, 0.62);
+    display: block;
+    height: 100%;
+    isolation: isolate;
+    mix-blend-mode: multiply;
+    opacity: calc(0.58 + var(--score, 0) * 0.36);
+    position: relative;
+  }
+  .chip-ink[data-attention="human"] { color: rgba(197, 112, 67, 0.7); }
+  .chip-ink[data-attention="none"] { color: rgba(107, 105, 83, 0.34); }
+  .chip-texture, .chip-wash { display: block; height: 100%; width: 100%; }
+  .chip-wash {
+    color: #5b5f3f;
+    inset: 0;
+    opacity: calc(var(--machine, 0) * 0.55);
+    position: absolute;
+    transform: scale(-1, -1);
+    z-index: -1;
+  }
+  .chip :global(svg) { display: block; height: 100%; width: 100%; filter: saturate(0.82) contrast(0.92); }
+</style>
