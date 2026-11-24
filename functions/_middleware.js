@@ -192,9 +192,77 @@ async function logMachineEvent(env, request, hit, status) {
   });
 }
 
+// Mobile entry — phones landing on the Field (/) are sent to the plain
+// newest-first list at /mobile/. Only the bare root redirects: record links
+// and feeds open as-is on any device. Bots (incl. Googlebot's smartphone UA)
+// always see the Field. `/?view=field` pins the Field on that device via a
+// cookie; `/?view=mobile` clears the pin.
+const VIEW_COOKIE = 'archive_view';
+const PHONE_UA = /iPhone|iPod|Android.*Mobile|Mobile.*Firefox|Windows Phone|IEMobile|Opera Mini/i;
+
+export function isPhoneClient(headers) {
+  const hint = headers.get('sec-ch-ua-mobile');
+  if (hint === '?1') return true;
+  return PHONE_UA.test(headers.get('user-agent') ?? '');
+}
+
+function viewCookieOf(headers) {
+  const match = (headers.get('cookie') ?? '').match(new RegExp(`(?:^|;\\s*)${VIEW_COOKIE}=([^;]*)`));
+  return match ? match[1] : null;
+}
+
+// Returns a Response to short-circuit with, a Set-Cookie value to attach to
+// the served Field, or null to serve normally.
+export function mobileEntryDecision(request) {
+  if (request.method !== 'GET' && request.method !== 'HEAD') return null;
+  const url = new URL(request.url);
+  if (url.pathname !== '/') return null;
+
+  const view = url.searchParams.get('view');
+  if (view === 'field') {
+    return { setCookie: `${VIEW_COOKIE}=field; Path=/; Max-Age=31536000; SameSite=Lax; Secure` };
+  }
+  if (view === 'mobile') {
+    return {
+      redirect: new Response(null, {
+        status: 302,
+        headers: {
+          location: '/mobile/',
+          'cache-control': 'no-store',
+          'set-cookie': `${VIEW_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax; Secure`,
+        },
+      }),
+    };
+  }
+
+  if (viewCookieOf(request.headers) === 'field') return null;
+  if (classify(request.headers.get('user-agent')) || request.cf?.verifiedBotCategory) return null;
+  if (!isPhoneClient(request.headers)) return null;
+
+  return {
+    redirect: new Response(null, {
+      status: 302,
+      headers: { location: '/mobile/', 'cache-control': 'no-store', vary: 'User-Agent, Sec-CH-UA-Mobile, Cookie' },
+    }),
+  };
+}
+
 export async function onRequest(context) {
   const { request, env, next, waitUntil } = context;
-  const response = await next();
+
+  let entry = null;
+  try {
+    entry = mobileEntryDecision(request);
+  } catch {
+    // Entry routing must never break serving.
+  }
+  if (entry?.redirect) return entry.redirect;
+
+  let response = await next();
+  if (entry?.setCookie) {
+    response = new Response(response.body, response);
+    response.headers.append('set-cookie', entry.setCookie);
+  }
 
   try {
     const pathname = new URL(request.url).pathname;

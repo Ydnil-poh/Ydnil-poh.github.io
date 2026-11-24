@@ -8,8 +8,9 @@ export default defineConfig({
 
   integrations: [
     // /posts/ pages are legacy redirects to /records/; listing them doubles
-    // every crawler's pass over the archive for no benefit.
-    sitemap({ filter: (page) => !page.includes('/posts/') })
+    // every crawler's pass over the archive for no benefit. /mobile/ is a
+    // noindex reading view, so it stays out too.
+    sitemap({ filter: (page) => !page.includes('/posts/') && !page.includes('/mobile/') })
   ],
 
   markdown: {
